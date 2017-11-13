@@ -1,0 +1,45 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SyncPro.Core", "SyncPro.Core\SyncPro.Core.csproj", "{DE859CDC-6879-4C28-AB26-354806276E04}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SyncPro.UnitTests", "SyncPro.UnitTests\SyncPro.UnitTests.csproj", "{3C8EB882-B735-49AC-BB0D-9C78A120295A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Utilities", "Utilities", "{2B1F0A5A-D3DD-4A43-8DD7-3856B773B36A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneDriveTokenHelper", "OneDriveTokenHelper\OneDriveTokenHelper.csproj", "{A6727CD7-8703-432C-95A8-36666AFF583B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JsonLog", "..\JsonLog\JsonLog\JsonLog.csproj", "{6028CE31-C870-4ECB-BF55-B4C4D4953B9D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DE859CDC-6879-4C28-AB26-354806276E04}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DE859CDC-6879-4C28-AB26-354806276E04}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DE859CDC-6879-4C28-AB26-354806276E04}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DE859CDC-6879-4C28-AB26-354806276E04}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3C8EB882-B735-49AC-BB0D-9C78A120295A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3C8EB882-B735-49AC-BB0D-9C78A120295A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3C8EB882-B735-49AC-BB0D-9C78A120295A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3C8EB882-B735-49AC-BB0D-9C78A120295A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A6727CD7-8703-432C-95A8-36666AFF583B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A6727CD7-8703-432C-95A8-36666AFF583B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A6727CD7-8703-432C-95A8-36666AFF583B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A6727CD7-8703-432C-95A8-36666AFF583B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6028CE31-C870-4ECB-BF55-B4C4D4953B9D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6028CE31-C870-4ECB-BF55-B4C4D4953B9D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6028CE31-C870-4ECB-BF55-B4C4D4953B9D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6028CE31-C870-4ECB-BF55-B4C4D4953B9D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{A6727CD7-8703-432C-95A8-36666AFF583B} = {2B1F0A5A-D3DD-4A43-8DD7-3856B773B36A}
+	EndGlobalSection
+EndGlobal
