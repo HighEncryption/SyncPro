@@ -1,0 +1,546 @@
+namespace SyncPro.Runtime
+{
+    using System;
+    using System.Collections.Generic;
+    using System.Data.Entity;
+    using System.Diagnostics;
+    using System.IO;
+    using System.Linq;
+    using System.Threading;
+    using System.Threading.Tasks;
+
+    using JsonLog;
+
+    using SyncPro.Adapters;
+    using SyncPro.Data;
+
+    public class SyncAnalyzer
+    {
+        private readonly SyncRelationship relationship;
+        private readonly CancellationToken cancellationToken;
+        private readonly AnalyzeRelationshipResult analyzeResult;
+
+        public EventHandler<SyncRunProgressInfo> ChangeDetected;
+
+        public SyncAnalyzer(SyncRelationship relationship, CancellationToken cancellationToken)
+        {
+            this.relationship = relationship;
+            this.cancellationToken = cancellationToken;
+            this.analyzeResult = new AnalyzeRelationshipResult();
+        }
+
+        public async Task<AnalyzeRelationshipResult> AnalyzeChangesAsync()
+        {
+            List<Task> updateTasks = new List<Task>();
+
+            // For each adapter (where changes can origiante from), start a task to analyze the change for that
+            // adapter. This will allow multiple adapters to be examined in parallel.
+            foreach (AdapterBase adapter in this.relationship.Adapters.Where(a => a.Configuration.IsOriginator))
+            {
+                this.analyzeResult.AdapterResults.Add(adapter.Configuration.Id, new AnalyzeAdapterResult());
+                updateTasks.Add(this.AnalyzeChangesFromAdapter(adapter));
+            }
+
+            await Task.WhenAll(updateTasks).ContinueWith(task =>
+            {
+                if (updateTasks.All(t => t.IsCompleted))
+                {
+                    this.analyzeResult.IsComplete = true;
+                }
+            });
+
+            this.CalculateUnchangedEntryCounts();
+
+            return this.analyzeResult;
+        }
+
+        private void CalculateUnchangedEntryCounts()
+        {
+            Dictionary<long, SyncEntryType> changedEntries = new Dictionary<long, SyncEntryType>();
+
+            foreach (AnalyzeAdapterResult adapterResult in this.analyzeResult.AdapterResults.Values)
+            {
+                foreach (EntryUpdateInfo entryUpdateInfo in adapterResult.EntryResults)
+                {
+                    // Any change results that indicate that the entry is New can be skipped, since we
+                    // know that they dont exist in the DB yet.
+                    if (entryUpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.NewFile) ||
+                        entryUpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.NewDirectory))
+                    {
+                        continue;
+                    }
+
+                    try
+                    {
+                        changedEntries.Add(
+                            entryUpdateInfo.Entry.Id,
+                            entryUpdateInfo.Entry.Type);
+                    }
+                    catch (ArgumentException)
+                    {
+                        // A duplicate was added. Suppress.
+                    }
+                }
+            }
+
+            using (SyncDatabase db = this.relationship.GetDatabase())
+            {
+                foreach (SyncEntry syncEntry in db.Entries)
+                {
+                    if (changedEntries.ContainsKey(syncEntry.Id))
+                    {
+                        continue;
+                    }
+
+                    switch (syncEntry.Type)
+                    {
+                        case SyncEntryType.Directory:
+                            this.analyzeResult.UnchangedFolderCount++;
+                            break;
+                        case SyncEntryType.File:
+                            this.analyzeResult.UnchangedFileCount++;
+                            this.analyzeResult.UnchangedFileBytes += syncEntry.Size;
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+                }
+            }
+        }
+
+        private async Task AnalyzeChangesFromAdapter(AdapterBase adapter)
+        {
+            Logger.Info("Beginning AnalyzeChangesFromAdapter for adapter " + adapter.Configuration.Id);
+
+            using (SyncDatabase db = this.relationship.GetDatabase())
+            {
+                SyncEntry rootIndexEntry = db.Entries.FirstOrDefault(e => e.Id == adapter.Configuration.RootIndexEntryId);
+                if (adapter.SupportChangeTracking())
+                {
+                    IChangeTracking changeTracking = (IChangeTracking)adapter;
+                    TrackedChange trackedChange = await changeTracking.GetChangesAsync().ConfigureAwait(false);
+
+                    this.analyzeResult.TrackedChanges.Add(adapter, trackedChange);
+                    this.AnalyzeChangesWithChangeTracking(db, adapter, rootIndexEntry);
+
+                    Logger.Info("Finished AnalyzeChangesFromAdapter with change tracking for adapter " + adapter.Configuration.Id);
+                }
+                else
+                {
+                    IAdapterItem rootFolder = adapter.GetRootFolder().Result;
+
+                    this.AnalyzeChangesWithoutChangeTracking(
+                        db,
+                        adapter,
+                        rootFolder,
+                        rootIndexEntry,
+                        string.Empty);
+
+                    Logger.Info("Finished AnalyzeChangesFromAdapter for adapter " + adapter.Configuration.Id);
+                }
+
+            }
+        }
+
+        private void AnalyzeChangesWithChangeTracking(
+            SyncDatabase db,
+            AdapterBase adapter,
+            SyncEntry logicalParent)
+        {
+            Logger.Verbose("---------------------------------------------------------------------");
+            Logger.Verbose("AnalyzeChangesWithChangeTracking called with root {0} (Name={1})", logicalParent.Id, logicalParent.Name);
+
+            TrackedChange trackedChange = this.analyzeResult.TrackedChanges[adapter];
+
+            // When analyzing changes with change tracking, it is possible that changes arrive out of order (such as a
+            // file creation arriving before the file's parent directory creation), which results in a change not being
+            // able to be processed. If a change cannot be processed, it is 'skipped' by adding it back to the end of 
+            // the queue of changes.
+            Queue<IChangeTrackedAdapterItem> pendingChanges = new Queue<IChangeTrackedAdapterItem>(trackedChange.Changes);
+
+            // This field tracks the number of changes that are skipped. If the number of skipped changes exceeds the 
+            // total number of changes to be analyzed, throw an exception.
+            int skipCount = 0;
+            Dictionary<string, SyncEntry> knownSyncEntries = new Dictionary<string, SyncEntry>();
+
+            while (pendingChanges.Any() && !this.cancellationToken.IsCancellationRequested)
+            {
+                IChangeTrackedAdapterItem changeAdapterItem = pendingChanges.Dequeue();
+
+                if (this.AnalyzeSingleChangeWithTracking(db, adapter, changeAdapterItem, knownSyncEntries))
+                {
+                    // Change change was successfully analyzed. Reset the skip counter.
+                    skipCount = 0;
+                }
+                else
+                {
+                    skipCount++;
+                    pendingChanges.Enqueue(changeAdapterItem);
+                }
+
+                if (skipCount > pendingChanges.Count)
+                {
+                    throw new Exception("Analysis failure!");
+                }
+            }
+        }
+
+        private bool AnalyzeSingleChangeWithTracking(
+            SyncDatabase db, 
+            AdapterBase adapter, 
+            IChangeTrackedAdapterItem changeAdapterItem, 
+            Dictionary<string, SyncEntry> knownSyncEntries)
+        {
+            // Get the logical item for this change
+            SyncEntryAdapterData adapterEntry =
+                db.AdapterEntries.Include(e => e.SyncEntry).FirstOrDefault(e => e.AdapterEntryId == changeAdapterItem.UniqueId);
+
+            if (changeAdapterItem.IsDeleted)
+            {
+                // It is possible that an item was created and deleted before a sync cycle was run, so we need to handle the 
+                // case when the adapterEntry is not present.
+                if (adapterEntry == null)
+                {
+#if DEBUG
+                    Debugger.Break(); // This should almost never happen!
+#endif
+
+                    Logger.Info("Skipping delete for non-existent item " + changeAdapterItem.Name);
+                    return true;
+                }
+
+                SyncEntry logicalChild = adapterEntry.SyncEntry;
+                Logger.Verbose("Child item {0} ({1}) was deleted.", logicalChild.Id, logicalChild.Name);
+
+                // Mark the sync entry as 'deleted' by setting the appropriate bit.
+                logicalChild.State |= SyncEntryState.IsDeleted;
+
+                // Set the state to 'Unsynchronized' (so that we know we have pending changes).
+                logicalChild.State |= SyncEntryState.NotSynchronized;
+
+                // Create the update info for the new entry
+                logicalChild.UpdateInfo = new EntryUpdateInfo(
+                    logicalChild,
+                    adapter,
+                    SyncEntryChangedFlags.Deleted,
+                    logicalChild.GetRelativePath(db, "/"));
+
+                this.RaiseChangeDetected(adapter.Configuration.Id, logicalChild.UpdateInfo);
+                return true;
+            }
+
+            if (adapterEntry != null)
+            {
+                // The item was found in the database
+                SyncEntry logicalChild = adapterEntry.SyncEntry;
+
+                if (!knownSyncEntries.ContainsKey(adapterEntry.AdapterEntryId))
+                {
+                    knownSyncEntries.Add(adapterEntry.AdapterEntryId, logicalChild);
+                }
+
+                Logger.Verbose("Found child item {0} in database that matches adapter item.", logicalChild.Id);
+
+                if (logicalChild.State.HasFlag(SyncEntryState.IsDeleted))
+                {
+                    // Handle the case where the item was previously deleted (TODO: verify that this is correct).
+                    Logger.Verbose("Child item {0} was un-deleted.", logicalChild.Id);
+
+                    // Clear the IsDeleted flag (needed in cases where the file was previously deleted).
+                    logicalChild.State &= ~SyncEntryState.IsDeleted;
+
+                    // Create the update info for the new entry (marked as a new file/directory)
+                    logicalChild.UpdateInfo = new EntryUpdateInfo(
+                        logicalChild,
+                        adapter, 
+                        SyncEntryChangedFlags.Restored, 
+                        logicalChild.GetRelativePath(db, "/"));
+
+                    // Raise change notification so that the UI can be updated in "real time" rather than waiting for the analyze 
+                    // process to finish.
+                    this.RaiseChangeDetected(adapter.Configuration.Id, logicalChild.UpdateInfo);
+                    return true;
+                }
+
+                SyncEntryChangedFlags changeFlags;
+
+                // If the item differs from the entry in the index, an update will be required.
+                if (logicalChild.UpdateInfo == null && adapter.IsEntryUpdated(logicalChild, changeAdapterItem, out changeFlags))
+                {
+                    Logger.Verbose("Child item {0} is out of sync.", logicalChild.Id);
+
+                    // Create the update info for the new entry
+                    logicalChild.UpdateInfo = new EntryUpdateInfo(
+                        logicalChild, 
+                        adapter, 
+                        changeFlags,
+                        logicalChild.GetRelativePath(db, "/"));
+
+                    // Raise change notification so that the UI can be updated in "real time" rather than waiting for the analyze process to finish.
+                    this.RaiseChangeDetected(adapter.Configuration.Id, logicalChild.UpdateInfo);
+                    return true;
+                }
+
+                // The change tracking indicates that this item has changed, but the adapter logic determined that it does not.
+                Logger.Verbose("Child item {0} is already synced.", logicalChild.Id);
+                return true;
+            }
+            else
+            {
+                Logger.Verbose("Child item {0} ({1}) was not found in database that matches adapter item.", changeAdapterItem.Name,
+                    changeAdapterItem.UniqueId);
+
+                SyncEntry parentEntry;
+                if (!knownSyncEntries.TryGetValue(changeAdapterItem.ParentUniqueId, out parentEntry))
+                {
+                    SyncEntryAdapterData parentAdapterEntry =
+                        db.AdapterEntries.Include(e => e.SyncEntry).FirstOrDefault(e => e.AdapterEntryId.Equals(changeAdapterItem.ParentUniqueId));
+
+                    if (parentAdapterEntry != null)
+                    {
+                        parentEntry = parentAdapterEntry.SyncEntry;
+                    }
+                }
+
+                if (parentEntry == null)
+                {
+                    Logger.Debug("Delaying analyze for parent.");
+                    return false;
+                }
+
+                // This file/directory was not found in the index, so create a new entry for it. Note that while this is a call
+                // to the adapter, no object is created as a result of the call (the result is in-memory only).
+                SyncEntry logicalChild = adapter.CreateSyncEntryForAdapterItem(changeAdapterItem, parentEntry);
+
+                knownSyncEntries.Add(changeAdapterItem.UniqueId, logicalChild);
+
+                // Set the NotSynchronized flag so that we know this has not yet been committed to the database.
+                logicalChild.State = SyncEntryState.NotSynchronized;
+
+                // Create the update info for the new entry
+                logicalChild.UpdateInfo = new EntryUpdateInfo(
+                    logicalChild,
+                    adapter,
+                    GetFlagsForNewSyncEntry(changeAdapterItem),
+                    logicalChild.GetRelativePath(db, "/"));
+
+                // Raise change notification so that the UI can be updated in "real time" rather than waiting for the analyze process to finish.
+                this.RaiseChangeDetected(adapter.Configuration.Id, logicalChild.UpdateInfo);
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="adapter"></param>
+        /// <param name="adapterParent"></param>
+        /// <param name="logicalParent"></param>
+        /// <param name="relativePath"></param>
+        /// <remarks>
+        /// This method uses a recursive strategy for comparing items exposed by an adapter. This requires retrieving the metadata
+        /// for each item on the adapter (expensive for non-local adapters).
+        /// </remarks>
+        private void AnalyzeChangesWithoutChangeTracking(
+            SyncDatabase db,
+            AdapterBase adapter,
+            IAdapterItem adapterParent,
+            SyncEntry logicalParent,
+            string relativePath)
+        {
+            IList<IAdapterItem> adapterChildren = new List<IAdapterItem>();
+
+            Logger.Verbose("---------------------------------------------------------------------");
+            Logger.Verbose("AnalyzeChangesWithoutChangeTracking called for entry {0} (Name={1})", logicalParent.Id, logicalParent.Name);
+
+            // Get files and folders in the given directory. If this given directory is null (such as when a directory was deleted),
+            // the list will be empty (allowing deletes to occur recursivly).
+            if (adapterParent != null)
+            {
+                Logger.Verbose("Getting adapter item");
+                adapterChildren = adapter.GetAdapterItems(adapterParent).ToList();
+            }
+
+            Logger.Verbose("Found {0} child items from adapter.", adapterChildren.Count);
+
+            // Get the children (files and directories) for a particular directory as identified by 'entry'.
+            List<SyncEntry> logicalChildren = db.Entries.Include(e => e.AdapterEntries).Where(e => e.ParentId == logicalParent.Id).ToList();
+
+            Logger.Verbose("Found {0} child items from database.", logicalChildren.Count);
+
+            // Loop through each of the items return by the adapter (eg files on disk)
+            foreach (IAdapterItem adapterChild in adapterChildren)
+            {
+                if (this.cancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
+
+                // TODO: Query the adapter somehow to see if the file should be suppressed (sparse file, for example).
+                // TODO: Further note - this would be the right place to implement an inclusion/exclusion behavior.
+
+                // Check if there was an error reading the item from the adapter. If so, skip the item.
+                if (!string.IsNullOrEmpty(adapterChild.ErrorMessage))
+                {
+                    Logger.Info("Skipping adapter child '{0}' with error.", adapterChild.FullName);
+                    continue;
+                }
+
+                // Get the list of sync entries from the index. We will match these up with the adapter items to determine what has been 
+                // added, modified, or removed.
+                Logger.Verbose("Examining adapter child item {0}", adapterChild.FullName);
+
+                // First check if there is an entry that matches the unique ID of the item
+                SyncEntry logicalChild = logicalChildren.FirstOrDefault(c => c.HasUniqueId(adapterChild.UniqueId));
+
+                // A match was found, so determine
+                if (logicalChild != null)
+                {
+                    Logger.Verbose("Found child item {0} in database that matches adapter item.", logicalChild.Id);
+
+                    // The index already contains an entry for this item. Remove it from the index list, then update as needed.
+                    logicalChildren.Remove(logicalChild);
+
+                    if (logicalChild.State.HasFlag(SyncEntryState.IsDeleted))
+                    {
+                        Logger.Verbose("Child item {0} is currently deleted?", logicalChild.Id);
+
+                        // Clear the IsDeleted flag (needed in cases where the file was previously deleted).
+                        logicalChild.State &= ~SyncEntryState.IsDeleted;
+
+                        // Create the update info for the new entry (marked as a new file/directory)
+                        logicalChild.UpdateInfo = new EntryUpdateInfo(
+                            logicalChild,
+                            adapter,
+                            GetFlagsForNewSyncEntry(adapterChild),
+                            Path.Combine(relativePath, logicalChild.Name));
+
+                        // Raise change notification so that the UI can be updated in "real time" rather than waiting for the analyze 
+                        // process to finish.
+                        this.RaiseChangeDetected(adapter.Configuration.Id, logicalChild.UpdateInfo);
+                        continue;
+                    }
+
+                    SyncEntryChangedFlags changeFlags;
+
+                    // If the file/directory is being created after it was deleted, set the flags such that the create timestamp has changed.
+                    // If the item differs from the entry in the index, an update will be required.
+                    if (logicalChild.UpdateInfo == null && adapter.IsEntryUpdated(logicalChild, adapterChild, out changeFlags))
+                    {
+                        Logger.Verbose("Child item {0} is out of sync.", logicalChild.Id);
+
+                        // Create the update info for the new entry
+                        logicalChild.UpdateInfo = new EntryUpdateInfo(logicalChild, adapter, changeFlags, Path.Combine(relativePath, logicalChild.Name));
+
+                        // Raise change notification so that the UI can be updated in "real time" rather than waiting for the analyze process to finish.
+                        //this.AnalyzeOnSyncEntryChanged(this, new SyncEntryChangedEventArgs(logicalChild.UpdateInfo));
+                        this.RaiseChangeDetected(adapter.Configuration.Id, logicalChild.UpdateInfo);
+                    }
+                }
+                else
+                {
+                    Logger.Verbose("Child item was not found in database that matches adapter item.");
+
+                    // This file/directory was not found in the index, so create a new entry for it. Note that while this is a call
+                    // to the adapter, no object is created as a result of the call (the result is in-memory only).
+                    logicalChild = adapter.CreateSyncEntryForAdapterItem(adapterChild, logicalParent);
+
+                    // Set the NotSynchronized flag so that we know this has not yet been committed to the database.
+                    logicalChild.State = SyncEntryState.NotSynchronized;
+
+                    // Create the update info for the new entry
+                    logicalChild.UpdateInfo = new EntryUpdateInfo(
+                        logicalChild,
+                        adapter,
+                        GetFlagsForNewSyncEntry(adapterChild),
+                        Path.Combine(relativePath, logicalChild.Name));
+
+                    // Raise change notification so that the UI can be updated in "real time" rather than waiting for the analyze process to finish.
+                    //this.AnalyzeOnSyncEntryChanged(this, new SyncEntryChangedEventArgs(logicalChild.UpdateInfo));
+                    this.RaiseChangeDetected(adapter.Configuration.Id, logicalChild.UpdateInfo);
+                }
+
+                // If this is a directory, descend into it
+                if (adapterChild.ItemType == SyncAdapterItemType.Directory)
+                {
+                    this.AnalyzeChangesWithoutChangeTracking(
+                        db,
+                        adapter,
+                        adapterChild,
+                        logicalChild,
+                        Path.Combine(relativePath, logicalChild.Name));
+                }
+            }
+
+            // Any entries still in the indexChildren list are no longer present in the source adapter and
+            // need to be expunged (recursivly).
+            foreach (
+                SyncEntry oldChild in logicalChildren.Where(e => e.State.HasFlag(SyncEntryState.IsDeleted) == false))
+            {
+                if (this.cancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
+
+                Logger.Verbose("Child item {0} ({1}) was deleted.", oldChild.Id, oldChild.Name);
+
+                // Mark the sync entry as 'deleted' by setting the appropriate bit.
+                oldChild.State |= SyncEntryState.IsDeleted;
+
+                // Set the state to 'Unsynchronized' (so that we know we have pending changes).
+                oldChild.State |= SyncEntryState.NotSynchronized;
+
+                // Create the update info for the new entry
+                oldChild.UpdateInfo = new EntryUpdateInfo(
+                    oldChild,
+                    adapter,
+                    SyncEntryChangedFlags.Deleted,
+                    Path.Combine(relativePath, oldChild.Name));
+
+                //this.RaiseSyncEntryChanged(oldChild, ItemChangeType.Deleted);
+                //this.AnalyzeOnSyncEntryChanged(this, new SyncEntryChangedEventArgs(oldChild.UpdateInfo));
+                this.RaiseChangeDetected(adapter.Configuration.Id, oldChild.UpdateInfo);
+
+                // If the entry we are removing is a directory, we need to also check for subdirectories and files. We can do this by calling 
+                // this method recursivly, and passing null for adapter folder (indicating that is no longer exists according to the 
+                // originating adapter.
+                if (oldChild.Type == SyncEntryType.Directory)
+                {
+                    this.AnalyzeChangesWithoutChangeTracking(
+                        db, 
+                        adapter, 
+                        null, 
+                        oldChild, 
+                        Path.Combine(relativePath, oldChild.Name));
+                }
+            }
+        }
+
+        private static SyncEntryChangedFlags GetFlagsForNewSyncEntry(IAdapterItem item)
+        {
+            if (item.ItemType == SyncAdapterItemType.Directory)
+            {
+                return SyncEntryChangedFlags.NewDirectory;
+            }
+
+            if (item.ItemType == SyncAdapterItemType.File)
+            {
+                return SyncEntryChangedFlags.NewFile;
+            }
+
+            throw new InvalidOperationException("Cannot create flags for unknown item type.");
+        }
+
+        private void RaiseChangeDetected(int adapterId, EntryUpdateInfo updateInfo)
+        {
+            this.analyzeResult.AdapterResults[adapterId].EntryResults.Add(updateInfo);
+            this.ChangeDetected?.Invoke(
+                this, 
+                new SyncRunProgressInfo(
+                    updateInfo, 
+                    this.analyzeResult.AdapterResults[adapterId].EntryResults.Count,
+                    0));
+        }
+    }
+}

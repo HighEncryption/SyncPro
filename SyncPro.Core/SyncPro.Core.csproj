@@ -1,0 +1,162 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{DE859CDC-6879-4C28-AB26-354806276E04}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>SyncPro</RootNamespace>
+    <AssemblyName>SyncPro.Core</AssemblyName>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>SyncPro.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>SyncPro.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="JetBrains.Annotations, Version=7.1.3000.2254, Culture=neutral, PublicKeyToken=1010a0d8d6380325, processorArchitecture=MSIL">
+      <HintPath>..\packages\ReSharper.Annotations.7.1.3.130415\lib\net\JetBrains.Annotations.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Security" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Adapters\AdapterFaultInformation.cs" />
+    <Compile Include="Adapters\AdapterItem.cs" />
+    <Compile Include="Adapters\GoogleDrive\Constants.cs" />
+    <Compile Include="Adapters\GoogleDrive\DataModel\User.cs" />
+    <Compile Include="Adapters\GoogleDrive\GoogleDriveAdapter.cs" />
+    <Compile Include="Adapters\GoogleDrive\GoogleDriveAdapterItem.cs" />
+    <Compile Include="Adapters\GoogleDrive\GoogleDriveClient.cs" />
+    <Compile Include="Adapters\GoogleDrive\DataModel\Item.cs" />
+    <Compile Include="Adapters\GoogleDrive\GoogleFileDownloadStream.cs" />
+    <Compile Include="Adapters\IChangeTracking.cs" />
+    <Compile Include="Adapters\MicrosoftOneDrive\DataModel\DeletedFacet.cs" />
+    <Compile Include="Adapters\MicrosoftOneDrive\OneDriveAdapterConfiguration.cs" />
+    <Compile Include="Adapters\MicrosoftOneDrive\OneDriveHttpException.cs" />
+    <Compile Include="Adapters\MicrosoftOneDrive\OneDriveTokenRefreshFailedException.cs" />
+    <Compile Include="Adapters\MicrosoftOneDrive\WindowsLiveError.cs" />
+    <Compile Include="Adapters\SyncEntryChangedFlags.cs" />
+    <Compile Include="Configuration\AdapterConfiguration.cs" />
+    <Compile Include="Configuration\AdapterConfigurationConverter.cs" />
+    <Compile Include="Configuration\RelationshipConfiguration.cs" />
+    <Compile Include="Configuration\ThrottlingConfiguration.cs" />
+    <Compile Include="Configuration\TriggerConfiguration.cs" />
+    <Compile Include="TriggerScheduleInterval.cs" />
+    <Compile Include="SyncScopeType.cs" />
+    <Compile Include="OAuth\TokenHelper.cs" />
+    <Compile Include="OAuth\TokenResponse.cs" />
+    <Compile Include="Adapters\IAdapterItem.cs" />
+    <Compile Include="Adapters\IChangeNotification.cs" />
+    <Compile Include="Adapters\AdapterBase.cs" />
+    <Compile Include="Adapters\MicrosoftOneDrive\DataModel\Drive.cs" />
+    <Compile Include="Adapters\MicrosoftOneDrive\DataModel\FileFacet.cs" />
+    <Compile Include="Adapters\MicrosoftOneDrive\DataModel\FileSystemInfoFacet.cs" />
+    <Compile Include="Adapters\MicrosoftOneDrive\DataModel\FolderFacet.cs" />
+    <Compile Include="Adapters\MicrosoftOneDrive\DataModel\HashesFacet.cs" />
+    <Compile Include="Adapters\MicrosoftOneDrive\DataModel\Identity.cs" />
+    <Compile Include="Adapters\MicrosoftOneDrive\DataModel\IdentitySet.cs" />
+    <Compile Include="Adapters\MicrosoftOneDrive\DataModel\Item.cs" />
+    <Compile Include="Adapters\MicrosoftOneDrive\DataModel\ItemContainer.cs" />
+    <Compile Include="Adapters\MicrosoftOneDrive\DataModel\ItemReference.cs" />
+    <Compile Include="Adapters\MicrosoftOneDrive\DataModel\Quota.cs" />
+    <Compile Include="Adapters\MicrosoftOneDrive\DataModel\ThumbnailSet.cs" />
+    <Compile Include="Adapters\MicrosoftOneDrive\DataModel\UserEmails.cs" />
+    <Compile Include="Adapters\MicrosoftOneDrive\DataModel\UserProfile.cs" />
+    <Compile Include="Adapters\MicrosoftOneDrive\OneDriveAdapter.cs" />
+    <Compile Include="Adapters\MicrosoftOneDrive\OneDriveAdapterItem.cs" />
+    <Compile Include="Adapters\MicrosoftOneDrive\OneDriveClient.cs" />
+    <Compile Include="Adapters\MicrosoftOneDrive\OneDriveException.cs" />
+    <Compile Include="Adapters\MicrosoftOneDrive\OneDriveFileDownloadStream.cs" />
+    <Compile Include="Adapters\MicrosoftOneDrive\OneDriveFileUploadStream.cs" />
+    <Compile Include="Adapters\MicrosoftOneDrive\OneDriveUploadSession.cs" />
+    <Compile Include="Adapters\MicrosoftOneDrive\TokenResponse.cs" />
+    <Compile Include="Adapters\WindowsFileSystem\NativeMethodHelpers.cs" />
+    <Compile Include="Adapters\WindowsFileSystem\WindowsFileSystemAdapter.cs" />
+    <Compile Include="Adapters\WindowsFileSystem\WindowsFileSystemFolder.cs" />
+    <Compile Include="Data\AdapterData.cs" />
+    <Compile Include="Data\SyncDatabase.cs" />
+    <Compile Include="Data\SyncEntry.cs" />
+    <Compile Include="Data\SyncHistoryData.cs" />
+    <Compile Include="Data\SyncHistoryEntryData.cs" />
+    <Compile Include="SyncTriggerType.cs" />
+    <Compile Include="Data\SyncTriggerConfiguration.cs" />
+    <Compile Include="Extensions.cs" />
+    <Compile Include="Global.cs" />
+    <Compile Include="NativeMethods.cs" />
+    <Compile Include="NotifyPropertyChangedSlim.cs" />
+    <Compile Include="Pre.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Runtime\AnalyzeAdapterResult.cs" />
+    <Compile Include="Runtime\AnalyzeRelationshipResult.cs" />
+    <Compile Include="Runtime\EntryUpdateInfo.cs" />
+    <Compile Include="Runtime\SyncAnalyzer.cs" />
+    <Compile Include="Runtime\SyncRelationship.cs" />
+    <Compile Include="Runtime\SyncRun.cs" />
+    <Compile Include="Runtime\SyncRunProgressInfo.cs" />
+    <Compile Include="Runtime\ThrottlingManager.cs" />
+    <Compile Include="Utility\CommandLineHelper.cs" />
+    <Compile Include="Utility\PathUtility.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+    <None Include="packages.config" />
+    <None Include="SyncPro.ruleset" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\JsonLog\JsonLog\JsonLog.csproj">
+      <Project>{6028ce31-c870-4ecb-bf55-b4c4d4953b9d}</Project>
+      <Name>JsonLog</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
