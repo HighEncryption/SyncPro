@@ -1,0 +1,517 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{1B87A69A-1070-4948-BA38-F400735E81F6}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>SyncPro.UI</RootNamespace>
+    <AssemblyName>SyncPro.UI</AssemblyName>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <WarningLevel>4</WarningLevel>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>SyncPro.UI.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>SyncPro.UI.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>SyncPro.UI.Startup</StartupObject>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Hardcodet.Wpf.TaskbarNotification, Version=1.0.5.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Hardcodet.NotifyIcon.Wpf.1.0.8\lib\net451\Hardcodet.Wpf.TaskbarNotification.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Windows.Interactivity, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xaml">
+      <RequiredTargetFramework>4.0</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="WindowsBase" />
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="Xceed.Wpf.AvalonDock, Version=3.1.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
+      <HintPath>..\packages\Extended.Wpf.Toolkit.3.1\lib\net40\Xceed.Wpf.AvalonDock.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Xceed.Wpf.AvalonDock.Themes.Aero, Version=3.1.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
+      <HintPath>..\packages\Extended.Wpf.Toolkit.3.1\lib\net40\Xceed.Wpf.AvalonDock.Themes.Aero.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Xceed.Wpf.AvalonDock.Themes.Metro, Version=3.1.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
+      <HintPath>..\packages\Extended.Wpf.Toolkit.3.1\lib\net40\Xceed.Wpf.AvalonDock.Themes.Metro.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Xceed.Wpf.AvalonDock.Themes.VS2010, Version=3.1.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
+      <HintPath>..\packages\Extended.Wpf.Toolkit.3.1\lib\net40\Xceed.Wpf.AvalonDock.Themes.VS2010.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Xceed.Wpf.DataGrid, Version=3.1.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
+      <HintPath>..\packages\Extended.Wpf.Toolkit.3.1\lib\net40\Xceed.Wpf.DataGrid.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Xceed.Wpf.Toolkit, Version=3.1.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
+      <HintPath>..\packages\Extended.Wpf.Toolkit.3.1\lib\net40\Xceed.Wpf.Toolkit.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <ApplicationDefinition Include="App.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </ApplicationDefinition>
+    <Compile Include="Controls\AdapterErrorView.xaml.cs">
+      <DependentUpon>AdapterErrorView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\BrowserAuthenticationWindow.xaml.cs">
+      <DependentUpon>BrowserAuthenticationWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\NavigationTreeView.cs" />
+    <Compile Include="Controls\NavigationTreeViewItem.cs" />
+    <Compile Include="Controls\ValidationContainer.cs" />
+    <Compile Include="Converters\BooleanToVisibilityMultiConverter.cs" />
+    <Compile Include="Converters\ByteArrayToString.cs" />
+    <Compile Include="Converters\CollectionToBooleanConverter.cs" />
+    <Compile Include="Converters\FormatAdapterDisplayName.cs" />
+    <Compile Include="Converters\NullImageConverter.cs" />
+    <Compile Include="Converters\ObjectToVisibilityConverter.cs" />
+    <Compile Include="Converters\StringToBooleanConverter.cs" />
+    <Compile Include="Converters\SyncRunStageToVisiblityConverter.cs" />
+    <Compile Include="DesignTimeData\MainWindowViewModel.cs" />
+    <Compile Include="DesignTimeData\SyncRelationshipViewModel.cs" />
+    <Compile Include="Extensions\DropDownButtonBehavior.cs" />
+    <Compile Include="Extensions\MouseDoubleClick.cs" />
+    <Compile Include="FolderBrowser\FolderBrowserWindow.xaml.cs">
+      <DependentUpon>FolderBrowserWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Framework\Validation\IPropertyValidationRule.cs" />
+    <Compile Include="Framework\Validation\IValidationBase.cs" />
+    <Compile Include="Framework\Validation\PropertyValidationRule.cs" />
+    <Compile Include="Framework\Validation\Rules\ChildElementValidationRuleAttribute.cs" />
+    <Compile Include="Framework\Validation\Rules\StringNotNullorEmptyValidationRuleAttribute.cs" />
+    <Compile Include="Framework\Validation\ValidationBase.cs" />
+    <Compile Include="Framework\Validation\ValidationException.cs" />
+    <Compile Include="Framework\Validation\ValidationExceptionResult.cs" />
+    <Compile Include="Framework\Validation\ValidationResult.cs" />
+    <Compile Include="Navigation\Content\DashboardView.xaml.cs">
+      <DependentUpon>DashboardView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Navigation\Content\SyncFolderView.xaml.cs">
+      <DependentUpon>SyncFolderView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Navigation\Content\SyncRelationshipView.xaml.cs">
+      <DependentUpon>SyncRelationshipView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Navigation\Content\SyncRunHistoryView.xaml.cs">
+      <DependentUpon>SyncRunHistoryView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Navigation\Content\SyncRunView.xaml.cs">
+      <DependentUpon>SyncRunView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Navigation\DashboardViewModel.cs" />
+    <Compile Include="Navigation\MenuCommands\AnalyzeRelationshipMenuCommand.cs" />
+    <Compile Include="Navigation\MenuCommands\BeginSyncMenuCommand.cs" />
+    <Compile Include="Navigation\MenuCommands\CancelOperationMenuCommand.cs" />
+    <Compile Include="Navigation\MenuCommands\ChangeConfigurationMenuCommand.cs" />
+    <Compile Include="Navigation\MenuCommands\ClosePanelMenuCommand.cs" />
+    <Compile Include="Navigation\MenuCommands\NavigationItemMenuCommand.cs" />
+    <Compile Include="Navigation\MenuCommands\ReanalyzeMenuCommand.cs" />
+    <Compile Include="Navigation\MenuCommands\RemoveRelationshipMenuCommand.cs" />
+    <Compile Include="Navigation\MenuCommands\SynchronzieNowMenuCommand.cs" />
+    <Compile Include="Navigation\MenuCommands\ViewSyncRunMenuCommand.cs" />
+    <Compile Include="Navigation\NavigationNodeViewModel.cs" />
+    <Compile Include="Navigation\SyncRunPanelViewModel.cs" />
+    <Compile Include="Navigation\ViewModels\AnalyzeResultsNodeViewModel.cs" />
+    <Compile Include="Navigation\ViewModels\DashboardNodeViewModel.cs" />
+    <Compile Include="Navigation\ViewModels\FilesAndFoldersNodeViewModel.cs" />
+    <Compile Include="Navigation\ViewModels\LazyLoadPlaceholderNodeViewModel.cs" />
+    <Compile Include="Navigation\ViewModels\SearchResultsNodeViewModel.cs" />
+    <Compile Include="Navigation\ViewModels\SyncEntryViewModel.cs" />
+    <Compile Include="Navigation\ViewModels\SyncFoldersNodeViewModel.cs" />
+    <Compile Include="Navigation\ViewModels\SyncHistoryNodeViewModel.cs" />
+    <Compile Include="Navigation\ViewModels\SyncRelationshipNodeViewModel.cs" />
+    <Compile Include="Navigation\ViewModels\SyncRunNodeViewModel.cs" />
+    <Compile Include="Properties\Annotations.cs" />
+    <Compile Include="RelationshipDetails\SyncDetailsWindow.xaml.cs">
+      <DependentUpon>SyncDetailsWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="RelationshipDetails\SyncDetailsWindowViewModel.cs" />
+    <Compile Include="RelationshipEditor\DaysOfWeekSelection.cs" />
+    <Compile Include="RelationshipEditor\EditorWindow.xaml.cs">
+      <DependentUpon>EditorWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="RelationshipEditor\Sections\SyncFilterSection.xaml.cs">
+      <DependentUpon>SyncFilterSection.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="RelationshipEditor\Sections\SyncNameSection.xaml.cs">
+      <DependentUpon>SyncNameSection.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="RelationshipEditor\Sections\SyncPerformanceSection.xaml.cs">
+      <DependentUpon>SyncPerformanceSection.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="RelationshipEditor\Sections\SyncTriggeringSection.xaml.cs">
+      <DependentUpon>SyncTriggeringSection.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="RelationshipEditor\SyncAdaptersPageViewModel.cs" />
+    <Compile Include="RelationshipEditor\Sections\SyncDestinationSection.xaml.cs">
+      <DependentUpon>SyncDestinationSection.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="RelationshipEditor\SyncDestinationPageViewModel.cs" />
+    <Compile Include="RelationshipEditor\SyncFilteringPageViewModel.cs" />
+    <Compile Include="RelationshipEditor\SyncNamePageViewModel.cs" />
+    <Compile Include="RelationshipEditor\SyncPerformancePageViewModel.cs" />
+    <Compile Include="RelationshipEditor\SyncSourcePageViewModel.cs" />
+    <Compile Include="RelationshipEditor\SyncTriggeringPageViewModel.cs" />
+    <Compile Include="Utility\BaseModelPropertyAttribute.cs" />
+    <Compile Include="Utility\FileInfoCache.cs" />
+    <Compile Include="ViewModels\Adapters\GoogleDriveAdapterViewModel.cs" />
+    <Compile Include="ViewModels\Adapters\OneDriveAdapterViewModel.cs" />
+    <Compile Include="ViewModels\EntryUpdateInfoViewModel.cs" />
+    <Compile Include="ViewModels\Adapters\ISyncTargetViewModel.cs" />
+    <Compile Include="ViewModels\Errors\OneDriveTokenExpiredErrorViewModel.cs" />
+    <Compile Include="ViewModels\MainWindowViewModel.cs" />
+    <Compile Include="Startup.cs" />
+    <Compile Include="ThreadingHelper.cs" />
+    <Compile Include="ViewModels\RelationshipEditorViewModel.cs" />
+    <Compile Include="ViewModels\SyncRelationshipViewModel.cs" />
+    <Compile Include="ViewModels\SyncRunViewModel.cs" />
+    <Compile Include="ViewModels\Adapters\SyncAdapterViewModel.cs" />
+    <Compile Include="ViewModels\Adapters\WindowsFileSystemAdapterViewModel.cs" />
+    <Compile Include="ViewModels\WizardPageViewModelBase.cs" />
+    <Compile Include="WebBrowserWindow.cs" />
+    <Page Include="Controls\AdapterErrorView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\ExtendedTextBox.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\BrowserAuthenticationWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\ValidationContainer.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Converters.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="FolderBrowser\FolderBrowserWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="MainWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Compile Include="App.xaml.cs">
+      <DependentUpon>App.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Controls\ExtendedTextBox.cs" />
+    <Compile Include="Controls\TreeListView.cs" />
+    <Compile Include="Controls\TreeListViewItem.cs" />
+    <Compile Include="Converters\BooleanToVisibilityConverter.cs" />
+    <Compile Include="Converters\CollectionToVisibilityConverter.cs" />
+    <Compile Include="Converters\DateTimeToStringConverter.cs" />
+    <Compile Include="Converters\DebugConverter.cs" />
+    <Compile Include="Converters\EnumToBooleanConverter.cs" />
+    <Compile Include="Converters\EnumToVisibilityConverter.cs" />
+    <Compile Include="Converters\FileSizeConverter.cs" />
+    <Compile Include="Converters\LevelToIndentConverter.cs" />
+    <Compile Include="Converters\StringToIntConverter.cs" />
+    <Compile Include="Converters\StringToVisibilityConverter.cs" />
+    <Compile Include="Extensions\TextBoxInputRegExBehaviour.cs" />
+    <Compile Include="FolderBrowser\FolderBrowserViewModel.cs" />
+    <Compile Include="FolderBrowser\FolderViewModel.cs" />
+    <Compile Include="Framework\IResizableWindow.cs" />
+    <Compile Include="Framework\IViewModel.cs" />
+    <Compile Include="Framework\MVVM\DelegatedCommand.cs" />
+    <Compile Include="Framework\MVVM\IRequestClose.cs" />
+    <Compile Include="Framework\MVVM\RequestCloseWindow.cs" />
+    <Compile Include="Framework\MVVM\StyleHelper.cs" />
+    <Compile Include="Framework\NotifyPropertyChangedSlim.cs" />
+    <Compile Include="Framework\TypeHelper.cs" />
+    <Compile Include="Framework\ViewModelBase.cs" />
+    <Compile Include="Framework\WindowResizer.cs" />
+    <Compile Include="LocalizableStrings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>LocalizableStrings.resx</DependentUpon>
+    </Compile>
+    <Compile Include="MainWindow.xaml.cs">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Page Include="Navigation\Content\DashboardView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Navigation\Content\SyncFolderView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Navigation\Content\SyncRelationshipView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Navigation\Content\SyncRunHistoryView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Navigation\Content\SyncRunView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Primitives.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="RelationshipDetails\SyncDetailsWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="RelationshipEditor\EditorWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="RelationshipEditor\Sections\SyncFilterSection.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="RelationshipEditor\Sections\SyncNameSection.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="RelationshipEditor\Sections\SyncPerformanceSection.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="RelationshipEditor\Sections\SyncTriggeringSection.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="RelationshipEditor\StyleResources.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="RelationshipEditor\Sections\SyncDestinationSection.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="RelationshipEditor\TabControlStyle.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="WindowStyles.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="XamlResources.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="NativeMethods.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <EmbeddedResource Include="LocalizableStrings.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>LocalizableStrings.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <None Include="packages.config" />
+    <AppDesigner Include="Properties\" />
+    <Resource Include="Resources\Fonts\Raleway-Bold.ttf" />
+    <Resource Include="Resources\Fonts\Raleway-ExtraBold.ttf" />
+    <Resource Include="Resources\Fonts\Raleway-ExtraLight.ttf" />
+    <Resource Include="Resources\Fonts\Raleway-Heavy.ttf" />
+    <Resource Include="Resources\Fonts\Raleway-Light.ttf" />
+    <Resource Include="Resources\Fonts\Raleway-Medium.ttf" />
+    <Resource Include="Resources\Fonts\Raleway-Regular.ttf" />
+    <Resource Include="Resources\Fonts\Raleway-SemiBold.ttf" />
+    <Resource Include="Resources\Fonts\Raleway-Thin.ttf" />
+    <None Include="SyncPro.UI.ruleset" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Graphics\exclaim_18.png" />
+    <Resource Include="Resources\Graphics\refresh_update.png" />
+    <Resource Include="Resources\Graphics\refresh_update.ico" />
+    <Resource Include="Resources\Graphics\refresh_update_64.png" />
+    <Resource Include="Resources\Graphics\refresh_update_48.png" />
+    <Resource Include="Resources\Graphics\filter_32.png" />
+    <Resource Include="Resources\Graphics\sort2_32.png" />
+    <Resource Include="Resources\Graphics\sort2_20.png" />
+    <Resource Include="Resources\Graphics\alarm_20.png" />
+    <Resource Include="Resources\Graphics\sort_down_20.png" />
+    <Resource Include="Resources\Graphics\sort_up_20.png" />
+    <Resource Include="Resources\Graphics\gear_20.png" />
+    <Resource Include="Resources\Graphics\filter_20.png" />
+    <Resource Include="Resources\Graphics\SyncPro 1.0.ico" />
+    <Resource Include="Resources\Graphics\ok_20.png" />
+    <Resource Include="Resources\Graphics\clock_20.png" />
+    <Resource Include="Resources\ProviderLogos\amazonS3.png" />
+    <Resource Include="Resources\ProviderLogos\dropbox.png" />
+    <Resource Include="Resources\ProviderLogos\onedrive.png" />
+    <Resource Include="Resources\ProviderLogos\windows_azure.png" />
+    <Resource Include="Resources\Graphics\help_16.png" />
+    <Resource Include="Resources\ProviderLogos\microsoft_windows.png" />
+    <Resource Include="Resources\Graphics\folder_16.png" />
+    <Resource Include="Resources\Graphics\folder_open_16.png" />
+    <Resource Include="Resources\Graphics\icon_exclaim.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\JsonLog\JsonLog\JsonLog.csproj">
+      <Project>{6028CE31-C870-4ECB-BF55-B4C4D4953B9D}</Project>
+      <Name>JsonLog</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SyncPro.Core\SyncPro.Core.csproj">
+      <Project>{DE859CDC-6879-4C28-AB26-354806276E04}</Project>
+      <Name>SyncPro.Core</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Graphics\Microsoft-OneDrive-icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\ProviderLogos\google_drive.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Graphics\add_24.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Graphics\gear_16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Graphics\add_16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Graphics\find_16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Graphics\sort2_16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Graphics\history_16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Graphics\tools_16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Graphics\delete_16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Graphics\search_16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Graphics\select_invert_16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Graphics\refresh_update_16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Graphics\close_window_16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Graphics\report_open_16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Graphics\history_open_16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Graphics\list_16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Graphics\list_error_16.png" />
+    <Resource Include="Resources\Graphics\list_ok_16.png" />
+    <Resource Include="Resources\Graphics\list_warn_16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Graphics\list_help_16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="version.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Graphics\stop_16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Graphics\rename_20.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Graphics\exclaim_14.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\ProviderLogos\box.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Graphics\signal_4_20.png" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PreBuildEvent>git describe --always --dirty &gt; $(ProjectDir)\version.txt</PreBuildEvent>
+  </PropertyGroup>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

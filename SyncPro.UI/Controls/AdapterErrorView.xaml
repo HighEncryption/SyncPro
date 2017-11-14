@@ -1,0 +1,38 @@
+﻿<UserControl x:Class="SyncPro.UI.Controls.AdapterErrorView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:adapters="clr-namespace:SyncPro.UI.ViewModels.Adapters"
+             xmlns:microsoftOneDrive="clr-namespace:SyncPro.Adapters.MicrosoftOneDrive;assembly=SyncPro.Core"
+             xmlns:controls="clr-namespace:SyncPro.UI.Controls"
+             mc:Ignorable="d" 
+             d:DataContext="{d:DesignInstance adapters:SyncAdapterViewModel}">
+    <Grid>
+        <Grid.Style>
+            <Style TargetType="Grid">
+                <Setter Property="Visibility" Value="Collapsed" />
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding Path=AdapterBase.IsFaulted}" Value="True" >
+                        <Setter Property="Visibility" Value="Visible" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+        </Grid.Style>
+
+        <ContentControl Content="{Binding Path=AdapterBase.FaultInformation}">
+            <ContentControl.Resources>
+                <DataTemplate DataType="{x:Type microsoftOneDrive:OneDriveRefreshTokenExpiredFault}">
+                    <StackPanel>
+                        <TextBlock>
+                            <Run Foreground="#E23116" Text="The Windows Live token has expired. You will need to sign in before files can be synchronized." />
+                            <Hyperlink Command="{Binding RelativeSource={RelativeSource AncestorType=controls:AdapterErrorView}, Path=DataContext.(adapters:OneDriveAdapterViewModel.SignInCommand)}">
+                                <Run Text="Click here to sign in again." />
+                            </Hyperlink>
+                        </TextBlock>
+                    </StackPanel>
+                </DataTemplate>
+            </ContentControl.Resources>
+        </ContentControl>
+    </Grid>
+</UserControl>

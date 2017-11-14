@@ -1,0 +1,300 @@
+﻿<UserControl x:Class="SyncPro.UI.RelationshipEditor.Sections.SyncTriggeringSection"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:relationshipEditor="clr-namespace:SyncPro.UI.RelationshipEditor"
+             xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+             xmlns:extensions="clr-namespace:SyncPro.UI.Extensions"
+             xmlns:data="clr-namespace:SyncPro.Data;assembly=SyncPro.Core"
+             xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+             xmlns:syncPro="clr-namespace:SyncPro;assembly=SyncPro.Core"
+             mc:Ignorable="d" 
+             d:DataContext="{d:DesignInstance relationshipEditor:SyncTriggeringPageViewModel}">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/RelationshipEditor/StyleResources.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <Style TargetType="TextBlock" BasedOn="{StaticResource ItemHeaderStyleCore}" x:Key="RadioButtonItemTextStyle">
+                <Setter Property="HorizontalAlignment" Value="Left" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+            
+            <Style TargetType="TextBlock" BasedOn="{StaticResource ItemHeaderStyle}" x:Key="LocalItemHeaderStyle">
+                <Setter Property="VerticalAlignment" Value="Top" />
+                <Setter Property="Padding" Value="0,0,8,4" />
+            </Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <StackPanel Margin="0,8,0,0" UseLayoutRounding="True">
+        <Grid HorizontalAlignment="Left">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" MinWidth="140" />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Column="0" Grid.Row="0" Style="{StaticResource ItemHeaderStyle}" Text="When To Sync" />
+
+            <StackPanel Grid.Column="1" Grid.Row="0" Orientation="Horizontal">
+                <RadioButton VerticalContentAlignment="Center" 
+                             IsChecked="{Binding Path=SelectedTriggering, Converter={StaticResource EnumToBoolean}, ConverterParameter=Continuous}">
+                    <TextBlock Style="{StaticResource RadioButtonItemTextStyle}" Text="Continuously" />
+                </RadioButton>
+                <RadioButton VerticalContentAlignment="Center" Margin="16,0,0,0"
+                             IsChecked="{Binding Path=SelectedTriggering, Converter={StaticResource EnumToBoolean}, ConverterParameter=Scheduled}">
+                    <TextBlock Style="{StaticResource RadioButtonItemTextStyle}" Text="Scheduled" />
+                </RadioButton>
+                <RadioButton VerticalContentAlignment="Center" Margin="16,0,0,0"
+                             IsChecked="{Binding Path=SelectedTriggering, Converter={StaticResource EnumToBoolean}, ConverterParameter=Manual}">
+                    <TextBlock Style="{StaticResource RadioButtonItemTextStyle}" Text="Manual" />
+                </RadioButton>
+                <RadioButton VerticalContentAlignment="Center" Margin="16,0,0,0"
+                             IsChecked="{Binding Path=SelectedTriggering, Converter={StaticResource EnumToBoolean}, ConverterParameter=DeviceInsertion}">
+                    <TextBlock Style="{StaticResource RadioButtonItemTextStyle}" Text="Device" />
+                </RadioButton>
+            </StackPanel>
+
+            <TextBlock Grid.Column="1" Grid.Row="1" Text="{Binding Path=SelectedTriggeringMessage}" Margin="0,8,0,0" Width="450"
+                       HorizontalAlignment="Left" TextWrapping="Wrap" />
+
+            <!-- 
+                Section shown when "Scheduled" is selected
+            -->
+            <TextBlock Grid.Column="0" Grid.Row="2" Style="{StaticResource LocalItemHeaderStyle}" Text="How Often" Margin="0,24,0,0"
+                       Visibility="{Binding Path=SelectedTriggering, Converter={StaticResource EnumToVisibility}, ConverterParameter=Scheduled}"/>
+
+            <StackPanel Grid.Column="1" Grid.Row="2" Orientation="Horizontal" Margin="0,20,0,0"
+                        Visibility="{Binding Path=SelectedTriggering, Converter={StaticResource EnumToVisibility}, ConverterParameter=Scheduled}">
+                <RadioButton VerticalContentAlignment="Center" 
+                             IsChecked="{Binding Path=SelectedScheduleInterval, Converter={StaticResource EnumToBoolean}, ConverterParameter=Hourly}">
+                    <TextBlock Style="{StaticResource RadioButtonItemTextStyle}" Text="Hourly" />
+                </RadioButton>
+                <RadioButton VerticalContentAlignment="Center" Margin="16,0,0,0"
+                             IsChecked="{Binding Path=SelectedScheduleInterval, Converter={StaticResource EnumToBoolean}, ConverterParameter=Daily}">
+                    <TextBlock Style="{StaticResource RadioButtonItemTextStyle}" Text="Daily" />
+                </RadioButton>
+                <RadioButton VerticalContentAlignment="Center" Margin="16,0,0,0"
+                             IsChecked="{Binding Path=SelectedScheduleInterval, Converter={StaticResource EnumToBoolean}, ConverterParameter=Weekly}">
+                    <TextBlock Style="{StaticResource RadioButtonItemTextStyle}" Text="Weekly" />
+                </RadioButton>
+                <RadioButton VerticalContentAlignment="Center" Margin="16,0,0,0"
+                             IsChecked="{Binding Path=SelectedScheduleInterval, Converter={StaticResource EnumToBoolean}, ConverterParameter=Monthly}">
+                    <TextBlock Style="{StaticResource RadioButtonItemTextStyle}" Text="Monthly" />
+                </RadioButton>
+            </StackPanel>
+
+            <TextBlock Grid.Column="0" Grid.Row="3" Text="Start Time" Margin="0,27,0,0">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock" BasedOn="{StaticResource LocalItemHeaderStyle}">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding Path=SelectedTriggering}" Value="{x:Static syncPro:SyncTriggerType.Scheduled}" />
+                                    <Condition Binding="{Binding Path=SelectedScheduleInterval}" Value="{x:Static data:SyncScheduleInterval.Hourly}" />
+                                </MultiDataTrigger.Conditions>
+                                <Setter Property="Visibility" Value="Visible" />
+                            </MultiDataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+
+            <StackPanel Grid.Column="1" Grid.Row="3" Margin="0,20,0,0" Orientation="Horizontal">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding Path=SelectedTriggering}" Value="{x:Static syncPro:SyncTriggerType.Scheduled}" />
+                                    <Condition Binding="{Binding Path=SelectedScheduleInterval}" Value="{x:Static data:SyncScheduleInterval.Hourly}" />
+                                </MultiDataTrigger.Conditions>
+                                <Setter Property="Visibility" Value="Visible" />
+                            </MultiDataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+
+                <TextBlock TextWrapping="NoWrap" Text="Synchronize every " VerticalAlignment="Center" />
+                <!--<TextBox Width="26" Margin="4,0,4,2" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" 
+                         Text="{Binding Path=HourlyIntervalValue}" Style="{StaticResource ItemTextBoxStyle}">
+                    <i:Interaction.Behaviors>
+                        <extensions:TextBoxInputRegExBehaviour RegularExpression="^\d+$" MaxLength="2" EmptyValue="1" />
+                    </i:Interaction.Behaviors>
+                </TextBox>-->
+                <xctk:IntegerUpDown Minimum="1" Maximum="48" Text="{Binding Path=HourlyIntervalValue}"
+                                    Width="40" Margin="4,0,4,2"  />
+                <TextBlock TextWrapping="NoWrap" Text="hour(s) at " VerticalAlignment="Center" />
+                
+                <!--<TextBox Width="26" Margin="4,0,4,2" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Text="{Binding Path=HourlyMinutesPastSyncTime}" >
+                    <i:Interaction.Behaviors>
+                        <extensions:TextBoxInputRegExBehaviour RegularExpression="^\d+$" MaxLength="2" EmptyValue="1" />
+                    </i:Interaction.Behaviors>
+                </TextBox>-->
+                <xctk:IntegerUpDown Minimum="1" Maximum="59" Text="{Binding Path=HourlyMinutesPastSyncTime}"
+                                    Width="40" Margin="4,0,4,2"  />
+
+                <TextBlock TextWrapping="NoWrap" Text="minutes past the hour." VerticalAlignment="Center" />
+            </StackPanel>
+
+            <TextBlock Grid.Column="0" Grid.Row="3" Text="Start Time" Margin="0,27,0,0">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock" BasedOn="{StaticResource LocalItemHeaderStyle}">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding Path=SelectedTriggering}" Value="{x:Static syncPro:SyncTriggerType.Scheduled}" />
+                                    <Condition Binding="{Binding Path=SelectedScheduleInterval}" Value="{x:Static data:SyncScheduleInterval.Daily}" />
+                                </MultiDataTrigger.Conditions>
+                                <Setter Property="Visibility" Value="Visible" />
+                            </MultiDataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+
+            <StackPanel Grid.Column="1" Grid.Row="3" Margin="0,20,0,0" Orientation="Horizontal">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding Path=SelectedTriggering}" Value="{x:Static syncPro:SyncTriggerType.Scheduled}" />
+                                    <Condition Binding="{Binding Path=SelectedScheduleInterval}" Value="{x:Static data:SyncScheduleInterval.Daily}" />
+                                </MultiDataTrigger.Conditions>
+                                <Setter Property="Visibility" Value="Visible" />
+                            </MultiDataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+
+                <TextBlock TextWrapping="NoWrap" Text="Synchronize every " VerticalAlignment="Center" />
+                <!--<TextBox Width="26" Margin="4,0,4,2" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Text="{Binding Path=DailyIntervalValue}" />-->
+                <xctk:IntegerUpDown Minimum="1" Maximum="31" Text="{Binding Path=DailyIntervalValue}"
+                                    Width="40" Margin="4,0,4,2"  />
+
+                <TextBlock TextWrapping="NoWrap" Text="day(s) at " VerticalAlignment="Center" />
+                <xctk:DateTimePicker Format="ShortTime" Width="74" Margin="4,0,4,2" ShowDropDownButton="False" />
+                <!--<TextBox Width="26" Margin="4,0,4,2" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />-->
+                <!--<TextBlock TextWrapping="NoWrap" Text="minutes past the hour." VerticalAlignment="Center" />-->
+            </StackPanel>
+
+            <TextBlock Grid.Column="0" Grid.Row="3" Text="Start Time" VerticalAlignment="Top" Margin="0,27,0,0">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock" BasedOn="{StaticResource ItemHeaderStyle}">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding Path=SelectedTriggering}" Value="{x:Static syncPro:SyncTriggerType.Scheduled}" />
+                                    <Condition Binding="{Binding Path=SelectedScheduleInterval}" Value="{x:Static data:SyncScheduleInterval.Weekly}" />
+                                </MultiDataTrigger.Conditions>
+                                <Setter Property="Visibility" Value="Visible" />
+                            </MultiDataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+
+            <StackPanel Grid.Column="1" Grid.Row="3" Margin="0,20,0,0" Orientation="Horizontal">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding Path=SelectedTriggering}" Value="{x:Static syncPro:SyncTriggerType.Scheduled}" />
+                                    <Condition Binding="{Binding Path=SelectedScheduleInterval}" Value="{x:Static data:SyncScheduleInterval.Weekly}" />
+                                </MultiDataTrigger.Conditions>
+                                <Setter Property="Visibility" Value="Visible" />
+                            </MultiDataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+
+                <TextBlock TextWrapping="NoWrap" Text="Synchronize every " VerticalAlignment="Center" />
+                <TextBox Width="26" Margin="4,0,4,2" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+                <TextBlock TextWrapping="NoWrap" Text="week(s) at " VerticalAlignment="Center" />
+                <TextBox Width="26" Margin="4,0,4,2" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+                <TextBlock TextWrapping="NoWrap" Text="on" VerticalAlignment="Center" />
+            </StackPanel>
+
+            <WrapPanel Grid.Column="1" Grid.Row="4" Margin="0,20,0,0" Width="500" HorizontalAlignment="Left">
+                <WrapPanel.Resources>
+                    <Style TargetType="CheckBox" BasedOn="{StaticResource {x:Type CheckBox}}">
+                        <Setter Property="Margin" Value="0,3,16,3" />
+                        <Setter Property="VerticalContentAlignment" Value="Center" />
+                        <Setter Property="MinWidth" Value="100" />
+                    </Style>
+                </WrapPanel.Resources>
+                <WrapPanel.Style>
+                    <Style TargetType="WrapPanel">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding Path=SelectedTriggering}" Value="{x:Static syncPro:SyncTriggerType.Scheduled}" />
+                                    <Condition Binding="{Binding Path=SelectedScheduleInterval}" Value="{x:Static data:SyncScheduleInterval.Weekly}" />
+                                </MultiDataTrigger.Conditions>
+                                <Setter Property="Visibility" Value="Visible" />
+                            </MultiDataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </WrapPanel.Style>
+                <CheckBox IsChecked="{Binding Path=WeeklyDaysOfWeekSelection.Monday}">
+                    <TextBlock Style="{StaticResource RadioButtonItemTextStyle}" Text="Monday" />
+                </CheckBox>
+                <CheckBox IsChecked="{Binding Path=WeeklyDaysOfWeekSelection.Tuesday}">
+                    <TextBlock Style="{StaticResource RadioButtonItemTextStyle}" Text="Tuesday" />
+                </CheckBox>
+                <CheckBox IsChecked="{Binding Path=WeeklyDaysOfWeekSelection.Wednesday}">
+                    <TextBlock Style="{StaticResource RadioButtonItemTextStyle}" Text="Wednesday" />
+                </CheckBox>
+                <CheckBox IsChecked="{Binding Path=WeeklyDaysOfWeekSelection.Thursday}">
+                    <TextBlock Style="{StaticResource RadioButtonItemTextStyle}" Text="Thursday" />
+                </CheckBox>
+                <CheckBox IsChecked="{Binding Path=WeeklyDaysOfWeekSelection.Friday}">
+                    <TextBlock Style="{StaticResource RadioButtonItemTextStyle}" Text="Friday" />
+                </CheckBox>
+                <CheckBox IsChecked="{Binding Path=WeeklyDaysOfWeekSelection.Saturday}">
+                    <TextBlock Style="{StaticResource RadioButtonItemTextStyle}" Text="Saturday" />
+                </CheckBox>
+                <CheckBox IsChecked="{Binding Path=WeeklyDaysOfWeekSelection.Sunday}">
+                    <TextBlock Style="{StaticResource RadioButtonItemTextStyle}" Text="Sunday" />
+                </CheckBox>
+            </WrapPanel>
+
+            <!-- 
+                Section shown when "Triggered" is selected
+            -->
+            <TextBlock Grid.Column="0" Grid.Row="2" Style="{StaticResource ItemHeaderStyle}" Text="How Often" VerticalAlignment="Top" Margin="0,24,0,0"
+                       Visibility="{Binding Path=SelectedTriggering, Converter={StaticResource EnumToVisibility}, ConverterParameter=DeviceInsertion}"/>
+
+            <StackPanel Grid.Column="1" Grid.Row="2" Orientation="Vertical" Margin="0,20,0,0"
+                        Visibility="{Binding Path=SelectedTriggering, Converter={StaticResource EnumToVisibility}, ConverterParameter=DeviceInsertion}">
+                <RadioButton VerticalContentAlignment="Center" 
+                             IsChecked="{Binding Path=SelectedEventTriggering, Converter={StaticResource EnumToBoolean}, ConverterParameter=Manual}">
+                    <TextBlock Style="{StaticResource RadioButtonItemTextStyle}" Text="Only when started by the user" />
+                </RadioButton>
+                <RadioButton VerticalContentAlignment="Center" Margin="0,16,0,0"
+                             IsChecked="{Binding Path=SelectedEventTriggering, Converter={StaticResource EnumToBoolean}, ConverterParameter=DeviceInsertion}">
+                    <TextBlock Style="{StaticResource RadioButtonItemTextStyle}" Text="When the device {0} is connected" />
+                </RadioButton>
+            </StackPanel>
+        </Grid>
+    </StackPanel>
+</UserControl>

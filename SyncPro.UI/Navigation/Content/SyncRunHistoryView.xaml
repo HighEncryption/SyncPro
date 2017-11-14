@@ -1,0 +1,117 @@
+﻿<UserControl x:Class="SyncPro.UI.Navigation.Content.SyncRunHistoryView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:extensions="clr-namespace:SyncPro.UI.Extensions"
+             xmlns:viewModels="clr-namespace:SyncPro.UI.ViewModels"
+             xmlns:content="clr-namespace:SyncPro.UI.Navigation.Content"
+             mc:Ignorable="d" 
+             d:DesignHeight="500" d:DesignWidth="500"
+             d:DataContext="{d:DesignInstance viewModels:SyncRelationshipViewModel}">
+    <UserControl.Resources>
+        <DataTemplate x:Key="StartTimeCellTemplate">
+            <DockPanel Name="dockMe" Margin="0">
+                <TextBlock Text="{Binding Path=StartTime, Converter={StaticResource DateTimeToString}, ConverterParameter='G'}"
+                           Foreground="Black" />
+            </DockPanel>
+        </DataTemplate>
+
+        <DataTemplate x:Key="ItemsCopiedCellTemplate">
+            <DockPanel Name="dockMe" Margin="0">
+                <TextBlock Text="{Binding Path=ItemsCopiedDisplayString, ConverterParameter='G'}"
+                           Foreground="Black" />
+            </DockPanel>
+        </DataTemplate>
+
+        <DataTemplate x:Key="DescriptionCellTemplate">
+            <DockPanel Name="dockMe" Margin="0">
+                <TextBlock Text="{Binding Path=StatusDescription, ConverterParameter='G'}"
+                           Foreground="Black" />
+            </DockPanel>
+        </DataTemplate>
+
+        <Style x:Key="GridViewColumnHeaderGripper" TargetType="{x:Type Thumb}">
+            <Setter Property="Canvas.Right" Value="-3"/>
+            <Setter Property="Width" Value="6"/>
+            <Setter Property="Height" Value="{Binding ActualHeight, RelativeSource={RelativeSource TemplatedParent}}"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Thumb}">
+                        <Border Background="Transparent" Padding="{TemplateBinding Padding}">
+                            <Rectangle Fill="{TemplateBinding Background}" HorizontalAlignment="Center" Width="1"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <Style x:Key="CustomHeaderStyle" TargetType="{x:Type GridViewColumnHeader}">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type GridViewColumnHeader}">
+                        <Grid>
+                            <Border Name="cellBorder" BorderThickness="0,0,0,1" BorderBrush="#c7c7c7" Padding="4,0,0,4" Margin="0,0,0,4">
+                                <TextBlock Text="{TemplateBinding Content}" Width="{TemplateBinding Width}" Margin="0,2"
+                                           VerticalAlignment="Center" HorizontalAlignment="Left" Foreground="#7d7d7d" />
+                            </Border>
+                            <Canvas>
+                                <Thumb x:Name="PART_HeaderGripper" Style="{StaticResource GridViewColumnHeaderGripper}"/>
+                            </Canvas>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+    
+    <Grid Margin="18,0">
+        <ListView ItemsSource="{Binding Path=SyncRunHistory}" SelectionMode="Single" BorderThickness="0" Margin="0,4,0,0" 
+                  SelectedItem="{Binding Path=SelectedSyncRun}">
+            <ListView.Resources>
+                <Style TargetType="{x:Type ListViewItem}">
+                    <!--<Setter Property="extensions:MouseDoubleClick.Command" 
+                            Value="{Binding Path=(viewModels:SyncRunViewModel.ViewSyncRunCommand)}" />-->
+                </Style>
+            </ListView.Resources>
+            <ListView.ItemContainerStyle>
+                <Style TargetType="{x:Type ListViewItem}">
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="{x:Type ListViewItem}">
+                                <Border Background="{TemplateBinding Background}" BorderThickness="0">
+                                    <GridViewRowPresenter Margin="0,4" />
+                                </Border>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                    <Setter Property="extensions:MouseDoubleClick.Command" 
+                            Value="{Binding Path=(viewModels:SyncRunViewModel.ViewSyncRunCommand)}" />
+                    <Style.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="#e8e8e8" />
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter Property="Background" Value="LightGray" />
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </ListView.ItemContainerStyle>
+            <ListView.View>
+                <GridView ColumnHeaderContainerStyle="{StaticResource CustomHeaderStyle}" AllowsColumnReorder="False">
+                    <GridViewColumn Header="Start Time" Width="160" CellTemplate="{StaticResource StartTimeCellTemplate}" />
+                    <GridViewColumn Header="Items Copied" Width="140" CellTemplate="{StaticResource ItemsCopiedCellTemplate}" />
+                    <GridViewColumn Header="Status" Width="160" CellTemplate="{StaticResource DescriptionCellTemplate}" />
+                </GridView>
+            </ListView.View>
+        </ListView>
+
+        <Canvas Visibility="{Binding Path=SyncRunHistory, Converter={StaticResource CollectionToVisibiltyCollapsedReversed}}"
+                    VerticalAlignment="Center" HorizontalAlignment="Center">
+            <TextBlock Text="No sync runs" />
+        </Canvas>
+    </Grid>
+</UserControl>

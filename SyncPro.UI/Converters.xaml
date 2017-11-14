@@ -1,0 +1,35 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:converters="clr-namespace:SyncPro.UI.Converters">
+    <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibility" />
+    <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityCollapsed" CollapsedWhenFalse="True" />
+    <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityReversed" ReverseValue="True" />
+    <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityCollapsedReversed" CollapsedWhenFalse="True" ReverseValue="True" />
+
+    <converters:StringToVisibilityConverter x:Key="StringToVisibilityCollapsed" CollapsedWhenFalse="True" />
+    <converters:StringToVisibilityConverter x:Key="StringToVisibilityCollapsedReversed" CollapsedWhenFalse="True" ReverseValue="True" />
+
+    <converters:StringToBooleanConverter x:Key="StringToBoolean" />
+    <converters:StringToBooleanConverter x:Key="StringToBooleanReversed" ReverseValue="True" />
+
+    <converters:CollectionToVisibilityConverter x:Key="CollectionToVisibiltyCollapsed"  EmptyIsCollapsed="True" />
+    <converters:CollectionToVisibilityConverter x:Key="CollectionToVisibiltyCollapsedReversed"  EmptyIsCollapsed="True" ReverseValue="True" />
+
+    <converters:ObjectToVisibilityConverter x:Key="ObjectToVisibility" />
+    <converters:ObjectToVisibilityConverter x:Key="ObjectToVisibilityCollapsed" CollapsedWhenFalse="True" />
+
+    <converters:EnumToBooleanConverter x:Key="EnumToBoolean" />
+
+    <converters:EnumToVisibilityConverter x:Key="EnumToVisibility" />
+
+    <converters:DateTimeToStringConverter x:Key="DateTimeToString" />
+
+    <converters:FileSizeConverter x:Key="FileSize" FormatType="2" />
+    <converters:FileSizeConverter x:Key="FileSize2" FormatType="2" />
+
+    <converters:ByteArrayToString x:Key="ByteArrayToString" />
+
+    <converters:SyncRunStageToVisiblityConverter x:Key="SyncRunStageToVisiblity" />
+    
+    <converters:NullImageConverter x:Key="NullImageConverter" />
+</ResourceDictionary>

@@ -1,0 +1,65 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:controls="clr-namespace:SyncPro.UI.Controls">
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="/XamlResources.xaml" />
+        <ResourceDictionary Source="/Converters.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+
+    <Style TargetType="{x:Type controls:ValidationContainer}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type controls:ValidationContainer}">
+                    <Border BorderThickness="0" Margin="{TemplateBinding Margin}">
+                        <Grid Margin="0,0,0,-17">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <Border Grid.Column="0" Grid.Row="0" BorderThickness="0,0,0,2">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=controls:ValidationContainer}, Path=HasValidationErrors}"
+                                                         Value="True">
+                                                <Setter Property="BorderBrush" Value="Red" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+
+                                        <Setter Property="BorderBrush" Value="Transparent" />
+                                    </Style>
+                                </Border.Style>
+                                <ContentPresenter Content="{TemplateBinding Content}" />
+                            </Border>
+
+                            <Image Grid.Column="1" Grid.Row="0" 
+                                   Source="/Resources/Graphics/exclaim_14.png" Height="14" UseLayoutRounding="True" SnapsToDevicePixels="True" 
+                                   Visibility="{TemplateBinding HasValidationErrors, Converter={StaticResource BooleanToVisibilityCollapsed}}"
+                                   VerticalAlignment="Center" Margin="2,0,0,0">
+                                <Image.ToolTip>
+                                    <ItemsControl ItemsSource="{TemplateBinding Errors}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Path=Message}" Foreground="Red"/>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </Image.ToolTip>
+                            </Image>
+
+                            <TextBlock Grid.Column="0" Grid.Row="1" Margin="0,-1,0,0"
+                                       Text="Required Field" FontSize="11" Foreground="#EE4444" HorizontalAlignment="Right"
+                                       Visibility="{TemplateBinding IsRequired, Converter={StaticResource BooleanToVisibility}}"/>
+                        </Grid>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>

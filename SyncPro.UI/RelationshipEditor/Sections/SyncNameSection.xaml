@@ -1,0 +1,43 @@
+﻿<UserControl x:Class="SyncPro.UI.RelationshipEditor.Sections.SyncNameSection"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:relationshipEditor="clr-namespace:SyncPro.UI.RelationshipEditor"
+             xmlns:controls="clr-namespace:SyncPro.UI.Controls"
+             mc:Ignorable="d" 
+             d:DataContext="{d:DesignInstance relationshipEditor:SyncNamePageViewModel}">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/RelationshipEditor/StyleResources.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <StackPanel Margin="0,8,0,0">
+        <Grid HorizontalAlignment="Left">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" MinWidth="140" />
+                <ColumnDefinition Width="4"/>
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Column="0" Grid.Row="0" Style="{StaticResource ItemHeaderStyle}" Text="Name" />
+            <controls:ValidationContainer Grid.Column="2" Grid.Row="0" Margin="0,3,0,6" ValidationPropertyName="Name" IsRequired="True">
+                <TextBox Style="{StaticResource ItemTextBoxStyle}" Text="{Binding Path=Name, UpdateSourceTrigger=PropertyChanged}" 
+                         Width="250" HorizontalAlignment="Left" />
+            </controls:ValidationContainer>
+
+            <TextBlock Grid.Column="0" Grid.Row="1" Style="{StaticResource ItemHeaderStyle}" Text="Description" Margin="0,16,0,3" Padding="0,8,8,0" VerticalAlignment="Top" />
+            <TextBox Grid.Column="2" Grid.Row="1" Style="{StaticResource ItemTextBoxStyle}"  Margin="0,16,0,3" Text="{Binding Path=Description}" HorizontalAlignment="Left"
+                     Height="96" TextWrapping="Wrap"/>
+        </Grid>
+    </StackPanel>
+</UserControl>

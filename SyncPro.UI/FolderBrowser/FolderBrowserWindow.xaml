@@ -1,0 +1,85 @@
+﻿<mvvm:RequestCloseWindow x:Class="SyncPro.UI.FolderBrowser.FolderBrowserWindow"
+                         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                         xmlns:mvvm="clr-namespace:SyncPro.UI.Framework.MVVM"
+                         xmlns:folderBrowser="clr-namespace:SyncPro.UI.FolderBrowser"
+                         mc:Ignorable="d"
+                         Height="500" Width="440"
+                         Style="{DynamicResource ChromelessWindowStyle}"
+                         Title="Browse For Folder"
+                         Icon="/Resources/Graphics/SyncPro 1.0.ico" 
+                         d:DataContext="{d:DesignInstance folderBrowser:FolderBrowserViewModel}">
+    <mvvm:RequestCloseWindow.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Converters.xaml" />
+                <ResourceDictionary Source="/WindowStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </mvvm:RequestCloseWindow.Resources>
+    <Grid Margin="8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="{Binding Path=Message}" Margin="0,0,0,12" />
+
+        <TreeView Grid.Row="1" ItemsSource="{Binding Path=RootFolders}" BorderBrush="#d0d0d0">
+            <TreeView.Resources>
+                <HierarchicalDataTemplate DataType="{x:Type folderBrowser:FolderViewModel}" ItemsSource="{Binding Path=SubFolders}">
+                    <StackPanel Orientation="Horizontal" Margin="0,1" UseLayoutRounding="True">
+                        <Image Width="16" Source="{Binding Path=IconSource}">
+                            <Image.Style>
+                                <Style TargetType="Image">
+                                    <Setter Property="Opacity" Value="1" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Path=IsHidden}" Value="True">
+                                            <Setter Property="Opacity" Value="0.5" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Image.Style>
+                        </Image>
+                        <TextBlock Text="{Binding Path=DisplayName}" VerticalAlignment="Center" Margin="2,0,0,0">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Path=ErrorMessage, Converter={StaticResource StringToBoolean}}" Value="True">
+                                            <Setter Property="Foreground" Value="DarkGray" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <Image Width="16" Source="/Resources/Graphics/icon_exclaim.png" Margin="2,0,0,0"
+                               Visibility="{Binding Path=ErrorMessage, Converter={StaticResource StringToVisibilityCollapsed}}"
+                               ToolTip="{Binding Path=ErrorMessage}" />
+                    </StackPanel>
+
+                </HierarchicalDataTemplate>
+            </TreeView.Resources>
+            <TreeView.ItemContainerStyle>
+                <Style TargetType="TreeViewItem">
+                    <Setter Property="IsExpanded" Value="{Binding Path=IsExpanded, Mode=TwoWay}" />
+                    <Setter Property="IsSelected" Value="{Binding Path=IsSelected, Mode=TwoWay}" />
+                </Style>
+            </TreeView.ItemContainerStyle>
+        </TreeView>
+
+        <Border Grid.Row="2" Background="{StaticResource WindowBackgroundBrush}"
+                BorderThickness="0" BorderBrush="#606060">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Width="80" Height="24" Margin="6" Command="{Binding Path=OKCommand}">
+                    <TextBlock Text="OK" />
+                </Button>
+                <Button Width="80" Height="24" Margin="6" Command="{Binding Path=CancelCommand}">
+                    <TextBlock Text="Cancel" />
+                </Button>
+            </StackPanel>
+        </Border>
+    </Grid>
+</mvvm:RequestCloseWindow>

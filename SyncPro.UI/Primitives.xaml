@@ -1,0 +1,64 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:system="clr-namespace:System;assembly=mscorlib">
+    <Style x:Key="FocusVisual">
+        <Setter Property="Control.Template">
+            <Setter.Value>
+                <ControlTemplate>
+                    <Rectangle Margin="2" SnapsToDevicePixels="true" Stroke="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" StrokeThickness="1" StrokeDashArray="1 2"/>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!--<Color x:Key="WindowBackgroundColor">#f0f0f0</Color>-->
+    <!--<Color x:Key="WindowBackgroundColor">#e8e8e8</Color>-->
+    <Color x:Key="WindowBackgroundColor">#FFFFFF</Color>
+    <Color x:Key="WindowAccentColor">#A0A0A0</Color>
+    <Color x:Key="WindowBorderColor">#888888</Color>
+    <Color x:Key="DisabledForegroundColor">#C0C0C0</Color>
+    <Color x:Key="HyperlinkForegroundColor">#518CC2</Color>
+    <Color x:Key="HyperlinkPressedForegroundColor">#315472</Color>
+    <Color x:Key="HeaderTextForegroundColor">#B0B0B0</Color>
+    <Color x:Key="ScrollbarTrackColor">#D9D9D9</Color>
+    <Color x:Key="ScrollbarThumbColor">#595959</Color>
+    <Color x:Key="MainWindowColor1">#222</Color>
+
+    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="{StaticResource WindowBackgroundColor}" />
+    <SolidColorBrush x:Key="WindowAccentBrush" Color="{StaticResource WindowAccentColor}" />
+    <SolidColorBrush x:Key="WindowBorderBrush" Color="{StaticResource WindowBorderColor}" />
+    <SolidColorBrush x:Key="DisabledForegroundBrush" Color="{StaticResource DisabledForegroundColor}" />
+    <SolidColorBrush x:Key="HyperlinkForegroundBrush" Color="{StaticResource HyperlinkForegroundColor}" />
+    <SolidColorBrush x:Key="HyperlinkPressedForegroundBrush" Color="{StaticResource HyperlinkPressedForegroundColor}" />
+    <SolidColorBrush x:Key="HeaderTextForegroundBrush" Color="{StaticResource HeaderTextForegroundColor}" />
+    <SolidColorBrush x:Key="ScrollbarTrackBrush" Color="{StaticResource ScrollbarTrackColor}" />
+    <SolidColorBrush x:Key="ScrollbarThumbBrush" Color="{StaticResource ScrollbarThumbColor}" />
+    
+    <SolidColorBrush x:Key="MainWindowBrush1" Color="{StaticResource MainWindowColor1}"></SolidColorBrush>
+
+    <SolidColorBrush x:Key="Common.Static.Background" Color="#fff"/>
+    <SolidColorBrush x:Key="Common.Static.Border" Color="#a0a0a0"/>
+
+    <SolidColorBrush x:Key="Common.MouseOver.Border" Color="#3E61B1"/>
+    <!--<SolidColorBrush x:Key="Common.MouseOver.Background" Color="#617FC4"/>-->
+    <SolidColorBrush x:Key="Common.MouseOver.Background" Color="#93B1F2"/>
+
+    <SolidColorBrush x:Key="Common.Pressed.Border" Color="#09276C"/>
+    <SolidColorBrush x:Key="Common.Pressed.Background" Color="#0F3488"/>
+
+    <SolidColorBrush x:Key="Common.Focus.Border" Color="#1F48A8"/>
+
+    <SolidColorBrush x:Key="RadioButton.Pressed.Background" Color="#FFD9ECFF"/>
+    <SolidColorBrush x:Key="RadioButton.Pressed.Border" Color="#FF3C77DD"/>
+    <SolidColorBrush x:Key="RadioButton.Pressed.Glyph" Color="#FF212121"/>
+
+    <Thickness x:Key="Common.Static.Padding">2,4</Thickness>
+    <Thickness x:Key="Common.Static.BorderThickness">2</Thickness>
+
+    <system:Double x:Key="DefaultFontSize">13</system:Double>
+    <system:Double x:Key="WindowTitleFontSize">13</system:Double>
+    <system:Double x:Key="InputElementFontSize">14</system:Double>
+    <system:Double x:Key="HeaderFontSize">14</system:Double>
+
+    <GridLength x:Key="ResizeMargin">5</GridLength>
+</ResourceDictionary>

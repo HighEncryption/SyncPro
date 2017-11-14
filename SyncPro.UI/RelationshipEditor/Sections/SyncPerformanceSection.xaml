@@ -1,0 +1,146 @@
+﻿<UserControl x:Class="SyncPro.UI.RelationshipEditor.Sections.SyncPerformanceSection"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:relationshipEditor="clr-namespace:SyncPro.UI.RelationshipEditor"
+             xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="600" 
+             d:DataContext="{d:DesignInstance relationshipEditor:SyncPerformancePageViewModel}">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/RelationshipEditor/StyleResources.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <Style TargetType="TextBlock" BasedOn="{StaticResource ItemHeaderStyleCore}" x:Key="ContentItemTextStyle">
+                <Setter Property="HorizontalAlignment" Value="Left" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+            
+            <Style TargetType="TextBlock" x:Key="EnabledTextBlock">
+                <Style.Triggers>
+                    <Trigger Property="IsEnabled" Value="False">
+                        <Setter Property="TextElement.Foreground" Value="#888" />
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <StackPanel Margin="0,8,0,0">
+        <Grid HorizontalAlignment="Left">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" MinWidth="140" />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Column="0" Grid.Row="0" Style="{StaticResource ItemHeaderStyle}" Text="Bandwidth Usage" VerticalAlignment="Top" />
+            <StackPanel Grid.Column="1" Grid.Row="0" Orientation="Vertical" VerticalAlignment="Center">
+                <CheckBox VerticalAlignment="Center" IsChecked="{Binding Path=IsThrottlingEnabled}">
+                    <TextBlock Style="{StaticResource ContentItemTextStyle}" Text="Enable bandwidth throttling"/>
+                </CheckBox>
+            </StackPanel>
+            
+            <StackPanel Grid.Column="1" Grid.Row="1" Orientation="Vertical" VerticalAlignment="Center" IsEnabled="{Binding Path=IsThrottlingEnabled}"
+                        Margin="0,0,0,16">
+
+                <TextBlock Text="By enabling bandwidth limiting, you can restrict the speed that files will be copied."
+                           Margin="0,4"/>
+
+                <StackPanel Orientation="Horizontal" Margin="0,8" IsEnabled="{Binding Path=IsThrottlingEnabled}">
+                    <TextBlock Style="{StaticResource ContentItemTextStyle}" 
+                               Text="Limit bandwidth usage to"/>
+                    <xctk:IntegerUpDown VerticalAlignment="Center" Margin="8,0,4,0" Minimum="1" Maximum="999"
+                                        Text="{Binding Path=ThrottlingValueText}" BorderThickness="2"/>
+
+                    <ComboBox ItemsSource="{Binding Path=ThrottlingUnits}" SelectedItem="{Binding Path=SelectedThrottlingUnit}"
+                              VerticalAlignment="Center" >
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding DisplayName}" Height="18" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+
+                <TextBlock Text="In addition to limiting bandwidth usage, you can specify times of the day when throttling is active. Outside of these times, files will be synchronzied at full speed."
+                           TextWrapping="Wrap" Style="{StaticResource EnabledTextBlock}"/>
+            </StackPanel>
+
+            <!--
+            <TextBlock Grid.Column="0" Grid.Row="2" Style="{StaticResource ItemHeaderStyle}" Text="Restricted Times" VerticalAlignment="Top" />
+            <StackPanel Grid.Column="1" Grid.Row="2" Orientation="Vertical" VerticalAlignment="Center">
+                <CheckBox VerticalAlignment="Center" IsChecked="{Binding Path=IsThrottlingTimesEnabled}">
+                    <TextBlock Style="{StaticResource ContentItemTextStyle}"  Text="Automatically synchronize during specific times" />
+                </CheckBox>
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Grid.Row="3" Margin="0,0,0,16">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Path=IsThrottlingTimesEnabled}" Value="false">
+                                <Setter Property="TextElement.Foreground" Value="#888888" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+
+                <TextBlock Style="{StaticResource ItemTextBlockStyle}" TextWrapping="Wrap"
+                           Margin="0,6,0,0" MaxWidth="450" Text="When restricted sync time are enabled, synchronization will not be started automatically." />
+
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,0" IsEnabled="{Binding Path=IsThrottlingTimesEnabled}">
+                    <TextBlock Text="Start Time" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                    <xctk:DateTimeUpDown Format="ShortTime" Width="80" Margin="0,0,64,0" VerticalAlignment="Center" Kind="Local" />
+
+                    <TextBlock Text="End Time" Margin="0,0,8,0"/>
+                    <xctk:DateTimeUpDown Format="ShortTime" Width="80" />
+                </StackPanel>
+            </StackPanel>
+            -->
+
+            <TextBlock Grid.Column="0" Grid.Row="4" Style="{StaticResource ItemHeaderStyle}" Text="Bandwidth Usage" VerticalAlignment="Top" />
+            <StackPanel Grid.Column="1" Grid.Row="4" Orientation="Vertical" VerticalAlignment="Center" IsEnabled="False">
+                <CheckBox VerticalAlignment="Center" IsChecked="{Binding Path=IsDataUsageEnabled}">
+                    <TextBlock Style="{StaticResource ContentItemTextStyle}"  Text="Limit the amount of data synchronized per day/week/month" />
+                </CheckBox>
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Grid.Row="5">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Path=IsDataUsageEnabled}" Value="false">
+                                <Setter Property="TextElement.Foreground" Value="#888888" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+
+                <TextBlock Text="Limit the total amount of data usage for this relationship."
+                           Margin="0,4"/>
+
+                <StackPanel Orientation="Horizontal" Margin="0,8" IsEnabled="{Binding Path=IsDataUsageEnabled}">
+                    <TextBlock Style="{StaticResource ContentItemTextStyle}" 
+                               Text="Limit bandwidth usage to"/>
+                    <xctk:IntegerUpDown VerticalAlignment="Center" Margin="8,0,4,0" Minimum="1" Maximum="100" />
+                    <TextBlock Text="Mb per" Style="{StaticResource ContentItemTextStyle}" />
+                    <ComboBox Width="80" SelectedValue="Day" Margin="4,0,0,0">
+                    </ComboBox>
+                </StackPanel>
+
+            </StackPanel>
+        </Grid>
+    </StackPanel>
+</UserControl>

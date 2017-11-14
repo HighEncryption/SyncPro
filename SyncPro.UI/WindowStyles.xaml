@@ -1,0 +1,173 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="Primitives.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+
+    <ControlTemplate x:Key="ChromelessWindowControlTemplate" TargetType="Window">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="{StaticResource ResizeMargin}" />
+                <ColumnDefinition />
+                <ColumnDefinition Width="{StaticResource ResizeMargin}" />
+            </Grid.ColumnDefinitions>
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="{StaticResource ResizeMargin}" />
+                <RowDefinition />
+                <RowDefinition Height="{StaticResource ResizeMargin}" />
+            </Grid.RowDefinitions>
+
+            <Border Grid.ColumnSpan="3" Grid.RowSpan="3" x:Name="WindowContentBorder"
+                    Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- This canvas provides an area that the user can click and drag to move the window -->
+                    <Grid x:Name="PART_HeaderGrid" SnapsToDevicePixels="True" Height="28">
+                        <Grid.Style>
+                            <Style TargetType="Grid">
+                                <Setter Property="Background" Value="{StaticResource WindowBackgroundBrush}" />
+                            </Style>
+                        </Grid.Style>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.ColumnSpan="4" HorizontalAlignment="Left" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Image Source="{TemplateBinding Icon}" Margin="4,0" Height="16" Width="16" UseLayoutRounding="True" />
+                            <TextBlock VerticalAlignment="Center" Foreground="Black" FontFamily="Segoe UI"
+                                       FontSize="{DynamicResource WindowTitleFontSize}" Text="{TemplateBinding Title}" />
+                        </StackPanel>
+
+                        <Button x:Name="PART_MinimizeWindowButton" 
+                                Grid.Column="1" 
+                                VerticalAlignment="Center"
+                                Margin="0,0,8,0"
+                                BorderBrush="Transparent"
+                                Background="Transparent"
+                                Focusable="False">
+                            <Grid Height="8" Width="8" Margin="4">
+                                <Line X1="0" Y1="8" X2="8" Y2="8" Stroke="{StaticResource WindowAccentBrush}" StrokeThickness="5" />
+                            </Grid>
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=ResizeMode}" Value="NoResize">
+                                            <Setter Property="Visibility" Value="Hidden" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+
+                        <Button x:Name="PART_MaximizeWindowButton" 
+                                Grid.Column="2" 
+                                VerticalAlignment="Center"
+                                Margin="0,0,8,0"
+                                BorderBrush="Transparent"
+                                Background="Transparent"
+                                Focusable="False">
+                            <Grid>
+                                <Grid Height="8" Width="8" Margin="4" x:Name="MaximizeGrid">
+                                    <Rectangle Height="8" Width="8" Stroke="{StaticResource WindowAccentBrush}" StrokeThickness="1" />
+                                    <Line X1="0" Y1="1" X2="8" Y2="1" Stroke="{StaticResource WindowAccentBrush}" StrokeThickness="3" />
+                                    <Grid.Style>
+                                        <Style TargetType="Grid">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=WindowState}" Value="Maximized">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Grid.Style>
+                                </Grid>
+
+                                <Grid Height="8" Width="8" Margin="4" x:Name="RestoreGrid">
+                                    <Rectangle Height="8" Width="8" Stroke="{StaticResource WindowAccentBrush}" StrokeThickness="1" Fill="{StaticResource WindowAccentBrush}" />
+                                    <!--<Line X1="0" Y1="3" X2="6" Y2="3" Stroke="{StaticResource WindowAccentBrush}" StrokeThickness="3" />-->
+                                    <!--<Line X1="0" Y1="0" X2="8" Y2="0" Stroke="{StaticResource WindowAccentBrush}" StrokeThickness="1" />-->
+                                    <!--<Line X1="8" Y1="0" X2="8" Y2="8" Stroke="{StaticResource WindowAccentBrush}" StrokeThickness="1" />-->
+                                    <Grid.Style>
+                                        <Style TargetType="Grid">
+                                            <Setter Property="Visibility" Value="Collapsed"></Setter>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=WindowState}" Value="Maximized">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Grid.Style>
+                                </Grid>
+                            </Grid>
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=ResizeMode}" Value="NoResize">
+                                            <Setter Property="Visibility" Value="Hidden" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+
+                        <Button x:Name="CloseWindowButton" 
+                                Grid.Column="3" 
+                                VerticalAlignment="Center"
+                                Margin="0,0,8,0"
+                                BorderBrush="Transparent"
+                                Background="Transparent"
+                                Command="{Binding Path=CloseWindowCommand}">
+                            <Grid Height="8" Width="8" Margin="4">
+                                <Line X1="0" Y1="0" X2="8" Y2="8" Stroke="{StaticResource WindowAccentBrush}" StrokeThickness="2" StrokeEndLineCap="Flat" StrokeStartLineCap="Flat" />
+                                <Line X1="8" Y1="0" X2="0" Y2="8" Stroke="{StaticResource WindowAccentBrush}" StrokeThickness="2" StrokeEndLineCap="Flat" StrokeStartLineCap="Flat" />
+                            </Grid>
+                        </Button>
+                    </Grid>
+
+                    <Border Name="WindowInnerBorder" Grid.Row="1" Padding="0">
+                        <ContentPresenter />
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!--
+            Series of rectangles for allowing resizing of the window. This really should be re-implemented using an adorner.
+             -->
+            <Rectangle Grid.Column="0" Grid.Row="0" Fill="Transparent" x:Name="PART_ResizeTopLeft" />
+            <Rectangle Grid.Column="1" Grid.Row="0" Fill="Transparent" x:Name="PART_ResizeTop" />
+            <Rectangle Grid.Column="2" Grid.Row="0" Fill="Transparent" x:Name="PART_ResizeTopRight" />
+
+            <Rectangle Grid.Column="0" Grid.Row="1" Fill="Transparent" x:Name="PART_ResizeLeft" />
+            <Rectangle Grid.Column="2" Grid.Row="1" Fill="Transparent" x:Name="PART_ResizeRight" />
+
+            <Rectangle Grid.Column="0" Grid.Row="2" Fill="Transparent" x:Name="PART_ResizeBottomLeft" />
+            <Rectangle Grid.Column="1" Grid.Row="2" Fill="Transparent" x:Name="PART_ResizeBottom" />
+            <Rectangle Grid.Column="2" Grid.Row="2" Fill="Transparent" x:Name="PART_ResizeBottomRight" />
+        </Grid>
+    </ControlTemplate>
+
+    <Style x:Key="ChromelessWindowStyle" TargetType="Window">
+        <Setter Property="BorderBrush" Value="{StaticResource WindowBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Background" Value="{StaticResource WindowBackgroundBrush}" />
+        <Setter Property="ResizeMode" Value="CanMinimize" />
+        <Setter Property="WindowStyle" Value="None" />
+        <Setter Property="Template" Value="{StaticResource ChromelessWindowControlTemplate}" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding Source={StaticResource {x:Static SystemParameters.HighContrastKey}}}" Value="True">
+                <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.WindowBrushKey}}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+</ResourceDictionary>

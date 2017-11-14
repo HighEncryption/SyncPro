@@ -1,0 +1,128 @@
+﻿<UserControl x:Class="SyncPro.UI.Navigation.Content.SyncRelationshipView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:viewModels="clr-namespace:SyncPro.UI.ViewModels"
+             xmlns:runtime="clr-namespace:SyncPro.Runtime;assembly=SyncPro.Core"
+             xmlns:converters="clr-namespace:SyncPro.UI.Converters"
+             xmlns:controls="clr-namespace:SyncPro.UI.Controls"
+             mc:Ignorable="d" 
+             d:DataContext="{d:DesignInstance viewModels:SyncRelationshipViewModel}">
+    <UserControl.Resources>
+        <converters:FormatAdapterDisplayName x:Key="FormatAdapterDisplayName" />
+        <converters:FileSizeConverter x:Key="LocalFileSizeConverter" FormatType="2" />
+    </UserControl.Resources>
+
+    <StackPanel>
+        <!--<StackPanel Background="#E23116 ">
+            <StackPanel.Style>
+                <Style TargetType="StackPanel">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Path=State}" Value="{x:Static runtime:SyncRelationshipState.Error}">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </StackPanel.Style>
+
+            <StackPanel Margin="24,6">
+                <TextBlock Text="Error" Foreground="White" FontWeight="Bold" FontSize="16" Margin="0,0,0,2" />
+                <StackPanel IsItemsHost="True">
+                    <ItemsControl Items="{Binding Path=Errors}"></ItemsControl>
+                </StackPanel>
+                <TextBlock Text="{Binding Path=SyncRelationship.ErrorMessage}"  Foreground="White"/>
+            </StackPanel>
+        </StackPanel>-->
+
+        <StackPanel Margin="24">
+
+            <StackPanel Margin="0,0,0,16">
+                <TextBlock Text="Source" FontWeight="Bold" FontSize="16" Margin="0,0,0,2" />
+                <TextBlock Text="{Binding Path=SyncSourceAdapter, Converter={StaticResource FormatAdapterDisplayName}}"
+                           Margin="0,0,0,2" />
+                <controls:AdapterErrorView DataContext="{Binding Path=SyncSourceAdapter}" />
+            </StackPanel>
+
+            <TextBlock Text="Destination" FontWeight="Bold" FontSize="16" Margin="0,0,0,2" />
+            <TextBlock Text="{Binding Path=SyncDestinationAdapter, Converter={StaticResource FormatAdapterDisplayName}}" 
+                       Margin="0,0,0,16" />
+
+            <TextBlock Text="Status" FontWeight="Bold" FontSize="16" Margin="0,0,0,2" />
+            <TextBlock Text="{Binding Path=SyncStatusDescription}"
+                       Visibility="{Binding Path=IsSyncActive, Converter={StaticResource BooleanToVisibilityCollapsedReversed}}"
+                       Margin="0,0,0,16" />
+
+            <StackPanel Margin="0,2,0,16" Visibility="{Binding Path=IsSyncActive, Converter={StaticResource BooleanToVisibilityCollapsed}}">
+                <DockPanel LastChildFill="True" MinHeight="17"
+                           Visibility="{Binding Path=ActiveSyncRun.Stage, Converter={StaticResource SyncRunStageToVisiblity}, ConverterParameter=Sync}">
+                    <TextBlock DockPanel.Dock="Left" Width="200" 
+                               Visibility="{Binding Path=ActiveSyncRun.ShowDiscreteProgress, Converter={StaticResource BooleanToVisibilityCollapsed}}">
+                        <Run Text="{Binding Path=ActiveSyncRun.TimeElapsed, StringFormat={}{0:hh}:{0:mm}:{0:ss}}" FontSize="13" FontFamily="Segoe UI" FontWeight="Normal" />
+                        <Run Text="elapsed" />
+                    </TextBlock>
+                    <TextBlock DockPanel.Dock="Right" Width="200" TextAlignment="Right"
+                               Visibility="{Binding Path=ActiveSyncRun.ShowDiscreteProgress, Converter={StaticResource BooleanToVisibilityCollapsed}}">
+                        <Run Text="{Binding Path=ActiveSyncRun.TimeRemaining, StringFormat={}{0:hh}:{0:mm}:{0:ss}}" FontSize="13" FontFamily="Segoe UI" FontWeight="Normal" />
+                        <Run Text="remaining" />
+                    </TextBlock>
+                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Bottom" 
+                               Text="{Binding Path=ActiveSyncRun.SyncProgressCurrentText}"
+                               Visibility="{Binding Path=ActiveSyncRun.Stage, Converter={StaticResource SyncRunStageToVisiblity}, ConverterParameter=Analyze}" />
+                </DockPanel>
+                <TextBlock Text="{Binding Path=ActiveSyncRun.AnalyzeStatusString}"></TextBlock>
+                <ProgressBar Height="8" Value="{Binding Path=ActiveSyncRun.ProgressValue}" Minimum="0" Maximum="1">
+                    <ProgressBar.Style>
+                        <Style TargetType="ProgressBar">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Path=ActiveSyncRun.Stage}" Value="{x:Static runtime:SyncRunStage.Analyze}">
+                                    <Setter Property="IsIndeterminate" Value="True" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ProgressBar.Style>
+                </ProgressBar>
+                <DockPanel LastChildFill="True" MinHeight="17"
+                           Visibility="{Binding Path=ActiveSyncRun.Stage, Converter={StaticResource SyncRunStageToVisiblity}, ConverterParameter=Sync}">
+                    <TextBlock DockPanel.Dock="Left" Width="200" 
+                               Visibility="{Binding Path=ActiveSyncRun.ShowDiscreteProgress, Converter={StaticResource BooleanToVisibilityCollapsed}}">
+                        <Run Text="{Binding Path=ActiveSyncRun.FilesCompleted}" FontSize="13" FontFamily="Segoe UI" FontWeight="Normal" />
+                        <Run Text="files /" />
+                        <Run Text="{Binding Path=ActiveSyncRun.BytesCompleted, Converter={StaticResource LocalFileSizeConverter}}" FontSize="13"
+                             FontFamily="Segoe UI" FontWeight="Normal" />
+                        <Run Text="complete" />
+                    </TextBlock>
+                    <TextBlock DockPanel.Dock="Right" Width="200" TextAlignment="Right"
+                               Visibility="{Binding Path=ActiveSyncRun.ShowDiscreteProgress, Converter={StaticResource BooleanToVisibilityCollapsed}}">
+                        <Run Text="{Binding Path=ActiveSyncRun.FilesRemaining}" FontSize="13" FontFamily="Segoe UI" FontWeight="Normal" />
+                        <Run Text="files /" />
+                        <Run Text="{Binding Path=ActiveSyncRun.BytesRemaining, Converter={StaticResource LocalFileSizeConverter}}" FontSize="13"
+                             FontFamily="Segoe UI" FontWeight="Normal" />
+                        <Run Text="remaining" />
+                    </TextBlock>
+                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Bottom" Text="{Binding Path=ActiveSyncRun.Throughput}" />
+                </DockPanel>
+            </StackPanel>
+
+            <TextBlock Text="Last Synchronization" FontWeight="Bold" FontSize="16" Margin="0,0,0,2" 
+                       Visibility="{Binding Path=IsNeverSynchronized, Converter={StaticResource BooleanToVisibilityCollapsedReversed}}" />
+            <TextBlock Text="{Binding Path=LastSyncDisplayString}" 
+                       Visibility="{Binding Path=IsNeverSynchronized, Converter={StaticResource BooleanToVisibilityCollapsedReversed}}"
+                       Margin="0,0,0,16" />
+
+            <TextBlock Text="Next Synchronization" FontWeight="Bold" FontSize="16" Margin="0,0,0,2" />
+            <TextBlock Text="{Binding Path=NextSyncDisplayString}"
+                       Margin="0,0,0,16" />
+
+            <TextBlock Text="Size" FontWeight="Bold" FontSize="16" Margin="0,0,0,2" />
+            <TextBlock Text="{Binding Path=RelationshipSizeDisplayString}"
+                       Margin="0,0,0,16" />
+
+            <TextBlock Text="Database Size" FontWeight="Bold" FontSize="16" Margin="0,0,0,2" />
+            <TextBlock Text="{Binding Path=DatabaseSizeDisplayString}"
+                       Margin="0,0,0,16" />
+        </StackPanel>
+
+    </StackPanel>
+</UserControl>

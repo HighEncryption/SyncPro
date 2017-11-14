@@ -1,0 +1,329 @@
+﻿<UserControl x:Class="SyncPro.UI.Navigation.Content.SyncRunView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:viewModels="clr-namespace:SyncPro.UI.ViewModels"
+             xmlns:converters="clr-namespace:SyncPro.UI.Converters"
+             xmlns:controls="clr-namespace:SyncPro.UI.Controls"
+             xmlns:navigation="clr-namespace:SyncPro.UI.Navigation"
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="300" 
+             d:DataContext="{d:DesignInstance navigation:SyncRunPanelViewModel}">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/WindowStyles.xaml" />
+                <ResourceDictionary Source="/RelationshipEditor/StyleResources.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <converters:DateTimeToStringConverter x:Key="FileDateTime" Format="g" />
+            <converters:LevelToIndentConverter x:Key="LevelToIndent" />
+
+            <Style TargetType="TextBlock" BasedOn="{StaticResource ItemHeaderStyleCore}" x:Key="RadioButtonItemTextStyle">
+                <Setter Property="HorizontalAlignment" Value="Left" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+
+            <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}" x:Key="TreeListItemStyle">
+                <Setter Property="FontFamily" Value="Segoe UI" />
+                <Setter Property="FontWeight" Value="Normal" />
+                <Setter Property="Foreground" Value="Black" />
+                <Setter Property="FontSize" Value="12.5" />
+            </Style>
+
+            <DataTemplate x:Key="RelativePathCellTemplate" DataType="{x:Type viewModels:EntryUpdateInfoViewModel}">
+                <TextBlock x:Name="TextBox" Text="{Binding Path=RelativePath}" Style="{StaticResource TreeListItemStyle}" />
+            </DataTemplate>
+
+            <DataTemplate x:Key="ChangeTypeCellTemplate" DataType="{x:Type viewModels:EntryUpdateInfoViewModel}">
+                <TextBlock x:Name="TextBox" Text="{Binding Path=ChangeHeader}" Style="{StaticResource TreeListItemStyle}" />
+            </DataTemplate>
+
+            <DataTemplate x:Key="LastModifiedCellTemplate" DataType="{x:Type viewModels:EntryUpdateInfoViewModel}">
+                <TextBlock x:Name="TextBox" Text="{Binding Path=LastModified, Converter={StaticResource FileDateTime}}">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource TreeListItemStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Path=IsDirectory}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </DataTemplate>
+
+            <DataTemplate x:Key="SizeCellTemplate" DataType="{x:Type viewModels:EntryUpdateInfoViewModel}">
+                <TextBlock x:Name="TextBox" Text="{Binding Path=Size, Converter={StaticResource FileSize2}}" >
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource TreeListItemStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Path=IsDirectory}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </DataTemplate>
+
+            <DataTemplate x:Key="EmptyCellTemplate" DataType="{x:Type viewModels:EntryUpdateInfoViewModel}">
+            </DataTemplate>
+
+            <DataTemplate x:Key="DisplayNameCellTemplate" DataType="{x:Type viewModels:ChangeMetrics}">
+                <TextBlock Text="{Binding Path=DisplayName}" Style="{StaticResource TreeListItemStyle}" />
+            </DataTemplate>
+
+            <DataTemplate x:Key="ChangeAddedCellTemplate" DataType="{x:Type viewModels:ChangeMetrics}">
+                <StackPanel>
+                    <TextBlock Text="{Binding Path=Added}" Style="{StaticResource TreeListItemStyle}"
+                               Visibility="{Binding Path=DisplayAsByteSize, Converter={StaticResource BooleanToVisibilityCollapsedReversed}}"/>
+                    <TextBlock Text="{Binding Path=Added, Converter={StaticResource FileSize}}" Style="{StaticResource TreeListItemStyle}" 
+                               Visibility="{Binding Path=DisplayAsByteSize, Converter={StaticResource BooleanToVisibilityCollapsed}}"/>
+                </StackPanel>
+            </DataTemplate>
+
+            <DataTemplate x:Key="ContentModifiedCellTemplate" DataType="{x:Type viewModels:ChangeMetrics}">
+                <StackPanel>
+                    <TextBlock Text="{Binding Path=Modified}" Style="{StaticResource TreeListItemStyle}"
+                               Visibility="{Binding Path=DisplayAsByteSize, Converter={StaticResource BooleanToVisibilityCollapsedReversed}}"/>
+                    <TextBlock Text="{Binding Path=Modified, Converter={StaticResource FileSize}}" Style="{StaticResource TreeListItemStyle}" 
+                               Visibility="{Binding Path=DisplayAsByteSize, Converter={StaticResource BooleanToVisibilityCollapsed}}"/>
+                </StackPanel>
+            </DataTemplate>
+
+            <DataTemplate x:Key="MetadataModifiedCellTemplate" DataType="{x:Type viewModels:ChangeMetrics}">
+                <TextBlock x:Name="TextBox" Text="{Binding Path=Metadata}" Style="{StaticResource TreeListItemStyle}" />
+            </DataTemplate>
+
+            <DataTemplate x:Key="RemovedCellTemplate" DataType="{x:Type viewModels:ChangeMetrics}">
+                <StackPanel>
+                    <TextBlock Text="{Binding Path=Removed}" Style="{StaticResource TreeListItemStyle}"
+                               Visibility="{Binding Path=DisplayAsByteSize, Converter={StaticResource BooleanToVisibilityCollapsedReversed}}"/>
+                    <TextBlock Text="{Binding Path=Removed, Converter={StaticResource FileSize}}" Style="{StaticResource TreeListItemStyle}" 
+                               Visibility="{Binding Path=DisplayAsByteSize, Converter={StaticResource BooleanToVisibilityCollapsed}}"/>
+                </StackPanel>
+            </DataTemplate>
+
+            <DataTemplate x:Key="UnchangedCellTemplate" DataType="{x:Type viewModels:ChangeMetrics}">
+                <StackPanel>
+                    <TextBlock Text="{Binding Path=Unchanged}" Style="{StaticResource TreeListItemStyle}"
+                               Visibility="{Binding Path=DisplayAsByteSize, Converter={StaticResource BooleanToVisibilityCollapsedReversed}}"/>
+                    <TextBlock Text="{Binding Path=Unchanged, Converter={StaticResource FileSize}}" Style="{StaticResource TreeListItemStyle}" 
+                               Visibility="{Binding Path=DisplayAsByteSize, Converter={StaticResource BooleanToVisibilityCollapsed}}"/>
+                </StackPanel>
+            </DataTemplate>
+
+            <Style x:Key="GridViewColumnHeaderGripper" TargetType="{x:Type Thumb}">
+                <Setter Property="Canvas.Right" Value="-3"/>
+                <Setter Property="Width" Value="6"/>
+                <Setter Property="Height" Value="{Binding ActualHeight, RelativeSource={RelativeSource TemplatedParent}}"/>
+                <Setter Property="Padding" Value="0"/>
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type Thumb}">
+                            <Border Background="Transparent" Padding="{TemplateBinding Padding}">
+                                <Rectangle Fill="{TemplateBinding Background}" HorizontalAlignment="Center" Width="1"/>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="CustomHeaderStyle" TargetType="{x:Type GridViewColumnHeader}">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type GridViewColumnHeader}">
+                            <Grid>
+                                <Border Name="cellBorder" BorderThickness="0,0,0,1" Padding="4,0,0,4" Margin="0,0,0,4">
+                                    <TextBlock Text="{TemplateBinding Content}" Width="{TemplateBinding Width}" Margin="0,2"
+                                           VerticalAlignment="Center" HorizontalAlignment="Left" Foreground="#7d7d7d" />
+                                </Border>
+                                <Canvas>
+                                    <Thumb x:Name="PART_HeaderGripper" Style="{StaticResource GridViewColumnHeaderGripper}"/>
+                                </Canvas>
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <DataTrigger Binding="{Binding Path=Content, RelativeSource={RelativeSource Self}, Converter={StaticResource StringToBoolean}}" Value="True">
+                                    <Setter Property="BorderBrush" TargetName="cellBorder" Value="#c7c7c7"/>
+                                </DataTrigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="CustomHeaderStyle2" TargetType="{x:Type GridViewColumnHeader}">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type GridViewColumnHeader}">
+                            <Grid>
+                                <Border Name="cellBorder" BorderThickness="0" Margin="0,0,0,4">
+                                </Border>
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <DataTemplate x:Key="TreeListViewItemExpanderTemplate" DataType="{x:Type viewModels:EntryUpdateInfoViewModel}">
+                <DockPanel>
+                    <ToggleButton x:Name="Expander" 
+                                  Style="{StaticResource ExpandCollapseToggleStyle}" 
+                                  Margin="{Binding Level, Converter={StaticResource LevelToIndent}, RelativeSource={RelativeSource AncestorType={x:Type controls:TreeListViewItem}}}"
+                                  IsChecked="{Binding Path=IsExpanded, RelativeSource={RelativeSource AncestorType={x:Type controls:TreeListViewItem}}}"
+                                  ClickMode="Press"/>
+                    <TextBlock x:Name="TextBox" Text="{Binding Path=Name}" Style="{StaticResource TreeListItemStyle}" />
+                </DockPanel>
+                <DataTemplate.Triggers>
+                    <DataTrigger Binding="{Binding Path=HasItems, RelativeSource={RelativeSource AncestorType={x:Type controls:TreeListViewItem}}}" Value="False">
+                        <Setter TargetName="Expander" Property="Visibility" Value="Hidden"/>
+                    </DataTrigger>
+                </DataTemplate.Triggers>
+            </DataTemplate>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition />
+                </Grid.RowDefinitions>
+
+                <StackPanel>
+                    <TextBlock Text="Analysis Summary" FontSize="20" FontFamily="Segoe UI Light" Foreground="#888888"
+                               Margin="16,4,16,8" />
+
+                    <!-- ListView for the analysis summary -->
+                    <ListView ItemsSource="{Binding Path=SyncRun.ChangeMetricsList}" BorderThickness="0" HorizontalAlignment="Stretch">
+                        <ListView.View>
+                            <GridView ColumnHeaderContainerStyle="{StaticResource CustomHeaderStyle}" AllowsColumnReorder="False">
+                                <GridViewColumn Width="12" HeaderContainerStyle="{StaticResource CustomHeaderStyle2}" CellTemplate="{StaticResource EmptyCellTemplate}" />
+                                <GridViewColumn Header=" " Width="120" CellTemplate="{StaticResource DisplayNameCellTemplate}" />
+                                <GridViewColumn Header="Added" Width="120" CellTemplate="{StaticResource ChangeAddedCellTemplate}" />
+                                <GridViewColumn Header="Content Modified" Width="120" CellTemplate="{StaticResource ContentModifiedCellTemplate}" />
+                                <GridViewColumn Header="Metadata Modified" Width="120" CellTemplate="{StaticResource MetadataModifiedCellTemplate}" />
+                                <GridViewColumn Header="Removed" Width="120" CellTemplate="{StaticResource RemovedCellTemplate}" />
+                                <GridViewColumn Header="Unchanged" Width="120" CellTemplate="{StaticResource UnchangedCellTemplate}" />
+                                <GridViewColumn Width="12" HeaderContainerStyle="{StaticResource CustomHeaderStyle2}" CellTemplate="{StaticResource EmptyCellTemplate}" />
+                            </GridView>
+                        </ListView.View>
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="{x:Type ListViewItem}">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="{x:Type ListViewItem}">
+                                            <Border Background="{TemplateBinding Background}" BorderThickness="0" x:Name="ListViewItemTemplateBd1" Margin="0">
+                                                <GridViewRowPresenter Margin="0,2" />
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                    </ListView>
+
+                    <StackPanel Orientation="Horizontal" Margin="16,8,0,24">
+                        <TextBlock FontSize="13" FontWeight="SemiBold"
+                                   Text="Total size of files to copy: " />
+                        <TextBlock FontSize="13" FontWeight="SemiBold"
+                                   Text="{Binding Path=SyncRun.BytesToCopy, Converter={StaticResource FileSize}, Mode=OneWay}" />
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Grid.Row="2">
+                    <Grid HorizontalAlignment="Left" Width="794">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0"
+                                   Text="Changes To Synchronize" 
+                                   FontSize="20" 
+                                   FontFamily="Segoe UI Light" 
+                                   Foreground="#888888"
+                                   Margin="16,4,16,8" />
+
+                        <!-- Panel for the control options -->
+                        <StackPanel Grid.Column="1" HorizontalAlignment="Right" Orientation="Horizontal" Margin="18,0">
+                            <TextBlock Style="{StaticResource RadioButtonItemTextStyle}" Text="View as" />
+                            <RadioButton VerticalContentAlignment="Center" Margin="8,0,0,0"
+                                         IsChecked="{Binding Path=FileDisplayMode, Converter={StaticResource EnumToBoolean}, ConverterParameter=Flat}">
+                                <TextBlock Style="{StaticResource RadioButtonItemTextStyle}" Text="Flat List" />
+                            </RadioButton>
+                            <RadioButton VerticalContentAlignment="Center" Margin="16,0,0,0"
+                                         IsChecked="{Binding Path=FileDisplayMode, Converter={StaticResource EnumToBoolean}, ConverterParameter=Tree}">
+                                <TextBlock Style="{StaticResource RadioButtonItemTextStyle}" Text="Tree" />
+                            </RadioButton>
+                        </StackPanel>
+
+                    </Grid>
+                </StackPanel>
+
+                <!-- TreeListView for the hierarchical listing of files and folders -->
+                <controls:TreeListView Grid.Row="3" ItemsSource="{Binding Path=SyncRun.EntryUpdatesTreeList}" Background="White" Margin="2,0,0,0"
+                                       Visibility="{Binding Path=FileDisplayMode, Converter={StaticResource EnumToVisibility}, ConverterParameter=Tree}">
+                    <controls:TreeListView.Resources>
+                        <HierarchicalDataTemplate DataType="{x:Type viewModels:EntryUpdateInfoViewModel}" ItemsSource="{Binding Path=ChildEntries}">
+                            <Border>
+                                <TextBlock Text="{Binding Path=Name}" />
+                            </Border>
+                        </HierarchicalDataTemplate>
+                    </controls:TreeListView.Resources>
+                    <controls:TreeListView.Columns>
+                        <GridViewColumn Width="12" HeaderContainerStyle="{StaticResource CustomHeaderStyle2}" CellTemplate="{StaticResource EmptyCellTemplate}" />
+                        <GridViewColumn Header="File Name" Width="420" CellTemplate="{StaticResource TreeListViewItemExpanderTemplate}" />
+                        <GridViewColumn Header="Change" Width="120" CellTemplate="{StaticResource ChangeTypeCellTemplate}" />
+                        <GridViewColumn Header="Last Modified" Width="140" CellTemplate="{StaticResource LastModifiedCellTemplate}" />
+                        <GridViewColumn Header="Size" Width="85" CellTemplate="{StaticResource SizeCellTemplate}" />
+                        <GridViewColumn Width="12" HeaderContainerStyle="{StaticResource CustomHeaderStyle2}" CellTemplate="{StaticResource EmptyCellTemplate}" />
+                    </controls:TreeListView.Columns>
+                </controls:TreeListView>
+
+                <!-- ListView for the flatlisting of files and folders -->
+                <ListView Grid.Row="3" ItemsSource="{Binding Path=SyncRun.EntryUpdatesFlatList}" BorderThickness="0" HorizontalAlignment="Stretch"
+                          Visibility="{Binding Path=FileDisplayMode, Converter={StaticResource EnumToVisibility}, ConverterParameter=Flat}">
+                    <ListView.View>
+                        <GridView ColumnHeaderContainerStyle="{StaticResource CustomHeaderStyle}" AllowsColumnReorder="False">
+                            <GridViewColumn Width="12" HeaderContainerStyle="{StaticResource CustomHeaderStyle2}" CellTemplate="{StaticResource EmptyCellTemplate}" />
+                            <GridViewColumn Header="File Name" Width="420" CellTemplate="{StaticResource RelativePathCellTemplate}" />
+                            <GridViewColumn Header="Change" Width="120" CellTemplate="{StaticResource ChangeTypeCellTemplate}" />
+                            <GridViewColumn Header="Last Modified" Width="140" CellTemplate="{StaticResource LastModifiedCellTemplate}" />
+                            <GridViewColumn Header="Size" Width="85" CellTemplate="{StaticResource SizeCellTemplate}" />
+                            <GridViewColumn Width="12" HeaderContainerStyle="{StaticResource CustomHeaderStyle2}" CellTemplate="{StaticResource EmptyCellTemplate}" />
+                        </GridView>
+                    </ListView.View>
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="{x:Type ListViewItem}">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="{x:Type ListViewItem}">
+                                        <Border Background="{TemplateBinding Background}" BorderThickness="0" x:Name="ListViewItemTemplateBd1" Margin="0">
+                                            <GridViewRowPresenter Margin="0,4" />
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#e8e8e8" />
+                                </Trigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="LightGray" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                </ListView>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

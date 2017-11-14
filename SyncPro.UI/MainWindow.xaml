@@ -1,0 +1,445 @@
+﻿<mvvm:RequestCloseResizableWindow x:Class="SyncPro.UI.MainWindow"
+                         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                         xmlns:viewModels="clr-namespace:SyncPro.UI.ViewModels"
+                         xmlns:converters="clr-namespace:SyncPro.UI.Converters"
+                         xmlns:controls="clr-namespace:SyncPro.UI.Controls"
+                         xmlns:menuCommands="clr-namespace:SyncPro.UI.Navigation.MenuCommands"
+                         xmlns:navigation="clr-namespace:SyncPro.UI.Navigation"
+                         xmlns:mvvm="clr-namespace:SyncPro.UI.Framework.MVVM"
+                         xmlns:ui="clr-namespace:SyncPro.UI"
+                         xmlns:content="clr-namespace:SyncPro.UI.Navigation.Content"
+                         xmlns:navViewModels="clr-namespace:SyncPro.UI.Navigation.ViewModels"
+                         mc:Ignorable="d"
+                         MinHeight="500" Height="600"
+                         MinWidth="800" Width="1070"
+                         Title="{Binding Path=WindowTitle}"
+                         Icon="/Resources/Graphics/SyncPro 1.0.ico" 
+                         Style="{DynamicResource ChromelessWindowStyle}"
+                         d:DataContext="{d:DesignInstance viewModels:MainWindowViewModel}">
+    <mvvm:RequestCloseResizableWindow.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/RelationshipEditor/StyleResources.xaml" />
+                <ResourceDictionary Source="/WindowStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <converters:LevelToIndentConverter x:Key="LevelToIndent" InitialIndentSize="0.0" IndentSize="16.0" />
+            <converters:CollectionToBooleanConverter x:Key="CollectionToBoolean" />
+
+                <Style x:Key="ExpanderToggleButtonStyle" TargetType="{x:Type ToggleButton}">
+                <Setter Property="Focusable" Value="False"/>
+                <Setter Property="Width" Value="19"/>
+                <Setter Property="Height" Value="13"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type ToggleButton}">
+                            <Border Width="19" Height="13" Background="Transparent">
+                                <Border Width="9" Height="9"
+                                BorderThickness="1" BorderBrush="#FF7898B5"
+                                CornerRadius="1" SnapsToDevicePixels="true">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                            <LinearGradientBrush.GradientStops>
+                                                <GradientStop Color="White" Offset=".2"/>
+                                                <GradientStop Color="#FFC0B7A6" Offset="1"/>
+                                            </LinearGradientBrush.GradientStops>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                    <Path x:Name="ExpandPath" Margin="1,1,1,1" Fill="Black"
+                                  Data="M 0 2 L 0 3 L 2 3 L 2 5 L 3 5 L 3 3 L 5 3 L 5 2 L 3 2 L 3 0 L 2 0 L 2 2 Z"/>
+                                </Border>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter Property="Data" TargetName="ExpandPath" Value="M 0 2 L 0 3 L 5 3 L 5 2 Z"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style TargetType="{x:Type controls:NavigationTreeView}">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate>
+                            <Border BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
+                                            Background="{TemplateBinding Background}">
+                                <ScrollViewer Focusable="False" CanContentScroll="False">
+                                    <ItemsPresenter/>
+                                </ScrollViewer>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            
+            <converters:BooleanToVisibilityMultiConverter x:Key="BooleanToVisibilityMultiConverter" />
+
+            <Style TargetType="{x:Type controls:NavigationTreeViewItem}">
+                <Setter Property="IsExpanded" Value="{Binding Path=(navigation:NavigationNodeViewModel.IsExpanded)}" />
+                <Setter Property="IsSelected" Value="{Binding Path=(navigation:NavigationNodeViewModel.IsSelected)}" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type controls:NavigationTreeViewItem}">
+                            <StackPanel d:DataContext="{d:DesignInstance navigation:NavigationNodeViewModel}">
+                                <Border Name="ItemBorder">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="#333" />
+
+                                            <Style.Triggers>
+                                                <!-- Ordering of the binding here matters to that IsMouseOver overrides IsSelected -->
+                                                <DataTrigger Binding="{Binding Path=IsSelected}" Value="True">
+                                                    <Setter Property="Background" Value="#545454"/>
+                                                </DataTrigger>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="#707070"/>
+                                                </Trigger>
+
+                                                <!--<DataTrigger Binding="{Binding Path=Parent}" Value="{x:Null}">
+                                                    <Setter Property="Margin" Value="0,12,0,0" />
+                                                </DataTrigger>-->
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <StackPanel Margin="{Binding Level, Converter={StaticResource LevelToIndent}, RelativeSource={RelativeSource AncestorType={x:Type controls:NavigationTreeViewItem}}}"
+                                                Orientation="Horizontal" x:Name="NavItemContainer">
+                                        <ToggleButton IsChecked="{Binding Path=IsExpanded}" ClickMode="Press" Style="{StaticResource ExpanderToggleButtonStyle}">
+                                            <ToggleButton.Visibility>
+                                                <MultiBinding Converter="{StaticResource BooleanToVisibilityMultiConverter}">
+                                                    <Binding Path="IsExpanderVisible" />
+                                                    <Binding Path="Children" Converter="{StaticResource CollectionToBoolean}" />
+                                                </MultiBinding>
+                                            </ToggleButton.Visibility>
+                                            <!--<ToggleButton.Style>
+                                                <Style TargetType="ToggleButton" BasedOn="{StaticResource ExpanderToggleButtonStyle}">
+                                                    <Setter Property="Visibility" Value="Hidden" />
+                                                    <Style.Triggers>
+                                                        <MultiDataTrigger>
+                                                            <MultiDataTrigger.Conditions>
+                                                                <Condition Binding="{Binding Path=Children, Converter={StaticResource CollectionToBoolean}}"
+                                                                           Value="True" />
+                                                                <Condition Binding="{Binding Path=IsExpanderVisible}" 
+                                                                           Value="True" />
+                                                            </MultiDataTrigger.Conditions>
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                        </MultiDataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </ToggleButton.Style>-->
+                                        </ToggleButton>
+                                        <ContentPresenter x:Name="PART_Header" ContentSource="Header" />
+                                    </StackPanel>
+                                </Border>
+                                <ItemsPresenter x:Name="ItemsHost" />
+                            </StackPanel>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsExpanded" Value="false">
+                                    <Setter TargetName="ItemsHost" Property="Visibility" Value="Collapsed"/>
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="false">
+                                    <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- ReSharper disable once Xaml.RedundantResource -->
+            <DataTemplate DataType="{x:Type navViewModels:SyncRelationshipNodeViewModel}">
+                <Border>
+                    <content:SyncRelationshipView DataContext="{Binding Path=Item}" />
+                </Border>
+            </DataTemplate>
+
+            <!-- ReSharper disable once Xaml.RedundantResource -->
+            <DataTemplate DataType="{x:Type navViewModels:SyncHistoryNodeViewModel}">
+                <Border>
+                    <content:SyncRunHistoryView DataContext="{Binding Path=Item}" />
+                </Border>
+            </DataTemplate>
+
+            <!-- ReSharper disable once Xaml.RedundantResource -->
+            <DataTemplate DataType="{x:Type navViewModels:SyncRunNodeViewModel}">
+                <Border>
+                    <content:SyncRunView DataContext="{Binding Path=Item}" />
+                </Border>
+            </DataTemplate>
+
+            <!-- ReSharper disable once Xaml.RedundantResource -->
+            <DataTemplate DataType="{x:Type navViewModels:FilesAndFoldersNodeViewModel}">
+                <Border>
+                    <content:SyncFolderView />
+                </Border>
+            </DataTemplate>
+
+            <!-- ReSharper disable once Xaml.RedundantResource -->
+            <DataTemplate DataType="{x:Type navViewModels:SyncFoldersNodeViewModel}">
+                <Border>
+                    <content:SyncFolderView />
+                </Border>
+            </DataTemplate>
+
+            <!-- ReSharper disable once Xaml.RedundantResource -->
+            <DataTemplate DataType="{x:Type navViewModels:DashboardNodeViewModel}">
+                <Border>
+                    <StackPanel>
+                        <content:DashboardView />
+                    </StackPanel>
+                </Border>
+            </DataTemplate>
+
+            <!-- ReSharper disable once Xaml.RedundantResource -->
+            <DataTemplate DataType="{x:Type navViewModels:AnalyzeResultsNodeViewModel}">
+                <Border>
+                    <content:SyncRunView DataContext="{Binding Path=Item}" />
+                </Border>
+            </DataTemplate>
+
+            <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}" x:Key="TransparentButtonStyle">
+                <Setter Property="MinHeight" Value="28" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="BorderBrush" Value="Transparent" />
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type Button}">
+                            <Border x:Name="buttonBorder" 
+                                    BorderBrush="{TemplateBinding BorderBrush}" 
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    Background="{TemplateBinding Background}" 
+                                    SnapsToDevicePixels="true">
+                                <ContentPresenter x:Name="contentPresenter" 
+                                                  Focusable="False" 
+                                                  HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" 
+                                                  Margin="{TemplateBinding Padding}" 
+                                                  RecognizesAccessKey="True" 
+                                                  SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" 
+                                                  VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsDefaulted" Value="true">
+                                    <Setter Property="BorderBrush" TargetName="buttonBorder" 
+                                            Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
+                                </Trigger>
+                                <MultiTrigger>
+                                    <MultiTrigger.Conditions>
+                                        <Condition Property="IsMouseOver" Value="true" />
+                                        <Condition Property="IsEnabled" Value="true" />
+                                    </MultiTrigger.Conditions>
+                                    <Setter Property="Background" TargetName="buttonBorder" Value="#d0d0d0"/>
+                                    <Setter Property="BorderBrush" TargetName="buttonBorder" Value="#7d7d7d"/>
+                                </MultiTrigger>
+
+                                <MultiTrigger>
+                                    <MultiTrigger.Conditions>
+                                        <Condition Property="IsPressed" Value="true" />
+                                        <Condition Property="IsEnabled" Value="true" />
+                                    </MultiTrigger.Conditions>
+                                    <Setter Property="Background" TargetName="buttonBorder" Value="#efefef"/>
+                                    <Setter Property="BorderBrush" TargetName="buttonBorder" Value="#7d7d7d"/>
+                                </MultiTrigger>
+                                <Trigger Property="IsEnabled" Value="false">
+                                    <Setter Property="Opacity" TargetName="buttonBorder" Value="0.56"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </ResourceDictionary>
+    </mvvm:RequestCloseResizableWindow.Resources>
+
+    <mvvm:RequestCloseWindow.InputBindings>
+        <!-- Shift + F5 will immediatly shutdown the app (not just close the main window) -->
+        <KeyBinding Key="F5" Modifiers="Shift" 
+                    Command="{Binding Source={x:Static ui:App.Current}, Path=ShutdownApplicationCommand}" />
+    </mvvm:RequestCloseWindow.InputBindings>
+
+    <!-- Main Window Grid -->
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="250" />
+            <ColumnDefinition />
+        </Grid.ColumnDefinitions>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+
+        <!-- Upper-left container for select relationship name -->
+        <Border Background="{StaticResource MainWindowBrush1}" Grid.Column="0">
+            <Grid Margin="0,0,-19,0">
+                <Path Data="M0,0 L249,0 L268,32 L249,64 L0,64" Fill="{StaticResource MainWindowBrush1}" Stretch="None" HorizontalAlignment="Right" />
+                <TextBlock Text="{Binding Path=CurrentNavigationRoot.Name}" Foreground="White" VerticalAlignment="Center"
+                       HorizontalAlignment="Left" Margin="16,0,0,0" FontSize="16" />
+            </Grid>
+        </Border>
+
+        <!-- Upper-right container for Search, New Relationship, Settings -->
+        <Grid Grid.Column="1" Grid.Row="0" Margin="20,0,0,0" Height="50">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition Width="1" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="1" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            
+            <DockPanel VerticalAlignment="Center" HorizontalAlignment="Stretch" Margin="8,0" LastChildFill="True">
+                <Image Source="Resources/Graphics/find_16.png" Height="15" DockPanel.Dock="Left" />
+                <controls:ExtendedTextBox InlayText="Search files &amp; folders" BorderThickness="0" HorizontalAlignment="Stretch" 
+                                          InlayTextHorizontalAlignment="Left" InlayTextFontSize="16" InlayTextFontStyle="Normal" 
+                                          InlayTextFontWeight="Normal" FontSize="14"
+                                          Text="{Binding Path=SearchText}">
+                    <controls:ExtendedTextBox.InputBindings>
+                        <KeyBinding Key="Enter" Command="{Binding Path=BeginSearchCommand}" />
+                        <KeyBinding Key="Return" Command="{Binding Path=BeginSearchCommand}" />
+                    </controls:ExtendedTextBox.InputBindings>
+                </controls:ExtendedTextBox>
+            </DockPanel>
+
+            <Path Grid.Column="1" Data="M0,0 L1,0 L1,50 L0,50 L0,0" Fill="Gray" VerticalAlignment="Center" SnapsToDevicePixels="True" />
+
+            <Button Grid.Column="2" Style="{StaticResource TransparentButtonStyle}" Margin="2,0"
+                    Command="{Binding Path=CreateRelationshipCommand}">
+                <StackPanel Margin="8,0">
+                    <Image Source="Resources/Graphics/add_16.png" />
+                    <TextBlock Text="New Relationship" Margin="0,8,0,0" Foreground="#7d7d7d" />
+                </StackPanel>
+            </Button>
+
+            <Path Grid.Column="3" Data="M0,0 L1,0 L1,50 L0,50 L0,0" Fill="Gray" VerticalAlignment="Center" SnapsToDevicePixels="True" />
+
+            <Button Grid.Column="4" Style="{StaticResource TransparentButtonStyle}" Margin="2,0">
+                <StackPanel Margin="8,0">
+                    <Image Source="Resources/Graphics/gear_16.png" />
+                    <TextBlock Text="Settings" Margin="0,8,0,0" Foreground="#7d7d7d" />
+                </StackPanel>
+            </Button>
+        </Grid>
+        
+        <!-- Mid-left container or select item type name -->
+        <Border Grid.Column="0" Grid.Row="1" Background="#333" Height="42">
+            <TextBlock Text="Sync Relationships" Foreground="CornflowerBlue" VerticalAlignment="Center"
+                       HorizontalAlignment="Left" Margin="16,0,0,0" FontSize="13" FontWeight="Bold" />
+        </Border>
+
+        <!-- Mid-right container or select item type commands -->
+        <Border Grid.Column="1" Grid.Row="1" MinWidth="300"
+                Background="#e8e8e8">
+            <DockPanel LastChildFill="True">
+                <Border Margin="8,0,10,0" VerticalAlignment="Center" DockPanel.Dock="Right"
+                        Visibility="{Binding Path=SelectedNavigationItem.ClosePanelCommand, Converter={StaticResource ObjectToVisibilityCollapsed}}">
+                    <Button Command="{Binding Path=Command}" Style="{StaticResource TransparentButtonStyle}"
+                            ToolTip="{Binding Path=ToolTip}" DataContext="{Binding Path=SelectedNavigationItem.ClosePanelCommand}">
+                        <StackPanel Orientation="Horizontal" Margin="2,0" SnapsToDevicePixels="True" UseLayoutRounding="True">
+                            <Image Source="{Binding Path=IconImageSource}" />
+                            <TextBlock Text="{Binding Path=Header}" Margin="8,0,0,0" Foreground="#3d3d3d" FontWeight="Bold"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </Border>
+                
+                <ListView ItemsSource="{Binding Path=SelectedNavigationItem.MenuCommands}" Background="Transparent" BorderThickness="0"
+                          DockPanel.Dock="Left">
+                    <ListView.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" UseLayoutRounding="True" />
+                        </ItemsPanelTemplate>
+                    </ListView.ItemsPanel>
+                    <ListView.ItemTemplate>
+                        <DataTemplate DataType="menuCommands:NavigationItemMenuCommand">
+                            <Border Margin="8,0,0,0" VerticalAlignment="Center">
+                                <Button Command="{Binding Path=Command}" Style="{StaticResource TransparentButtonStyle}"
+                                        ToolTip="{Binding Path=ToolTip}">
+                                    <StackPanel Orientation="Horizontal" Margin="2,0" SnapsToDevicePixels="True" UseLayoutRounding="True">
+                                        <Image Source="{Binding Path=IconImageSource}" />
+                                        <TextBlock Text="{Binding Path=Header}" Margin="8,0,0,0" Foreground="#3d3d3d" FontWeight="Bold"
+                                                   VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </Border>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="BorderThickness" Value="0"/>
+                            <Setter Property="Margin" Value="10,0,0,0"/>
+                            <Setter Property="Padding" Value="0"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListViewItem">
+                                        <Border>
+                                            <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" />
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                </ListView>
+            </DockPanel>
+        </Border>
+        
+        <!-- Bottom-left container for navigation tree -->
+        <Border Grid.Column="0" Grid.Row="2" Background="#333">
+            <controls:NavigationTreeView Background="Transparent" BorderThickness="0" ItemsSource="{Binding Path=NavigationItems}">
+                <controls:NavigationTreeView.Style>
+                    <Style TargetType="{x:Type controls:NavigationTreeView}">
+                        <!-- 
+                            Alternate design: 
+                            http://stackoverflow.com/questions/8384237/stop-wpf-scrollviewer-automatically-scrolling-to-perceived-content 
+                        -->
+                        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+                    </Style>
+                </controls:NavigationTreeView.Style>
+                <controls:NavigationTreeView.ItemTemplate>
+                    <HierarchicalDataTemplate DataType="{x:Type navigation:NavigationNodeViewModel}"
+                                              ItemsSource="{Binding Path=Children}">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" x:Name="NavItemStackPanel">
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Margin" Value="0,6"></Setter>
+                                    <!--<Style.Triggers>
+                                        <DataTrigger Binding="{Binding Path=Parent}" Value="{x:Null}">
+                                            <Setter Property="Margin" Value="0,18,0,6" />
+                                        </DataTrigger>
+                                    </Style.Triggers>-->
+                                </Style>
+                            </StackPanel.Style>
+                            <Image Source="{Binding Path=IconImageSource}" Height="16" />
+
+                            <Grid>
+                                <TextBlock Text="{Binding Path=Name}" Margin="8,0,0,0" VerticalAlignment="Center" Foreground="White"
+                                       ToolTip="{Binding Path=Name}"/>
+
+                                <ProgressBar HorizontalAlignment="Stretch" Height="3" VerticalAlignment="Bottom"
+                                             Margin="8,0,0,-2" IsIndeterminate="{Binding Path=ProgressIsIndeterminate}"
+                                             Visibility="{Binding Path=ShowProgress, Converter={StaticResource BooleanToVisibility}}"
+                                             Value="{Binding Path=ProgressValue}"/>
+                            </Grid>
+
+                            <Image Source="{Binding Path=StatusIconImageSource, Converter={StaticResource NullImageConverter}}" Height="16" Margin="8,0,0,0"
+                                   Visibility="{Binding Path=ShowStatusIcon, Converter={StaticResource BooleanToVisibilityCollapsed}}"/>
+                        </StackPanel>
+                    </HierarchicalDataTemplate>
+                </controls:NavigationTreeView.ItemTemplate>
+            </controls:NavigationTreeView>
+        </Border>
+
+        <!-- Bottom-right container for the currently selected navigation content -->
+        <Border Grid.Column="1" Grid.Row="2">
+            <ContentControl Content="{Binding Path=SelectedNavigationItem}" />
+        </Border>
+
+        <GridSplitter Grid.Column="0" Grid.RowSpan="3" Grid.Row="0" Width="3" Background="Transparent" BorderThickness="0" />
+    </Grid>
+</mvvm:RequestCloseResizableWindow>

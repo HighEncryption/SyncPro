@@ -1,0 +1,232 @@
+﻿<UserControl x:Class="SyncPro.UI.RelationshipEditor.Sections.SyncDestinationSection"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:relationshipEditor="clr-namespace:SyncPro.UI.RelationshipEditor"
+             xmlns:adapters="clr-namespace:SyncPro.UI.ViewModels.Adapters"
+             xmlns:sections="clr-namespace:SyncPro.UI.RelationshipEditor.Sections"
+             xmlns:controls="clr-namespace:SyncPro.UI.Controls"
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="300"
+             d:DataContext="{d:DesignInstance relationshipEditor:SyncDestinationPageViewModel}">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/RelationshipEditor/StyleResources.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <StackPanel Margin="0,8,0,0">
+        <Grid HorizontalAlignment="Left">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" MinWidth="140" />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Column="0" Grid.Row="0" Style="{StaticResource ItemHeaderStyle}" Text="Provider" />
+            <ComboBox Grid.Column="1" Grid.Row="0"
+                      ItemsSource="{Binding Path=SyncAdapters}" 
+                      DisplayMemberPath="DisplayName"
+                      IsEnabled="{Binding Path=EditorViewModel.IsCreateMode}"
+                      SelectedItem="{Binding Path=SelectedSyncAdapter}">
+                <ComboBox.Style>
+                    <Style TargetType="ComboBox" BasedOn="{StaticResource MyComboBoxStyle}">
+                        <Setter Property="ItemTemplate">
+                            <Setter.Value>
+                                <DataTemplate DataType="adapters:SyncAdapterViewModel">
+                                    <TextBlock Text="{Binding Path=DisplayName}">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsEnabled" Value="False">
+                                                        <Setter Property="Opacity" Value="0.56" />
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </DataTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </ComboBox.Style>
+            </ComboBox>
+
+            <Image Grid.Column="1" Grid.Row="1" Margin="0,24,0,0" Width="400"
+                   Source="{Binding Path=SelectedSyncAdapter.LogoImage}" />
+        </Grid>
+
+        <Border Margin="0,8,0,0">
+            <ContentControl Content="{Binding Path=SelectedSyncAdapter}">
+                <ContentControl.Resources>
+                    <DataTemplate DataType="{x:Type adapters:WindowsFileSystemAdapterViewModel}">
+                        <Grid HorizontalAlignment="Left" >
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" MinWidth="140" />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition />
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Column="1" Grid.Row="0" Style="{StaticResource ItemTextBlockStyle}" Text="Select the directory where files should be synchronize" />
+
+                            <TextBlock Grid.Column="0" Grid.Row="1" Style="{StaticResource ItemHeaderStyle}" Text="Folder" />
+                            <StackPanel Grid.Column="1" Grid.Row="1" Orientation="Horizontal" Margin="0,3"
+                                        IsEnabled="{Binding RelativeSource={RelativeSource AncestorType=sections:SyncDestinationSection}, Path=DataContext.EditorViewModel.IsCreateMode}">
+
+                                <controls:ValidationContainer IsRequired="True" ValidationPropertyName="DestinationPath">
+                                    <TextBox Style="{StaticResource ItemTextBoxStyle}" Text="{Binding Path=DestinationPath}" />
+                                </controls:ValidationContainer>
+
+                                <Button Style="{StaticResource ItemButtonStyle}" Margin="8,0,0,0" Command="{Binding Path=BrowsePathCommand}">
+                                    <TextBlock Text="Browse" />
+                                </Button>
+
+                            </StackPanel>
+
+                            <!--<TextBlock Grid.Column="0" Grid.Row="1" Style="{StaticResource ItemHeaderStyle}" Text="Access Key" />
+                            <TextBox Grid.Column="1" Grid.Row="1" Style="{StaticResource ItemTextBoxStyle}" Text="{Binding AccessKey}" />
+
+                            <TextBlock Grid.Column="0" Grid.Row="2" Style="{StaticResource ItemHeaderStyle}" Text="Container Name" />
+                            <TextBox Grid.Column="1" Grid.Row="2" Style="{StaticResource ItemTextBoxStyle}" Text="{Binding ContainerName}" />-->
+                        </Grid>
+                        <!--<StackPanel>
+                            <TextBlock Text="Select the directory where files should be synchronize to:" Style="{StaticResource SectionTextStyle}" />
+                            <StackPanel Orientation="Horizontal">
+                                <TextBox Width="400" Text="{Binding Path=DestinationPath}" VerticalContentAlignment="Center" />
+                                <Button Margin="8,0,0,0" Height="22" Width="70"
+                                        Command="{Binding Path=BrowsePathCommand}">
+                                    <TextBlock Text="Browse" />
+                                </Button>
+                            </StackPanel>
+                        </StackPanel>-->
+                    </DataTemplate>
+                    <!--<DataTemplate DataType="{x:Type viewModels:AzureStorageSyncTargetViewModel}">
+                        <Grid HorizontalAlignment="Left" >
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" MinWidth="140" />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition />
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Column="0" Grid.Row="0" Style="{StaticResource ItemHeaderStyle}" Text="Account Name" />
+                            <TextBox Grid.Column="1" Grid.Row="0" Style="{StaticResource ItemTextBoxStyle}" Text="{Binding AccountName}" />
+
+                            <TextBlock Grid.Column="0" Grid.Row="1" Style="{StaticResource ItemHeaderStyle}" Text="Access Key" />
+                            <TextBox Grid.Column="1" Grid.Row="1" Style="{StaticResource ItemTextBoxStyle}" Text="{Binding AccessKey}" />
+
+                            <TextBlock Grid.Column="0" Grid.Row="2" Style="{StaticResource ItemHeaderStyle}" Text="Container Name" />
+                            <TextBox Grid.Column="1" Grid.Row="2" Style="{StaticResource ItemTextBoxStyle}" Text="{Binding ContainerName}" />
+                        </Grid>
+                    </DataTemplate>-->
+                    <DataTemplate DataType="{x:Type adapters:OneDriveAdapterViewModel}">
+                        <Grid HorizontalAlignment="Left" >
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" MinWidth="140" />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition />
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Column="1" Grid.Row="0" Margin="0,3" Width="400" TextWrapping="Wrap" HorizontalAlignment="Left"
+                                       Text="You must first sign into your OneDrive account before selecting where files and folder will be synchronzied." />
+
+                            <Button Grid.Column="1" Grid.Row="1" Style="{StaticResource ItemButtonStyle}" Margin="0,4"
+                                     Command="{Binding Path=SignInCommand}">
+                                <TextBlock Text="{Binding Path=SignInButtonText}" Margin="8,4" />
+                            </Button>
+
+                            <TextBlock Grid.Column="1" Grid.Row="2" Text="{Binding Path=SignInMessage}" 
+                                        FontStyle="Italic" Margin="0,3,0,8" VerticalAlignment="Center" />
+
+                            <TextBlock Grid.Column="0" Grid.Row="3" Style="{StaticResource ItemHeaderStyle}" Text="Folder" />
+                            <StackPanel Grid.Column="1" Grid.Row="3" Orientation="Horizontal" Margin="0,3" IsEnabled="{Binding Path=IsSignedIn}">
+                                <controls:ValidationContainer IsRequired="True" ValidationPropertyName="DestinationPath">
+                                    <TextBox Style="{StaticResource ItemTextBoxStyle}" Text="{Binding Path=DestinationPath}" IsReadOnly="True" />
+                                </controls:ValidationContainer>
+
+                                <Button Style="{StaticResource ItemButtonStyle}" Margin="8,0,0,0" Command="{Binding BrowsePathCommand}">
+                                    <TextBlock Text="Browse" />
+                                </Button>
+
+                            </StackPanel>
+
+                            <!--<TextBlock Grid.Column="0" Grid.Row="2" Style="{StaticResource ItemHeaderStyle}" Text="Container Name (Optional)" />
+                            <TextBox Grid.Column="1" Grid.Row="2" Style="{StaticResource ItemTextBoxStyle}" Text="{Binding ContainerName}" />-->
+                        </Grid>
+                    </DataTemplate>
+                    <DataTemplate DataType="{x:Type adapters:GoogleDriveAdapterViewModel}">
+                        <Grid HorizontalAlignment="Left" >
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" MinWidth="140" />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition />
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Column="1" Grid.Row="0" Margin="0,3" Width="400" TextWrapping="Wrap" HorizontalAlignment="Left"
+                                       Text="You must first sign into your Google Drive account before selecting where files and folder will be synchronzied." />
+
+                            <Button Grid.Column="1" Grid.Row="1" Style="{StaticResource ItemButtonStyle}" Margin="0,4"
+                                     Command="{Binding Path=SignInCommand}">
+                                <TextBlock Text="{Binding Path=SignInButtonText}" Margin="8,4" />
+                            </Button>
+
+                            <TextBlock Grid.Column="1" Grid.Row="2" Text="{Binding Path=SignInMessage}" 
+                                        FontStyle="Italic" Margin="0,3,0,8" VerticalAlignment="Center" />
+
+                            <TextBlock Grid.Column="0" Grid.Row="3" Style="{StaticResource ItemHeaderStyle}" Text="Folder" />
+                            <StackPanel Grid.Column="1" Grid.Row="3" Orientation="Horizontal" Margin="0,3" IsEnabled="{Binding Path=IsSignedIn}">
+                                <TextBox Style="{StaticResource ItemTextBoxStyle}" Text="{Binding Path=DestinationPath}" IsReadOnly="True" />
+
+                                <Button Style="{StaticResource ItemButtonStyle}" Margin="8,0,0,0" Command="{Binding BrowsePathCommand}">
+                                    <TextBlock Text="Browse" />
+                                </Button>
+
+                            </StackPanel>
+
+                            <!--<TextBlock Grid.Column="0" Grid.Row="2" Style="{StaticResource ItemHeaderStyle}" Text="Container Name (Optional)" />
+                            <TextBox Grid.Column="1" Grid.Row="2" Style="{StaticResource ItemTextBoxStyle}" Text="{Binding ContainerName}" />-->
+                        </Grid>
+                    </DataTemplate>
+                    <DataTemplate DataType="{x:Type adapters:PlaceholderAdapterViewModel}">
+                        <Grid>
+                        </Grid>
+                    </DataTemplate>
+                </ContentControl.Resources>
+            </ContentControl>
+        </Border>
+    </StackPanel>
+</UserControl>
