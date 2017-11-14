@@ -83,6 +83,10 @@
       <Project>{DE859CDC-6879-4C28-AB26-354806276E04}</Project>
       <Name>SyncPro.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\SyncPro.UI\SyncPro.UI.csproj">
+      <Project>{1B87A69A-1070-4948-BA38-F400735E81F6}</Project>
+      <Name>SyncPro.UI</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

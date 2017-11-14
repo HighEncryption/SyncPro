@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneDriveTokenHelper", "OneD
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JsonLog", "..\JsonLog\JsonLog\JsonLog.csproj", "{6028CE31-C870-4ECB-BF55-B4C4D4953B9D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SyncPro.UI", "SyncPro.UI\SyncPro.UI.csproj", "{1B87A69A-1070-4948-BA38-F400735E81F6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,6 +37,10 @@ Global
 		{6028CE31-C870-4ECB-BF55-B4C4D4953B9D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6028CE31-C870-4ECB-BF55-B4C4D4953B9D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6028CE31-C870-4ECB-BF55-B4C4D4953B9D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1B87A69A-1070-4948-BA38-F400735E81F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1B87A69A-1070-4948-BA38-F400735E81F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1B87A69A-1070-4948-BA38-F400735E81F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1B87A69A-1070-4948-BA38-F400735E81F6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
