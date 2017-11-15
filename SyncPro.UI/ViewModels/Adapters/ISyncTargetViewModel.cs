@@ -19,6 +19,8 @@
 
         string DisplayName { get; }
 
+        string ShortDisplayName { get; }
+
         string DestinationPath { get; set; }
     }
 }

@@ -2,7 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.ComponentModel;
     using System.Diagnostics;
     using System.Linq;
     using System.Windows.Input;
@@ -22,6 +21,8 @@
         public ICommand BrowsePathCommand { get; }
 
         public override string DisplayName => "Microsoft OneDrive";
+
+        public override string ShortDisplayName => "OneDrive";
 
         public override string LogoImage => "/SyncPro.UI;component/Resources/ProviderLogos/onedrive.png";
 
@@ -307,6 +308,8 @@
         }
 
         public override string DisplayName => "Select a provider...";
+
+        public override string ShortDisplayName => string.Empty;
 
         public override string DestinationPath { get; set; }
     }

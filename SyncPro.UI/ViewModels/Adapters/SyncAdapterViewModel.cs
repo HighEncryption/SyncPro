@@ -15,6 +15,8 @@
 
         public abstract string DisplayName { get; }
 
+        public abstract string ShortDisplayName { get; }
+
         public abstract string DestinationPath { get; set; }
 
         public virtual string LogoImage => null;

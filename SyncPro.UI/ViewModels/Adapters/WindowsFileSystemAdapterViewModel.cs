@@ -16,23 +16,22 @@
 
         public override string DisplayName => "Folder On Local Computer";
 
+        public override string ShortDisplayName
+        {
+            get
+            {
+                if (!string.IsNullOrWhiteSpace(this.DestinationPath) && this.DestinationPath.StartsWith("\\"))
+                {
+                    return "Network Share";
+                }
+
+                return "Local Computer";
+            }
+        }
+
         public override string LogoImage => "/SyncPro.UI;component/Resources/ProviderLogos/microsoft_windows.png";
 
         public WindowsFileSystemAdapter Adapter => (WindowsFileSystemAdapter) this.AdapterBase;
-
-        //[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        //private string destinationPath;
-
-        //public override string DestinationPath => this.AdapterBase.RootDirectory;
-
-        //private void SetDestinationPath(string path)
-        //{
-        //    //this.SetProperty("DestinationPath", ref this.destinationPath, path);
-        //    this.SetPropertyDelegated("DestinationPath", this.AdapterBase.RootDirectory, path, () =>
-        //    {
-        //        this.AdapterBase.RootDirectory = path;
-        //    });
-        //}
 
         [StringNotNullorEmptyValidationRule]
         public override string DestinationPath

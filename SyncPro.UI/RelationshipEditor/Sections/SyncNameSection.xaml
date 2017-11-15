@@ -6,7 +6,8 @@
              xmlns:relationshipEditor="clr-namespace:SyncPro.UI.RelationshipEditor"
              xmlns:controls="clr-namespace:SyncPro.UI.Controls"
              mc:Ignorable="d" 
-             d:DataContext="{d:DesignInstance relationshipEditor:SyncNamePageViewModel}">
+             d:DataContext="{d:DesignInstance relationshipEditor:SyncNamePageViewModel}"
+             Loaded="SyncNameSection_OnLoaded">
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>

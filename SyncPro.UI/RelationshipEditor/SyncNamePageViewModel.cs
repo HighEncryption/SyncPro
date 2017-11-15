@@ -1,12 +1,14 @@
 ﻿namespace SyncPro.UI.RelationshipEditor
 {
-    using System.ComponentModel;
+    using System;
     using System.Diagnostics;
+    using System.Linq;
     using System.Windows.Input;
 
     using SyncPro.UI.Framework.MVVM;
     using SyncPro.UI.Framework.Validation.Rules;
     using SyncPro.UI.ViewModels;
+    using SyncPro.UI.ViewModels.Adapters;
 
     public class SyncNamePageViewModel : WizardPageViewModelBase
     {
@@ -62,6 +64,41 @@
         {
             get { return this.description; }
             set { this.SetProperty(ref this.description, value); }
+        }
+
+        public void ComputeDefaultName()
+        {
+            if (this.EditorViewModel.IsEditMode)
+            {
+                return;
+            }
+
+            ISyncTargetViewModel sourceAdapter = this.EditorViewModel.SyncSourcePageViewModel.SelectedSyncAdapter;
+            if (sourceAdapter == null)
+            {
+                return;
+            }
+
+            var destAdapter = this.EditorViewModel.SyncDestinationPageViewModel.SelectedSyncAdapter;
+            if (destAdapter == null)
+            {
+                return;
+            }
+
+            string sourceFolderName = sourceAdapter.DestinationPath.Split(
+                new[] { sourceAdapter.AdapterBase.PathSeparator },
+                StringSplitOptions.None).Last();
+
+            string destFolderName = destAdapter.DestinationPath.Split(
+                new[] { destAdapter.AdapterBase.PathSeparator },
+                StringSplitOptions.None).Last();
+
+            this.Name = string.Format(
+                "Copy '{0}' ({1}) to '{2}' ({3})",
+                sourceFolderName,
+                sourceAdapter.ShortDisplayName,
+                destFolderName,
+                destAdapter.ShortDisplayName);
         }
     }
 }

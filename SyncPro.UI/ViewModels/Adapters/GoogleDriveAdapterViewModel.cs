@@ -27,6 +27,8 @@
 
         public override string DisplayName => "Google Drive";
 
+        public override string ShortDisplayName => "GDrive";
+
         public override string LogoImage => "/SyncPro.UI;component/Resources/ProviderLogos/google_drive.png";
 
         public GoogleDriveAdapter Adapter => (GoogleDriveAdapter) this.AdapterBase;
