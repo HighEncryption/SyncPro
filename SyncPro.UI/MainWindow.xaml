@@ -86,11 +86,19 @@
                     <Setter.Value>
                         <ControlTemplate TargetType="{x:Type controls:NavigationTreeViewItem}">
                             <StackPanel d:DataContext="{d:DesignInstance navigation:NavigationNodeViewModel}">
+                                <StackPanel.Style>
+                                    <Style TargetType="StackPanel">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Path=Parent}" Value="{x:Null}">
+                                                <Setter Property="Margin" Value="0,0,0,12" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </StackPanel.Style>
                                 <Border Name="ItemBorder">
                                     <Border.Style>
                                         <Style TargetType="Border">
                                             <Setter Property="Background" Value="#333" />
-
                                             <Style.Triggers>
                                                 <!-- Ordering of the binding here matters to that IsMouseOver overrides IsSelected -->
                                                 <DataTrigger Binding="{Binding Path=IsSelected}" Value="True">
@@ -99,16 +107,12 @@
                                                 <Trigger Property="IsMouseOver" Value="True">
                                                     <Setter Property="Background" Value="#707070"/>
                                                 </Trigger>
-
-                                                <!--<DataTrigger Binding="{Binding Path=Parent}" Value="{x:Null}">
-                                                    <Setter Property="Margin" Value="0,12,0,0" />
-                                                </DataTrigger>-->
                                             </Style.Triggers>
                                         </Style>
                                     </Border.Style>
-                                    <StackPanel Margin="{Binding Level, Converter={StaticResource LevelToIndent}, RelativeSource={RelativeSource AncestorType={x:Type controls:NavigationTreeViewItem}}}"
-                                                Orientation="Horizontal" x:Name="NavItemContainer">
-                                        <ToggleButton IsChecked="{Binding Path=IsExpanded}" ClickMode="Press" Style="{StaticResource ExpanderToggleButtonStyle}">
+                                    <DockPanel Margin="{Binding Level, Converter={StaticResource LevelToIndent}, RelativeSource={RelativeSource AncestorType={x:Type controls:NavigationTreeViewItem}}}"
+                                               x:Name="NavItemContainer" LastChildFill="True">
+                                        <ToggleButton DockPanel.Dock="Left" IsChecked="{Binding Path=IsExpanded}" ClickMode="Press" Style="{StaticResource ExpanderToggleButtonStyle}">
                                             <ToggleButton.Visibility>
                                                 <MultiBinding Converter="{StaticResource BooleanToVisibilityMultiConverter}">
                                                     <Binding Path="IsExpanderVisible" />
@@ -133,7 +137,7 @@
                                             </ToggleButton.Style>-->
                                         </ToggleButton>
                                         <ContentPresenter x:Name="PART_Header" ContentSource="Header" />
-                                    </StackPanel>
+                                    </DockPanel>
                                 </Border>
                                 <ItemsPresenter x:Name="ItemsHost" />
                             </StackPanel>
@@ -279,7 +283,8 @@
             <Grid Margin="0,0,-19,0">
                 <Path Data="M0,0 L249,0 L268,32 L249,64 L0,64" Fill="{StaticResource MainWindowBrush1}" Stretch="None" HorizontalAlignment="Right" />
                 <TextBlock Text="{Binding Path=CurrentNavigationRoot.Name}" Foreground="White" VerticalAlignment="Center"
-                       HorizontalAlignment="Left" Margin="16,0,0,0" FontSize="16" />
+                           HorizontalAlignment="Left" Margin="16,0,20,0" FontSize="16" 
+                           TextTrimming="CharacterEllipsis"/>
             </Grid>
         </Border>
 
@@ -404,32 +409,26 @@
                 <controls:NavigationTreeView.ItemTemplate>
                     <HierarchicalDataTemplate DataType="{x:Type navigation:NavigationNodeViewModel}"
                                               ItemsSource="{Binding Path=Children}">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" x:Name="NavItemStackPanel">
-                            <StackPanel.Style>
-                                <Style TargetType="StackPanel">
-                                    <Setter Property="Margin" Value="0,6"></Setter>
-                                    <!--<Style.Triggers>
-                                        <DataTrigger Binding="{Binding Path=Parent}" Value="{x:Null}">
-                                            <Setter Property="Margin" Value="0,18,0,6" />
-                                        </DataTrigger>
-                                    </Style.Triggers>-->
-                                </Style>
-                            </StackPanel.Style>
+                        <Grid Margin="0,6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
                             <Image Source="{Binding Path=IconImageSource}" Height="16" />
 
-                            <Grid>
-                                <TextBlock Text="{Binding Path=Name}" Margin="8,0,0,0" VerticalAlignment="Center" Foreground="White"
-                                       ToolTip="{Binding Path=Name}"/>
+                            <TextBlock Grid.Column="1" Text="{Binding Path=Name}" Margin="8,0,0,0" VerticalAlignment="Center" Foreground="White"
+                                       ToolTip="{Binding Path=Name}" TextTrimming="CharacterEllipsis" />
 
-                                <ProgressBar HorizontalAlignment="Stretch" Height="3" VerticalAlignment="Bottom"
-                                             Margin="8,0,0,-2" IsIndeterminate="{Binding Path=ProgressIsIndeterminate}"
-                                             Visibility="{Binding Path=ShowProgress, Converter={StaticResource BooleanToVisibility}}"
-                                             Value="{Binding Path=ProgressValue}"/>
-                            </Grid>
+                            <ProgressBar Grid.Column="1" HorizontalAlignment="Stretch" Height="3" VerticalAlignment="Bottom"
+                                         Margin="8,0,0,-2" IsIndeterminate="{Binding Path=ProgressIsIndeterminate}"
+                                         Visibility="{Binding Path=ShowProgress, Converter={StaticResource BooleanToVisibility}}"
+                                         Value="{Binding Path=ProgressValue}"/>
 
-                            <Image Source="{Binding Path=StatusIconImageSource, Converter={StaticResource NullImageConverter}}" Height="16" Margin="8,0,0,0"
+                            <Image Grid.Column="2" Source="{Binding Path=StatusIconImageSource, Converter={StaticResource NullImageConverter}}" Height="16" Margin="8,0,0,0"
                                    Visibility="{Binding Path=ShowStatusIcon, Converter={StaticResource BooleanToVisibilityCollapsed}}"/>
-                        </StackPanel>
+                        </Grid>
                     </HierarchicalDataTemplate>
                 </controls:NavigationTreeView.ItemTemplate>
             </controls:NavigationTreeView>
