@@ -6,6 +6,7 @@ namespace SyncPro.UnitTests
     using System.IO;
     using System.Linq;
     using System.Threading;
+    using System.Threading.Tasks;
 
     using JsonLog;
 
@@ -67,6 +68,91 @@ namespace SyncPro.UnitTests
                 TestHelper.CreateFile(sourceAdapter.Config.RootDirectory, "dir2\\dir3\\dir4\\file101.txt"),
                 TestHelper.CreateFile(sourceAdapter.Config.RootDirectory, "dir2\\dir3\\dir4\\file102.txt"),
             });
+
+            return this;
+        }
+
+        public TestWrapper<TSource, TDestination> CreateLargeSourceStructure()
+        {
+            WindowsFileSystemAdapter sourceAdapter = this.SourceAdapter as WindowsFileSystemAdapter;
+
+            if (sourceAdapter == null)
+            {
+                throw new NotImplementedException();
+            }
+
+            if (this.SyncFileList == null)
+            {
+                this.SyncFileList = new List<string>();
+            }
+
+            string testRoot = "C:\\large";
+
+            Random r2 = new Random();
+            // Generate the random data source file (32k)
+            byte[] dataSource = new byte[1024 * 32];
+            r2.NextBytes(dataSource);
+
+            List<int> ints = new List<int>();
+            for (int i = 0; i < 100; i++)
+            {
+                ints.Add(i);
+            }
+
+            //for (int i = 0; i < 100; i++)
+            Parallel.ForEach(
+                ints,
+                new ParallelOptions() {  MaxDegreeOfParallelism = 8 },
+                (i, state) =>
+                {
+                    Random r = new Random();
+                    string suffix = Guid.NewGuid().ToString("N").Substring(0, r.Next(4, 32));
+                    string folderName1 = string.Format("dir{0}_{1}", i, suffix);
+                    string path1 = TestHelper.CreateDirectory(testRoot, folderName1);
+                    this.SyncFileList.Add(path1);
+
+                    for (int j = 0; j < 100; j++)
+                    {
+                        suffix = Guid.NewGuid().ToString("N").Substring(0, r.Next(4, 32));
+                        string folderName2 = string.Format("dir{0}_{1}", j, suffix);
+                        string path2 = TestHelper.CreateDirectory(testRoot, Path.Combine(folderName1, folderName2));
+
+                        for (int k = 0; k < 10; k++)
+                        {
+                            suffix = Guid.NewGuid().ToString("N").Substring(0, r.Next(4, 32));
+                            string fileName = string.Format("file{0}_{1}", k, suffix);
+
+                            string fullPath = Path.Combine(testRoot, path2, fileName);
+
+                            using (FileStream fs = File.Open(fullPath, FileMode.CreateNew))
+                            {
+                                using (BinaryWriter sw = new BinaryWriter(fs))
+                                {
+                                    sw.Write(dataSource, 0, r.Next(0, dataSource.Length - 1));
+                                }
+                            }
+                        }
+                    }
+
+                }
+            );
+
+            //this.SyncFileList.AddRange(new List<string>
+            //{
+            //    TestHelper.CreateDirectory(sourceAdapter.Config.RootDirectory, "dir1"),
+            //    TestHelper.CreateFile(sourceAdapter.Config.RootDirectory, "dir1\\file1.txt"),
+            //    TestHelper.CreateFile(sourceAdapter.Config.RootDirectory, "dir1\\file2.txt"),
+            //    TestHelper.CreateFile(sourceAdapter.Config.RootDirectory, "dir1\\file3.txt"),
+            //    TestHelper.CreateDirectory(sourceAdapter.Config.RootDirectory, "dir2"),
+            //    TestHelper.CreateFile(sourceAdapter.Config.RootDirectory, "dir2\\file1.txt"),
+            //    TestHelper.CreateFile(sourceAdapter.Config.RootDirectory, "dir2\\file2.txt"),
+            //    TestHelper.CreateFile(sourceAdapter.Config.RootDirectory, "dir2\\file3.txt"),
+            //    TestHelper.CreateDirectory(sourceAdapter.Config.RootDirectory, "dir2\\dir3"),
+            //    TestHelper.CreateDirectory(sourceAdapter.Config.RootDirectory, "dir2\\dir3\\dir4"),
+            //    TestHelper.CreateFile(sourceAdapter.Config.RootDirectory, "dir2\\dir3\\dir4\\file100.txt"),
+            //    TestHelper.CreateFile(sourceAdapter.Config.RootDirectory, "dir2\\dir3\\dir4\\file101.txt"),
+            //    TestHelper.CreateFile(sourceAdapter.Config.RootDirectory, "dir2\\dir3\\dir4\\file102.txt"),
+            //});
 
             return this;
         }

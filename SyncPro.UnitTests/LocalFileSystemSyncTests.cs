@@ -175,5 +175,19 @@
                 .VerifyResultContainsAllFiles()
                 .VerifyDatabaseHashes();
         }
+
+        //[TestMethod]
+        public void LargeFileCountTest()
+        {
+            TestWrapperFactory
+                .CreateLocalToLocal(this.TestContext)
+                .SaveRelationship()
+                .CreateLargeSourceStructure()
+                .CreateSyncRun()
+                .RunToCompletion()
+                .VerifySyncSuccess()
+                .VerifyResultContainsAllFiles()
+                .VerifyDatabaseHashes();
+        }
     }
 }
