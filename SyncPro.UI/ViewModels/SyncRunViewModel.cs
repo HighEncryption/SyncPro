@@ -6,7 +6,9 @@
     using System.ComponentModel;
     using System.Data.Entity;
     using System.Diagnostics;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
+    using System.Threading;
     using System.Threading.Tasks;
     using System.Windows.Input;
 
@@ -25,7 +27,7 @@
         AllFiles,
     }
 
-    public class ChangeMetrics : ViewModelBase
+    public class ChangeMetrics : NotifyPropertyChangedSlim
     {
         public ChangeMetrics(string displayName, bool displayAsByteSize = false)
         {
@@ -37,50 +39,24 @@
 
         public string DisplayName { get; }
 
+        public long Added { get; set; }
 
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private long added;
+        public long Modified { get; set; }
 
-        public long Added
+        public long Metadata { get; set; }
+
+        public long Removed { get; set; }
+
+        public long Unchanged { get; set; }
+
+        [SuppressMessage("ReSharper", "ExplicitCallerInfoArgument")]
+        public void RaisePropertiesChanged()
         {
-            get { return this.added; }
-            set { this.SetProperty(ref this.added, value); }
-        }
-
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private long modified;
-
-        public long Modified
-        {
-            get { return this.modified; }
-            set { this.SetProperty(ref this.modified, value); }
-        }
-
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private long metadata;
-
-        public long Metadata
-        {
-            get { return this.metadata; }
-            set { this.SetProperty(ref this.metadata, value); }
-        }
-
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private long removed;
-
-        public long Removed
-        {
-            get { return this.removed; }
-            set { this.SetProperty(ref this.removed, value); }
-        }
-
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private long unchanged;
-
-        public long Unchanged
-        {
-            get { return this.unchanged; }
-            set { this.SetProperty(ref this.unchanged, value); }
+            this.RaisePropertyChanged(nameof(this.Added));
+            this.RaisePropertyChanged(nameof(this.Modified));
+            this.RaisePropertyChanged(nameof(this.Metadata));
+            this.RaisePropertyChanged(nameof(this.Removed));
+            this.RaisePropertyChanged(nameof(this.Unchanged));
         }
     }
 
@@ -302,11 +278,33 @@
             this.ChangeMetricsList[2].Unchanged = this.SyncRun.AnalyzeResult.UnchangedFileBytes;
 
             this.SetStatusDescription();
+
+            this.metadataUpdateCancellationToken.Cancel();
         }
+
+        private CancellationTokenSource metadataUpdateCancellationToken;
 
         private void SyncRunOnSyncStarted(object sender, EventArgs eventArgs)
         {
             this.StartTime = this.SyncRun.StartTime;
+            this.metadataUpdateCancellationToken = new CancellationTokenSource();
+
+            Task t = new Task(async () =>
+            {
+                while (!this.metadataUpdateCancellationToken.IsCancellationRequested)
+                {
+                    await Task.Delay(100);
+
+                    foreach (ChangeMetrics changeMetric in this.ChangeMetricsList)
+                    {
+                        changeMetric.RaisePropertiesChanged();
+                        this.RaisePropertyChanged(nameof(this.BytesToCopy));
+                    }
+                }
+            },
+            this.metadataUpdateCancellationToken.Token);
+
+            t.Start();
         }
 
         /// <summary>
@@ -601,14 +599,7 @@
 
         public List<ChangeMetrics> ChangeMetricsList { get; }
 
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private long bytesToCopy;
-
-        public long BytesToCopy
-        {
-            get { return this.bytesToCopy; }
-            set { this.SetProperty(ref this.bytesToCopy, value); }
-        }
+        public long BytesToCopy { get; set; }
 
         private ObservableCollection<EntryUpdateInfoViewModel> entryUpdatesTreeList;
 
