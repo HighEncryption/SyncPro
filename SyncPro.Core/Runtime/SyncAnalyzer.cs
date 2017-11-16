@@ -365,9 +365,15 @@ namespace SyncPro.Runtime
             Logger.Verbose("Found {0} child items from adapter.", adapterChildren.Count);
 
             // Get the children (files and directories) for a particular directory as identified by 'entry'.
-            List<SyncEntry> logicalChildren = db.Entries.Include(e => e.AdapterEntries).Where(e => e.ParentId == logicalParent.Id).ToList();
+            // Performance Note: Check if the logical parent is a new item. If so, then any of the children will
+            // be new as well, so don't query the DB for them.
+            List<SyncEntry> logicalChildren = null;
+            if (logicalParent.UpdateInfo != null && !logicalParent.UpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.IsNew))
+            {
+                logicalChildren = db.Entries.Include(e => e.AdapterEntries).Where(e => e.ParentId == logicalParent.Id).ToList();
+            }
 
-            Logger.Verbose("Found {0} child items from database.", logicalChildren.Count);
+            Logger.Verbose("Found {0} child items from database.", logicalChildren?.Count);
 
             // Loop through each of the items return by the adapter (eg files on disk)
             foreach (IAdapterItem adapterChild in adapterChildren)
@@ -392,7 +398,7 @@ namespace SyncPro.Runtime
                 Logger.Verbose("Examining adapter child item {0}", adapterChild.FullName);
 
                 // First check if there is an entry that matches the unique ID of the item
-                SyncEntry logicalChild = logicalChildren.FirstOrDefault(c => c.HasUniqueId(adapterChild.UniqueId));
+                SyncEntry logicalChild = logicalChildren?.FirstOrDefault(c => c.HasUniqueId(adapterChild.UniqueId));
 
                 // A match was found, so determine
                 if (logicalChild != null)
@@ -475,44 +481,47 @@ namespace SyncPro.Runtime
 
             // Any entries still in the indexChildren list are no longer present in the source adapter and
             // need to be expunged (recursivly).
-            foreach (
-                SyncEntry oldChild in logicalChildren.Where(e => e.State.HasFlag(SyncEntryState.IsDeleted) == false))
+            if (logicalChildren != null)
             {
-                if (this.cancellationToken.IsCancellationRequested)
+                foreach (
+                    SyncEntry oldChild in logicalChildren.Where(e => e.State.HasFlag(SyncEntryState.IsDeleted) == false))
                 {
-                    break;
-                }
+                    if (this.cancellationToken.IsCancellationRequested)
+                    {
+                        break;
+                    }
 
-                Logger.Verbose("Child item {0} ({1}) was deleted.", oldChild.Id, oldChild.Name);
+                    Logger.Verbose("Child item {0} ({1}) was deleted.", oldChild.Id, oldChild.Name);
 
-                // Mark the sync entry as 'deleted' by setting the appropriate bit.
-                oldChild.State |= SyncEntryState.IsDeleted;
+                    // Mark the sync entry as 'deleted' by setting the appropriate bit.
+                    oldChild.State |= SyncEntryState.IsDeleted;
 
-                // Set the state to 'Unsynchronized' (so that we know we have pending changes).
-                oldChild.State |= SyncEntryState.NotSynchronized;
+                    // Set the state to 'Unsynchronized' (so that we know we have pending changes).
+                    oldChild.State |= SyncEntryState.NotSynchronized;
 
-                // Create the update info for the new entry
-                oldChild.UpdateInfo = new EntryUpdateInfo(
-                    oldChild,
-                    adapter,
-                    SyncEntryChangedFlags.Deleted,
-                    Path.Combine(relativePath, oldChild.Name));
-
-                //this.RaiseSyncEntryChanged(oldChild, ItemChangeType.Deleted);
-                //this.AnalyzeOnSyncEntryChanged(this, new SyncEntryChangedEventArgs(oldChild.UpdateInfo));
-                this.RaiseChangeDetected(adapter.Configuration.Id, oldChild.UpdateInfo);
-
-                // If the entry we are removing is a directory, we need to also check for subdirectories and files. We can do this by calling 
-                // this method recursivly, and passing null for adapter folder (indicating that is no longer exists according to the 
-                // originating adapter.
-                if (oldChild.Type == SyncEntryType.Directory)
-                {
-                    this.AnalyzeChangesWithoutChangeTracking(
-                        db, 
-                        adapter, 
-                        null, 
-                        oldChild, 
+                    // Create the update info for the new entry
+                    oldChild.UpdateInfo = new EntryUpdateInfo(
+                        oldChild,
+                        adapter,
+                        SyncEntryChangedFlags.Deleted,
                         Path.Combine(relativePath, oldChild.Name));
+
+                    //this.RaiseSyncEntryChanged(oldChild, ItemChangeType.Deleted);
+                    //this.AnalyzeOnSyncEntryChanged(this, new SyncEntryChangedEventArgs(oldChild.UpdateInfo));
+                    this.RaiseChangeDetected(adapter.Configuration.Id, oldChild.UpdateInfo);
+
+                    // If the entry we are removing is a directory, we need to also check for subdirectories and files. We can do this by calling 
+                    // this method recursivly, and passing null for adapter folder (indicating that is no longer exists according to the 
+                    // originating adapter.
+                    if (oldChild.Type == SyncEntryType.Directory)
+                    {
+                        this.AnalyzeChangesWithoutChangeTracking(
+                            db,
+                            adapter,
+                            null,
+                            oldChild,
+                            Path.Combine(relativePath, oldChild.Name));
+                    }
                 }
             }
         }
