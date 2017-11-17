@@ -503,6 +503,18 @@
   <ItemGroup>
     <Resource Include="Resources\Graphics\signal_4_20.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Graphics\hourglass_64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Graphics\warning_64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Graphics\ok_64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Graphics\error_64.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>git describe --always --dirty &gt; $(ProjectDir)\version.txt</PreBuildEvent>

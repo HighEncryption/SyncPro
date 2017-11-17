@@ -5,16 +5,18 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:ui="clr-namespace:SyncPro.UI"
              xmlns:viewModels="clr-namespace:SyncPro.UI.ViewModels"
+             xmlns:runtime="clr-namespace:SyncPro.Runtime;assembly=SyncPro.Core"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
     <UserControl.Resources>
         <ResourceDictionary>
             <DataTemplate x:Key="SyncRelationshipDataTemplate" 
                           DataType="viewModels:SyncRelationshipViewModel">
-                <Border Margin="2" Padding="2" BorderBrush="Black"
-                        BorderThickness="1">
+                <Border Margin="0,4" Padding="2" BorderBrush="Black"
+                        BorderThickness="0" Background="Transparent">
                     <Grid>
                         <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition MaxWidth="4" />
                             <ColumnDefinition />
@@ -26,20 +28,41 @@
                             <RowDefinition />
                         </Grid.RowDefinitions>
 
-                        <TextBlock Grid.ColumnSpan="3"
-                                   Text="{Binding Path=Name}" FontSize="16" FontWeight="SemiBold" />
-                        <TextBlock Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="3" Margin="0,0,0,8"
-                                   Text="{Binding Path=Description}" FontSize="10" />
+                        <Image Grid.Column="0" Grid.RowSpan="4" Margin="0,0,8,0">
+                            <Image.Style>
+                                <Style TargetType="Image">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Path=State}" Value="{x:Static runtime:SyncRelationshipState.Idle}">
+                                            <Setter Property="Source" Value="/Resources/Graphics/ok_64.png" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Path=State}" Value="{x:Static runtime:SyncRelationshipState.Error}">
+                                            <Setter Property="Source" Value="/Resources/Graphics/error_64.png" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Path=State}" Value="{x:Static runtime:SyncRelationshipState.Running}">
+                                            <Setter Property="Source" Value="/Resources/Graphics/hourglass_64.png" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Path=State}" Value="{x:Static runtime:SyncRelationshipState.Initializing}">
+                                            <Setter Property="Source" Value="/Resources/Graphics/hourglass_64.png" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Image.Style>
+                        </Image>
 
-                        <TextBlock Grid.Column="0" Grid.Row="2" HorizontalAlignment="Right"
-                                   Text="Status" FontSize="11" FontWeight="SemiBold" />
-                        <TextBlock Grid.Column="2" Grid.Row="2" 
-                                   Text="{Binding Path=State}" FontSize="11" />
+                        <TextBlock Grid.Column="1" Grid.Row="0" Grid.ColumnSpan="3"
+                                   Text="{Binding Path=Name}" FontSize="18" FontWeight="SemiBold" />
+                        <TextBlock Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="3" Margin="0,0,0,8"
+                                   Text="{Binding Path=Description}" FontSize="11" />
 
-                        <TextBlock Grid.Column="0" Grid.Row="3" HorizontalAlignment="Right"
-                                   Text="Last Sync" FontSize="11" FontWeight="SemiBold" />
-                        <TextBlock Grid.Column="2" Grid.Row="3" 
-                                   Text="{Binding Path=LastSyncDisplayString}" FontSize="11" />
+                        <TextBlock Grid.Column="1" Grid.Row="2" HorizontalAlignment="Right"
+                                   Text="Status" FontSize="12" FontWeight="SemiBold" />
+                        <TextBlock Grid.Column="3" Grid.Row="2" 
+                                   Text="{Binding Path=State}" FontSize="12" />
+
+                        <TextBlock Grid.Column="1" Grid.Row="3" HorizontalAlignment="Right"
+                                   Text="Last Sync" FontSize="12" FontWeight="SemiBold" />
+                        <TextBlock Grid.Column="3" Grid.Row="3" 
+                                   Text="{Binding Path=LastSyncDisplayString}" FontSize="12" />
                     </Grid>
 
                 </Border>
@@ -49,8 +72,9 @@
     <StackPanel>
         <StackPanel Margin="24">
             <ListView ItemsSource="{Binding Source={x:Static ui:App.Current}, Path=MainWindowsViewModel.SyncRelationships}"
-                      BorderThickness="0" Background="Transparent"
-                      ItemTemplate="{StaticResource SyncRelationshipDataTemplate}">
+                      BorderThickness="0" Background="Transparent" 
+                      SelectedItem="{Binding Source={x:Static ui:App.Current}, Path=MainWindowsViewModel.SelectedSyncRelationship}"
+                      ItemTemplate="{StaticResource SyncRelationshipDataTemplate}" SelectionMode="Single">
                 <ListView.ItemsPanel>
                     <ItemsPanelTemplate>
                         <StackPanel Orientation="Vertical" UseLayoutRounding="True" />
@@ -59,12 +83,21 @@
                 <ListView.ItemContainerStyle>
                     <Style TargetType="ListViewItem">
                         <Setter Property="BorderThickness" Value="0"/>
-                        <Setter Property="Margin" Value="0"/>
+                        <Setter Property="Margin" Value="0,0,0,4"/>
                         <Setter Property="Padding" Value="0"/>
                         <Setter Property="Template">
                             <Setter.Value>
                                 <ControlTemplate TargetType="ListViewItem">
                                     <Border>
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background" Value="#E8E8E8" />
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
                                         <ContentPresenter Content="{TemplateBinding Content}" 
                                                           ContentTemplate="{TemplateBinding ContentTemplate}" />
                                     </Border>

@@ -11,7 +11,6 @@
 
     using JsonLog;
 
-    using SyncPro.Adapters.WindowsFileSystem;
     using SyncPro.Runtime;
     using SyncPro.UI.Framework;
     using SyncPro.UI.Framework.MVVM;
@@ -21,9 +20,9 @@
 
     public class MainWindowViewModel : ViewModelBase, IRequestClose
     {
-        public ICommand CreateRelationshipCommand { get; private set; }
+        public ICommand CreateRelationshipCommand { get; }
 
-        public ICommand CloseWindowCommand { get; private set; }
+        public ICommand CloseWindowCommand { get; }
 
         public string WindowTitle { get; set; }
 
@@ -36,6 +35,26 @@
 
         public ObservableCollection<NavigationNodeViewModel> NavigationItems
             => this.navigationItems ?? (this.navigationItems = new ObservableCollection<NavigationNodeViewModel>());
+
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private ViewModelBase selectedSyncRelationship;
+
+        public ViewModelBase SelectedSyncRelationship
+        {
+            get { return this.selectedSyncRelationship; }
+            set
+            {
+                if (this.SetProperty(ref this.selectedSyncRelationship, value) && value != null)
+                {
+                    SyncRelationshipNodeViewModel relationshipViewModel = this.NavigationItems
+                        .OfType<SyncRelationshipNodeViewModel>()
+                        .Single(vm => vm.Item == value);
+
+                    this.SelectedNavigationItem = relationshipViewModel;
+                    this.selectedSyncRelationship = null;
+                }
+            }
+        }
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private NavigationNodeViewModel selectedNavigationItem;
@@ -68,6 +87,7 @@
                     }
 
                     this.CurrentNavigationRoot = element;
+                    value.IsSelected = true;
                 }
             }
         }
