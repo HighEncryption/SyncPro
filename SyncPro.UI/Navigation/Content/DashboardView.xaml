@@ -69,44 +69,40 @@
             </DataTemplate>
         </ResourceDictionary>
     </UserControl.Resources>
-    <StackPanel>
-        <StackPanel Margin="24">
-            <ListView ItemsSource="{Binding Source={x:Static ui:App.Current}, Path=MainWindowsViewModel.SyncRelationships}"
-                      BorderThickness="0" Background="Transparent" 
-                      SelectedItem="{Binding Source={x:Static ui:App.Current}, Path=MainWindowsViewModel.SelectedSyncRelationship}"
-                      ItemTemplate="{StaticResource SyncRelationshipDataTemplate}" SelectionMode="Single">
-                <ListView.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <StackPanel Orientation="Vertical" UseLayoutRounding="True" />
-                    </ItemsPanelTemplate>
-                </ListView.ItemsPanel>
-                <ListView.ItemContainerStyle>
-                    <Style TargetType="ListViewItem">
-                        <Setter Property="BorderThickness" Value="0"/>
-                        <Setter Property="Margin" Value="0,0,0,4"/>
-                        <Setter Property="Padding" Value="0"/>
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="ListViewItem">
-                                    <Border>
-                                        <Border.Style>
-                                            <Style TargetType="Border">
-                                                <Style.Triggers>
-                                                    <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter Property="Background" Value="#E8E8E8" />
-                                                    </Trigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Border.Style>
-                                        <ContentPresenter Content="{TemplateBinding Content}" 
-                                                          ContentTemplate="{TemplateBinding ContentTemplate}" />
-                                    </Border>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                    </Style>
-                </ListView.ItemContainerStyle>
-            </ListView>
-        </StackPanel>
-    </StackPanel>
+    <ListView ItemsSource="{Binding Source={x:Static ui:App.Current}, Path=MainWindowsViewModel.SyncRelationships}"  
+                BorderThickness="0" Background="Transparent" 
+                SelectedItem="{Binding Source={x:Static ui:App.Current}, Path=MainWindowsViewModel.SelectedSyncRelationship}"
+                ItemTemplate="{StaticResource SyncRelationshipDataTemplate}" SelectionMode="Single">
+        <ListView.ItemsPanel>
+            <ItemsPanelTemplate>
+                <StackPanel Orientation="Vertical" UseLayoutRounding="True" Margin="24" />
+            </ItemsPanelTemplate>
+        </ListView.ItemsPanel>
+        <ListView.ItemContainerStyle>
+            <Style TargetType="ListViewItem">
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Margin" Value="0,0,0,4"/>
+                <Setter Property="Padding" Value="0"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ListViewItem">
+                            <Border>
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Style.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Background" Value="#E8E8E8" />
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <ContentPresenter Content="{TemplateBinding Content}" 
+                                                    ContentTemplate="{TemplateBinding ContentTemplate}" />
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </ListView.ItemContainerStyle>
+    </ListView>
 </UserControl>

@@ -8,10 +8,10 @@
 
     public class Global
     {
-        public static void Initialize()
+        public static void Initialize(bool testMode)
         {
             string localAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            Global.Initialize(Path.Combine(localAppDataPath, "SyncPro"), false);
+            Global.Initialize(Path.Combine(localAppDataPath, "SyncPro"), testMode);
         }
 
         // Test Hook
@@ -24,7 +24,7 @@
                 Directory.CreateDirectory(Global.AppDataRoot);
             }
 
-            InitializeLogging(Global.AppDataRoot, !isTestMode);
+            InitializeLogging(Global.AppDataRoot, isTestMode); 
 
             Logger.Info("Logging initialized.");
 

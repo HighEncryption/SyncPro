@@ -192,9 +192,7 @@
             <!-- ReSharper disable once Xaml.RedundantResource -->
             <DataTemplate DataType="{x:Type navViewModels:DashboardNodeViewModel}">
                 <Border>
-                    <StackPanel>
-                        <content:DashboardView />
-                    </StackPanel>
+                    <content:DashboardView />
                 </Border>
             </DataTemplate>
 

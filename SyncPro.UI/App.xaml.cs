@@ -56,7 +56,8 @@
 
         internal static void Start(Dictionary<string, string> args)
         {
-            Global.Initialize();
+            bool testMode = Keyboard.IsKeyDown(Key.LeftShift);
+            Global.Initialize(testMode);
 
             // Enable property validation logging if trying to debug validation problems
             // LoggerExtensions.LogPropertyValidation = true;

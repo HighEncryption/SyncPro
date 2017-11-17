@@ -252,6 +252,7 @@
             if (!this.SyncRunHistory.Any())
             {
                 this.SyncStatusDescription = "Never Synchronized";
+                this.LastSyncDisplayString = "Never Synchronized";
                 this.IsNeverSynchronized = true;
                 return;
             }
