@@ -15,7 +15,7 @@
         }
 
         // Test Hook
-        internal static void Initialize(string root, bool isTestMode = true)
+        internal static void Initialize(string root, bool isTestMode = false)
         {
             Global.AppDataRoot = root;
 

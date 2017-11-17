@@ -1,5 +1,6 @@
 namespace SyncPro.Runtime
 {
+    using System;
     using System.Collections.Generic;
 
     public class AnalyzeAdapterResult
@@ -26,6 +27,11 @@ namespace SyncPro.Runtime
         /// will be committed to the adapter.
         /// </remarks>
         public bool ForceCommitChanges { get; set; }
+
+        /// <summary>
+        /// Exception thrown during analysis.
+        /// </summary>
+        public Exception Exception { get; set; }
 
         public AnalyzeAdapterResult()
         {

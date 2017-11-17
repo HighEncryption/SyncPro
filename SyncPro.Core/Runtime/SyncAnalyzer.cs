@@ -112,33 +112,40 @@ namespace SyncPro.Runtime
         {
             Logger.Info("Beginning AnalyzeChangesFromAdapter for adapter " + adapter.Configuration.Id);
 
-            using (SyncDatabase db = this.relationship.GetDatabase())
+            try
             {
-                SyncEntry rootIndexEntry = db.Entries.FirstOrDefault(e => e.Id == adapter.Configuration.RootIndexEntryId);
-                if (adapter.SupportChangeTracking())
+                using (SyncDatabase db = this.relationship.GetDatabase())
                 {
-                    IChangeTracking changeTracking = (IChangeTracking)adapter;
-                    TrackedChange trackedChange = await changeTracking.GetChangesAsync().ConfigureAwait(false);
+                    SyncEntry rootIndexEntry = db.Entries.FirstOrDefault(e => e.Id == adapter.Configuration.RootIndexEntryId);
 
-                    this.analyzeResult.TrackedChanges.Add(adapter, trackedChange);
-                    this.AnalyzeChangesWithChangeTracking(db, adapter, rootIndexEntry);
+                    if (adapter.SupportChangeTracking())
+                    {
+                        IChangeTracking changeTracking = (IChangeTracking)adapter;
+                        TrackedChange trackedChange = await changeTracking.GetChangesAsync().ConfigureAwait(false);
 
-                    Logger.Info("Finished AnalyzeChangesFromAdapter with change tracking for adapter " + adapter.Configuration.Id);
+                        this.analyzeResult.TrackedChanges.Add(adapter, trackedChange);
+                        this.AnalyzeChangesWithChangeTracking(db, adapter, rootIndexEntry);
+
+                        Logger.Info("Finished AnalyzeChangesFromAdapter with change tracking for adapter " + adapter.Configuration.Id);
+                    }
+                    else
+                    {
+                        IAdapterItem rootFolder = adapter.GetRootFolder().Result;
+
+                        this.AnalyzeChangesWithoutChangeTracking(
+                            db,
+                            adapter,
+                            rootFolder,
+                            rootIndexEntry,
+                            string.Empty);
+
+                        Logger.Info("Finished AnalyzeChangesFromAdapter for adapter " + adapter.Configuration.Id);
+                    }
                 }
-                else
-                {
-                    IAdapterItem rootFolder = adapter.GetRootFolder().Result;
-
-                    this.AnalyzeChangesWithoutChangeTracking(
-                        db,
-                        adapter,
-                        rootFolder,
-                        rootIndexEntry,
-                        string.Empty);
-
-                    Logger.Info("Finished AnalyzeChangesFromAdapter for adapter " + adapter.Configuration.Id);
-                }
-
+            }
+            catch (Exception exception)
+            {
+                this.analyzeResult.AdapterResults[adapter.Configuration.Id].Exception = exception;
             }
         }
 
@@ -366,9 +373,16 @@ namespace SyncPro.Runtime
 
             // Get the children (files and directories) for a particular directory as identified by 'entry'.
             // Performance Note: Check if the logical parent is a new item. If so, then any of the children will
-            // be new as well, so don't query the DB for them.
+            // be new as well, so don't query the DB for them. The logic below determines if we need to make this
+            // DB query inverted, as it is easier to read by a human.
+            bool skipChildLookup =
+                logicalParent.State == SyncEntryState.NotSynchronized &&
+                logicalParent.UpdateInfo != null &&
+                logicalParent.UpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.IsNew);
+
             List<SyncEntry> logicalChildren = null;
-            if (logicalParent.UpdateInfo != null && !logicalParent.UpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.IsNew))
+
+            if (!skipChildLookup)
             {
                 logicalChildren = db.Entries.Include(e => e.AdapterEntries).Where(e => e.ParentId == logicalParent.Id).ToList();
             }
@@ -438,6 +452,9 @@ namespace SyncPro.Runtime
 
                         // Create the update info for the new entry
                         logicalChild.UpdateInfo = new EntryUpdateInfo(logicalChild, adapter, changeFlags, Path.Combine(relativePath, logicalChild.Name));
+
+                        // Set the NotSynchronized flag so that we know this has not yet been committed to the database.
+                        logicalChild.State = SyncEntryState.NotSynchronized;
 
                         // Raise change notification so that the UI can be updated in "real time" rather than waiting for the analyze process to finish.
                         //this.AnalyzeOnSyncEntryChanged(this, new SyncEntryChangedEventArgs(logicalChild.UpdateInfo));
