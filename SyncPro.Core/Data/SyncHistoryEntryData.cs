@@ -7,6 +7,9 @@
     using SyncPro.Adapters;
     using SyncPro.Runtime;
 
+    /// <summary>
+    /// Contains metadata about the changes synchronized for a <see cref="SyncEntry"/>.
+    /// </summary>
     [Table("HistoryEntries")]
     public class SyncHistoryEntryData
     {
@@ -14,9 +17,6 @@
         public int Id { get; set; }
 
         public int SyncHistoryId { get; set; }
-
-        //[ForeignKey("SyncHistoryId")]
-        //public virtual SyncHistoryData HistoryData { get; set; }
 
         public long SyncEntryId { get; set; }
 
@@ -30,8 +30,14 @@
 
         public byte[] Sha1Hash { get; set; }
 
+        /// <summary>
+        /// The result of the change (succeeded/failed).
+        /// </summary>
         public EntryUpdateState Result { get; set; }
 
+        /// <summary>
+        /// Flags indicating the way in which the entry changed (size, hash, timestap, etc.)
+        /// </summary>
         [NotMapped]
         public SyncEntryChangedFlags Flags
         {
@@ -58,6 +64,9 @@
 
         public int FlagsValue { get; set; }
 
+        /// <summary>
+        /// The timestamp when the change was applied (and this <see cref="SyncHistoryEntryData"/> was created).
+        /// </summary>
         public DateTime Timestamp { get; set; }
 
         /// <summary>

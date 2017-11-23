@@ -7,7 +7,6 @@ namespace SyncPro.Runtime
     using JsonLog;
 
     using SyncPro.Adapters;
-    using SyncPro.Data;
 
     public class AnalyzeRelationshipResult
     {
