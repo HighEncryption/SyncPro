@@ -49,7 +49,6 @@ namespace SyncPro.UnitTests
             Logger.Info("   Relationship Id: {0}", relationship.RelationshipId);
             Logger.Info("   Scope: {0}", relationship.Scope);
             Logger.Info("   Sync Attributes: {0}", relationship.SyncAttributes);
-            Logger.Info("   Sync Timestamps: {0}", relationship.SyncTimestamps);
 
             Logger.Info("Trigger Configuration:");
             Logger.Info("   Trigger Type: {0}", relationship.TriggerConfiguration.TriggerType);

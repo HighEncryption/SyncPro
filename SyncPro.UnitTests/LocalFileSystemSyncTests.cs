@@ -6,6 +6,8 @@
 
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+    using SyncPro.Adapters;
+
     [TestClass]
     public class LocalFileSystemSyncTests
     {
@@ -116,12 +118,12 @@
         }
 
         [TestMethod]
-        public void SyncTimestampChange()
+        public void SyncCreationTimestampChange()
         {
             var testWrapper = TestWrapperFactory
                 .CreateLocalToLocal(this.TestContext)
                 .SaveRelationship()
-                .CreateBasicSourceStructure();
+                .CreateSimpleSourceStructure();
 
             // First sync run
             testWrapper
@@ -131,30 +133,84 @@
                 .VerifyResultContainsAllFiles()
                 .VerifyDatabaseHashes();
 
-            Logger.Info("Logging database before delete:");
+            Logger.Info("Logging database before creation timestamp change:");
             using (var db = testWrapper.Relationship.GetDatabase())
             {
                 TestHelper.LogConfiguration(testWrapper.Relationship.Configuration);
                 TestHelper.LogDatabase(db);
             }
 
-            // Delete dir2 and a file from dir1
-            var syncSourcePath = testWrapper.SourceAdapter.Config.RootDirectory;
-            File.AppendAllLines(
-                Path.Combine(syncSourcePath, "dir1\\file2.txt"),
-                new [] { "Appended line." });
-
-            //File.Move(
-            //    Path.Combine(syncSourcePath, "dir1\\file3.txt"),
-            //    Path.Combine(syncSourcePath, "dir1\\file3_rename.txt"));
+            // Update the creation time of a file
+            string filePath = Path.Combine(testWrapper.SourceAdapter.Config.RootDirectory, "dir1\\file1.txt");
+            var newCreationTime = File.GetCreationTimeUtc(filePath).AddSeconds(1);
+            File.SetCreationTimeUtc(filePath, newCreationTime);
 
             // Second sync run
-            testWrapper
-                .CreateSyncRun()
+            var syncRun = testWrapper
+                .CreateSyncRun();
+
+            syncRun
                 .RunToCompletion()
                 .VerifySyncSuccess()
                 .VerifyAnalyzeEntryCount(1)
                 .VerifyDatabaseHashes();
+
+            // Verify that only the created timestamp change was detected
+            var changedSyncEntry = syncRun.CurrentSyncRun.AnalyzeResult.AdapterResults[1].EntryResults[0];
+            Assert.AreEqual(changedSyncEntry.Flags, SyncEntryChangedFlags.CreatedTimestamp);
+
+            // Verify that the timestamp was copied
+            filePath = Path.Combine(testWrapper.DestinationAdapter.Config.RootDirectory, "dir1\\file1.txt");
+            var expectedCreationTime = File.GetCreationTimeUtc(filePath);
+            Assert.AreEqual(expectedCreationTime, newCreationTime);
+        }
+
+        [TestMethod]
+        public void SyncModifiedTimestampChange()
+        {
+            var testWrapper = TestWrapperFactory
+                .CreateLocalToLocal(this.TestContext)
+                .SaveRelationship()
+                .CreateSimpleSourceStructure();
+
+            // First sync run
+            testWrapper
+                .CreateSyncRun()
+                .RunToCompletion()
+                .VerifySyncSuccess()
+                .VerifyResultContainsAllFiles()
+                .VerifyDatabaseHashes();
+
+            Logger.Info("Logging database before last modified timestamp change:");
+            using (var db = testWrapper.Relationship.GetDatabase())
+            {
+                TestHelper.LogConfiguration(testWrapper.Relationship.Configuration);
+                TestHelper.LogDatabase(db);
+            }
+
+            // Update the creation time of a file
+            string filePath = Path.Combine(testWrapper.SourceAdapter.Config.RootDirectory, "dir1\\file1.txt");
+            var newModifiedTime = File.GetLastWriteTimeUtc(filePath).AddSeconds(1);
+            File.SetLastWriteTimeUtc(filePath, newModifiedTime);
+
+            // Second sync run
+            var syncRun = testWrapper
+                .CreateSyncRun();
+
+            syncRun
+                .RunToCompletion()
+                .VerifySyncSuccess()
+                .VerifyAnalyzeEntryCount(1)
+                .VerifyDatabaseHashes();
+
+            // Verify that only the created timestamp change was detected
+            var changedSyncEntry = syncRun.CurrentSyncRun.AnalyzeResult.AdapterResults[1].EntryResults[0];
+            Assert.AreEqual(changedSyncEntry.Flags, SyncEntryChangedFlags.ModifiedTimestamp);
+
+            // Verify that the timestamp was copied
+            filePath = Path.Combine(testWrapper.DestinationAdapter.Config.RootDirectory, "dir1\\file1.txt");
+            var expectedModifiedTime = File.GetLastWriteTimeUtc(filePath);
+            Assert.AreEqual(expectedModifiedTime, newModifiedTime);
         }
 
         [TestMethod]

@@ -477,11 +477,6 @@
             else if ((entryUpdateInfo.Flags & SyncEntryChangedFlags.IsUpdated) != 0 ||
                      entryUpdateInfo.Flags.HasFlag(SyncEntryChangedFlags.Renamed))
             {
-                // The item was either renamed or the metadata was updated. Either way, this will be handled
-                // by the UpdateItem call to the adapter.
-                Logger.Info("Updating item using adapter");
-                adapter.UpdateItem(entryUpdateInfo.Entry, entryUpdateInfo.Flags);
-
                 // If IsUpdated is true (which is possible along with a rename) and the item is a file, update
                 // the file contents.
                 if (entryUpdateInfo.Entry.Type == SyncEntryType.File)
@@ -494,6 +489,11 @@
                             throttlingManager)
                         .ConfigureAwait(false);
                 }
+
+                // The item was either renamed or the metadata was updated. Either way, this will be handled
+                // by the UpdateItem call to the adapter.
+                Logger.Info("Updating item using adapter");
+                adapter.UpdateItem(entryUpdateInfo, entryUpdateInfo.Flags);
             }
             else
             {

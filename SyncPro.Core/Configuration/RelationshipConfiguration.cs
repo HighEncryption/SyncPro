@@ -52,14 +52,9 @@
         public SyncScopeType Scope { get; set; }
 
         /// <summary>
-        /// Whether the attributes (system, hidden, etc.) of the item should be syncrhonzied.
+        /// Whether the attributes (system, hidden, etc.) of the item should be synchronzied.
         /// </summary>
         public bool SyncAttributes { get; set; }
-
-        /// <summary>
-        /// Whether the timestamps (created, modified) of the item should be synchronized.
-        /// </summary>
-        public bool SyncTimestamps { get; set; }
 
         public ThrottlingConfiguration ThrottlingConfiguration { get; set; }
 

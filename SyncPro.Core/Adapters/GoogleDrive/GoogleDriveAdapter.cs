@@ -76,7 +76,7 @@
             throw new NotImplementedException();
         }
 
-        public override void UpdateItem(SyncEntry entry, SyncEntryChangedFlags changeFlags)
+        public override void UpdateItem(EntryUpdateInfo updateInfo, SyncEntryChangedFlags changeFlags)
         {
             throw new NotImplementedException();
         }
@@ -105,7 +105,7 @@
             return adapterItems;
         }
 
-        public override bool IsEntryUpdated(SyncEntry childEntry, IAdapterItem adapterItem, out SyncEntryChangedFlags changeFlags)
+        public override bool IsEntryUpdated(SyncEntry childEntry, IAdapterItem adapterItem, out EntryUpdateResult result)
         {
             throw new NotImplementedException();
         }

@@ -16,11 +16,6 @@
     {
         public static readonly Guid TargetTypeId = new Guid("b1755e86-381e-4e78-b47d-dbbfeee34585");
 
-        // TODO: Need to implement this?
-        // private CancellationTokenSource cancellationTokenSource;
-
-        //public string RootDirectory { get; set; }
-
         public WindowsFileSystemAdapterConfiguration Config =>
             (WindowsFileSystemAdapterConfiguration) this.Configuration;
 
@@ -125,32 +120,24 @@
             return File.Open(fullPath, FileMode.Open, FileAccess.Read);
         }
 
-        public override void UpdateItem(SyncEntry entry, SyncEntryChangedFlags changeFlags)
+        public override void UpdateItem(EntryUpdateInfo updateInfo, SyncEntryChangedFlags changeFlags)
         {
             string fullPath;
             using (var database = this.Relationship.GetDatabase())
             {
-                fullPath = Path.Combine(this.Config.RootDirectory, entry.GetRelativePath(database, this.PathSeparator));
+                fullPath = Path.Combine(this.Config.RootDirectory, updateInfo.Entry.GetRelativePath(database, this.PathSeparator));
             }
 
-            FileSystemInfo f = GetFileSystemInfo(fullPath, entry.Type);
+            FileSystemInfo fileSystemInfo = GetFileSystemInfo(fullPath, updateInfo.Entry.Type);
 
-            switch (changeFlags)
+            if ((changeFlags & SyncEntryChangedFlags.CreatedTimestamp) != 0)
             {
-                case SyncEntryChangedFlags.ModifiedTimestamp:
-                    if (this.Relationship.Configuration.SyncTimestamps)
-                    {
-                        f.LastWriteTimeUtc = entry.ModifiedDateTimeUtc;
-                    }
-                    break;
-                case SyncEntryChangedFlags.CreatedTimestamp:
-                    if (this.Relationship.Configuration.SyncTimestamps)
-                    {
-                        f.CreationTimeUtc = entry.CreationDateTimeUtc;
-                    }
-                    break;
-                case SyncEntryChangedFlags.Renamed:
-                    throw new NotImplementedException();
+                fileSystemInfo.CreationTimeUtc = updateInfo.UpdatedCreationTime;
+            }
+
+            if ((changeFlags & SyncEntryChangedFlags.ModifiedTimestamp) != 0)
+            {
+                fileSystemInfo.LastWriteTimeUtc = updateInfo.UpdatedModifiedTime;
             }
         }
 
@@ -160,12 +147,6 @@
             using (var database = this.Relationship.GetDatabase())
             {
                 fullPath = Path.Combine(this.Config.RootDirectory, entry.GetRelativePath(database, this.PathSeparator));
-
-                //// Here we need to call GetRelativePathStack instead of just GetRelativePath because the path may contain a 
-                //// different separator character, and we need to ensure that the seperator character is a '\' for use in this
-                //// adapter's delete logic.
-                //IList<string> entryPathStack = entry.GetRelativePathStack(database);
-                //fullPath = Path.Combine(this.RootDirectory, string.Join(this.PathSeparator, entryPathStack));
             }
 
             switch (entry.Type)
@@ -222,10 +203,15 @@
             return this.GetItemsFromDirectory((DirectoryInfo)fileSystemFolder.FileSystemInfo, folder);
         }
 
-        public override bool IsEntryUpdated(SyncEntry childEntry, IAdapterItem adapterItem, out SyncEntryChangedFlags changeFlags)
+        public override bool IsEntryUpdated(SyncEntry childEntry, IAdapterItem adapterItem, out EntryUpdateResult result)
         {
             const long TicksPerMillisecond = 10000;
-            const long Epsilon = TicksPerMillisecond * 2;
+
+            // 2017/11/24: There appears to be a discrepency when reading ModifiedDateTimeUtc and CreationTimeUtc
+            // from FileSystemInfo objects. The Ticks value is being rounded to the nearest 10000 ticks, causing 
+            // some directories to appear to be modified. For now, we will set the threshold for an item being 
+            // changed to 10ms
+            const long Epsilon = TicksPerMillisecond * 10;
 
             FileSystemFolder fileSystemItem = adapterItem as FileSystemFolder;
 
@@ -234,19 +220,18 @@
                 throw new ArgumentException("The adapter item is not of the correct type.", nameof(adapterItem));
             }
 
-            changeFlags = SyncEntryChangedFlags.None;
+            result = new EntryUpdateResult();
 
-            if (this.Relationship.Configuration.SyncTimestamps)
+            if (Math.Abs(childEntry.ModifiedDateTimeUtc.Ticks - fileSystemItem.FileSystemInfo.LastWriteTimeUtc.Ticks) > Epsilon)
             {
-                if (Math.Abs(childEntry.ModifiedDateTimeUtc.Ticks - fileSystemItem.FileSystemInfo.LastWriteTimeUtc.Ticks) > Epsilon)
-                {
-                    changeFlags |= SyncEntryChangedFlags.ModifiedTimestamp;
-                }
+                result.ChangeFlags |= SyncEntryChangedFlags.ModifiedTimestamp;
+                result.ModifiedTime = fileSystemItem.FileSystemInfo.LastWriteTimeUtc;
+            }
 
-                if (Math.Abs(childEntry.CreationDateTimeUtc.Ticks - fileSystemItem.FileSystemInfo.CreationTimeUtc.Ticks) > Epsilon)
-                {
-                    changeFlags |= SyncEntryChangedFlags.CreatedTimestamp;
-                }
+            if (Math.Abs(childEntry.CreationDateTimeUtc.Ticks - fileSystemItem.FileSystemInfo.CreationTimeUtc.Ticks) > Epsilon)
+            {
+                result.ChangeFlags |= SyncEntryChangedFlags.CreatedTimestamp;
+                result.CreationTime = fileSystemItem.FileSystemInfo.CreationTimeUtc;
             }
 
             FileInfo fileInfo = fileSystemItem.FileSystemInfo as FileInfo;
@@ -257,13 +242,13 @@
 
                 if (fileInfo.Length != childEntry.Size)
                 {
-                    changeFlags |= SyncEntryChangedFlags.FileSize;
+                    result.ChangeFlags |= SyncEntryChangedFlags.FileSize;
                 }
             }
 
             if (!string.Equals(fileSystemItem.Name, childEntry.Name, StringComparison.Ordinal))
             {
-                changeFlags |= SyncEntryChangedFlags.Renamed;
+                result.ChangeFlags |= SyncEntryChangedFlags.Renamed;
             }
 
             // It is possible that a directory was created over a file that previously existed (with the same name). To 
@@ -274,7 +259,7 @@
                 throw new NotImplementedException();
             }
 
-            return changeFlags != SyncEntryChangedFlags.None;
+            return result.ChangeFlags != SyncEntryChangedFlags.None;
         }
 
         public override SyncEntry CreateSyncEntryForAdapterItem(IAdapterItem item, SyncEntry parentEntry)
@@ -286,67 +271,9 @@
                 throw new InvalidOperationException("Item type is incorrect.");
             }
 
-            //return this.CreateEntryForFileInfo(fileSystemItem.FileSystemInfo, parentEntry);
             return this.CreateEntry(fileSystemItem.FileSystemInfo, parentEntry);
         }
 
-        //private SyncEntry CreateEntryForFileInfo(FileSystemInfo info, SyncEntry parentEntry)
-        //{
-        //    SyncEntry entry = new SyncEntry
-        //    {
-        //        CreationDateTimeUtc = info.CreationTimeUtc,
-        //        ModifiedDateTimeUtc = info.LastWriteTimeUtc,
-        //        Name = info.Name,
-        //    };
-
-        //    entry.AdapterEntries.Add(new SyncEntryAdapterData()
-        //    {
-        //        Adapter = this.Configuration,
-        //        SyncEntry = entry,
-        //        AdapterEntryId = GetItemId(info)
-        //    });
-
-        //    if (parentEntry != null)
-        //    {
-        //        entry.ParentEntry = parentEntry;
-        //        entry.ParentId = parentEntry.Id;
-        //    }
-
-        //    FileInfo fileInfo = info as FileInfo;
-
-        //    if (fileInfo != null)
-        //    {
-        //        entry.Type = SyncEntryType.File;
-        //        entry.Size = fileInfo.Length;
-
-        //        // TODO: Compute this when we actually copy the file
-        //        //entry.Sha1Hash = ComputerSha1Hash(info.FullName);
-        //    }
-
-        //    DirectoryInfo directoryInfo = info as DirectoryInfo;
-
-        //    if (directoryInfo != null)
-        //    {
-        //        entry.Type = SyncEntryType.Directory;
-        //    }
-
-        //    if (entry.Type == SyncEntryType.Undefined)
-        //    {
-        //        throw new Exception("Unknown type for FileSystemInfo " + info.FullName);
-        //    }
-
-        //    if (this.Relationship.Configuration.SyncTimestamps)
-        //    {
-        //        entry.CreationDateTimeUtc = info.CreationTimeUtc;
-        //        entry.ModifiedDateTimeUtc = info.LastWriteTimeUtc;
-        //    }
-
-        //    entry.EntryLastUpdatedDateTimeUtc = DateTime.UtcNow;
-
-        //    return entry;
-        //}
-
-        // TODO: Rewrite this as an members in an include/exclude list
         private static readonly string[] SuppressedDirectories = { "$RECYCLE.BIN", "System Volume Information" };
 
         private IEnumerable<IAdapterItem> GetItemsFromDirectory(DirectoryInfo directory, IAdapterItem parent)
@@ -357,62 +284,26 @@
                     .Select(info => FileSystemFolder.Create(info, parent, this));
         }
 
-        //public override void LoadConfiguration()
-        //{
-        //    JObject json = JObject.Parse(this.Configuration.CustomConfiguration);
-        //    this.RootDirectory = Convert.ToString(json["RootDirectory"]);
-        //}
-
-        //public override byte[] GetUniqueId(SyncEntry entry)
-        //private static byte[] GetUniqueId(SyncEntry entry)
-        //{
-        //    string fullPath;
-        //    using (var db = this.Relationship.GetDatabase())
-        //    {
-        //        fullPath = Path.Combine(this.RootDirectory, entry.GetRelativePath(db, this.PathSeparator));
-        //    }
-
-        //    FileSystemInfo f = GetFileSystemInfo(fullPath, entry.Type);
-        //    return GetItemId(f);
-        //}
-
-        //public override void SaveConfiguration()
-        //{
-        //    JObject json = new JObject();
-        //    if (!string.IsNullOrWhiteSpace(this.Configuration.CustomConfiguration))
-        //    {
-        //        json = JObject.Parse(this.Configuration.CustomConfiguration);
-        //    }
-
-        //    json["RootDirectory"] = this.RootDirectory;
-        //    this.Configuration.CustomConfiguration = json.ToString(Formatting.None);
-        //}
-
         private SyncEntry CreateEntry(FileSystemInfo info, SyncEntry parentEntry)
         {
             SyncEntry entry = new SyncEntry
             {
                 CreationDateTimeUtc = info.CreationTimeUtc,
                 ModifiedDateTimeUtc = info.LastWriteTimeUtc,
-                Name = info.Name
+                Name = info.Name,
+                AdapterEntries = new List<SyncEntryAdapterData>()
             };
-
-            entry.AdapterEntries = new List<SyncEntryAdapterData>();
 
             if (parentEntry != null)
             {
                 entry.AdapterEntries.Add(
                     new SyncEntryAdapterData()
                     {
-                        //Adapter = this.Configuration,
                         AdapterId = this.Configuration.Id,
                         SyncEntry = entry,
                         AdapterEntryId = GetItemId(info)
                     });
-            }
 
-            if (parentEntry != null)
-            {
                 entry.ParentEntry = parentEntry;
                 entry.ParentId = parentEntry.Id;
             }
@@ -423,9 +314,6 @@
             {
                 entry.Type = SyncEntryType.File;
                 entry.Size = fileInfo.Length;
-
-                // TODO: Compute this when we actually copy the file
-                //entry.Sha1Hash = ComputerSha1Hash(info.FullName);
             }
 
             DirectoryInfo directoryInfo = info as DirectoryInfo;
@@ -438,12 +326,6 @@
             if (entry.Type == SyncEntryType.Undefined)
             {
                 throw new Exception("Unknown type for FileSystemInfo " + info.FullName);
-            }
-
-            if (this.Relationship.Configuration.SyncTimestamps)
-            {
-                entry.CreationDateTimeUtc = info.CreationTimeUtc;
-                entry.ModifiedDateTimeUtc = info.LastWriteTimeUtc;
             }
 
             entry.EntryLastUpdatedDateTimeUtc = DateTime.UtcNow;
@@ -469,10 +351,8 @@
                 // Item is a directory.
                 return Convert.ToBase64String(NativeMethodHelpers.GetDirectoryObjectId(info.FullName));
             }
-            else
-            {
-                return Convert.ToBase64String(NativeMethodHelpers.GetFileObjectId(info.FullName));
-            }
+
+            return Convert.ToBase64String(NativeMethodHelpers.GetFileObjectId(info.FullName));
         }
 
         public WindowsFileSystemAdapter(SyncRelationship relationship) 
@@ -492,5 +372,4 @@
 
         public string RootDirectory { get; set; }
     }
-
 }

@@ -106,7 +106,7 @@ namespace SyncPro.Adapters
 
         public abstract Stream GetWriteStreamForEntry(SyncEntry entry, long length);
 
-        public abstract void UpdateItem(SyncEntry entry, SyncEntryChangedFlags changeFlags);
+        public abstract void UpdateItem(EntryUpdateInfo updateInfo, SyncEntryChangedFlags changeFlags);
 
         /// <summary>
         /// Delete an item from the adapter identified by the entity. The entity for the item will not be deleted/
@@ -123,10 +123,10 @@ namespace SyncPro.Adapters
         /// </summary>
         /// <param name="childEntry">The currently known state of the item (from the database)</param>
         /// <param name="adapterItem">The currently known state of the item (from the adapter)</param>
-        /// <param name="changeFlags">Flags indicating how the item has changed</param>
+        /// <param name="result">Result containing metadata about the change</param>
         /// <returns>True if the item has changed, false otherwise</returns>
         /// <remarks>Note that this call performs an in-memory check and MUST NOT result in a network/disk call.</remarks>
-        public abstract bool IsEntryUpdated(SyncEntry childEntry, IAdapterItem adapterItem, out SyncEntryChangedFlags changeFlags);
+        public abstract bool IsEntryUpdated(SyncEntry childEntry, IAdapterItem adapterItem, out EntryUpdateResult result);
 
         public abstract SyncEntry CreateSyncEntryForAdapterItem(IAdapterItem item, SyncEntry parentEntry);
 
@@ -182,6 +182,15 @@ namespace SyncPro.Adapters
         {
             return this is IChangeTracking;
         }
+    }
+
+    public class EntryUpdateResult
+    {
+        public SyncEntryChangedFlags ChangeFlags { get; set; }
+
+        public DateTime CreationTime { get; set; }
+
+        public DateTime ModifiedTime { get; set; }
     }
 
     public sealed class AdapterFactory

@@ -3,6 +3,7 @@ namespace SyncPro.UnitTests
     using System;
     using System.Collections.Generic;
     using System.Data.Entity;
+    using System.Diagnostics;
     using System.IO;
     using System.Linq;
     using System.Threading;
@@ -66,6 +67,31 @@ namespace SyncPro.UnitTests
                 TestHelper.CreateFile(sourceAdapter.Config.RootDirectory, "dir2\\dir3\\dir4\\file100.txt"),
                 TestHelper.CreateFile(sourceAdapter.Config.RootDirectory, "dir2\\dir3\\dir4\\file101.txt"),
                 TestHelper.CreateFile(sourceAdapter.Config.RootDirectory, "dir2\\dir3\\dir4\\file102.txt"),
+            });
+
+            return this;
+        }
+
+        public TestWrapper<TSource, TDestination> CreateSimpleSourceStructure()
+        {
+            WindowsFileSystemAdapter sourceAdapter = this.SourceAdapter as WindowsFileSystemAdapter;
+
+            if (sourceAdapter == null)
+            {
+                throw new NotImplementedException();
+            }
+
+            if (this.SyncFileList == null)
+            {
+                this.SyncFileList = new List<string>();
+            }
+
+            this.SyncFileList.AddRange(new List<string>
+            {
+                TestHelper.CreateDirectory(sourceAdapter.Config.RootDirectory, "dir1"),
+                TestHelper.CreateFile(sourceAdapter.Config.RootDirectory, "dir1\\file1.txt"),
+                TestHelper.CreateFile(sourceAdapter.Config.RootDirectory, "dir1\\file2.txt"),
+                TestHelper.CreateFile(sourceAdapter.Config.RootDirectory, "dir1\\file3.txt"),
             });
 
             return this;
@@ -136,7 +162,7 @@ namespace SyncPro.UnitTests
                     TestRootPath = testRootPath
                 };
 
-            Global.Initialize(testRootPath);
+            Global.Initialize(testRootPath, Debugger.IsAttached);
             wrapper.Relationship = SyncRelationship.Create();
 
             wrapper.SourceAdapter = new WindowsFileSystemAdapter(wrapper.Relationship);

@@ -1,5 +1,6 @@
 ﻿namespace SyncPro.Runtime
 {
+    using System;
     using System.Diagnostics;
 
     using SyncPro.Adapters;
@@ -45,6 +46,10 @@
         /// Flags indicating the type of change to be applied (added/updated/deleted/etc).
         /// </summary>
         public SyncEntryChangedFlags Flags { get; }
+
+        public DateTime UpdatedCreationTime { get; set; }
+
+        public DateTime UpdatedModifiedTime { get; set; }
 
         /// <summary>
         /// The state of the change (whether it has been applied/succeeded).

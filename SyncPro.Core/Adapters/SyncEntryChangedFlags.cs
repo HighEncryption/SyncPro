@@ -1,8 +1,11 @@
 namespace SyncPro.Adapters
 {
+    using System;
+
     /// <summary>
     /// Enumeration for the type of changes that can occur for a sync entry.
     /// </summary>
+    [Flags]
     public enum SyncEntryChangedFlags : uint
     {
         /// <summary>

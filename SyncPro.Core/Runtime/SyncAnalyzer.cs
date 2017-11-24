@@ -269,10 +269,10 @@ namespace SyncPro.Runtime
                     return true;
                 }
 
-                SyncEntryChangedFlags changeFlags;
+                EntryUpdateResult updateResult;
 
                 // If the item differs from the entry in the index, an update will be required.
-                if (logicalChild.UpdateInfo == null && adapter.IsEntryUpdated(logicalChild, changeAdapterItem, out changeFlags))
+                if (logicalChild.UpdateInfo == null && adapter.IsEntryUpdated(logicalChild, changeAdapterItem, out updateResult))
                 {
                     Logger.Verbose("Child item {0} is out of sync.", logicalChild.Id);
 
@@ -280,8 +280,18 @@ namespace SyncPro.Runtime
                     logicalChild.UpdateInfo = new EntryUpdateInfo(
                         logicalChild, 
                         adapter, 
-                        changeFlags,
+                        updateResult.ChangeFlags,
                         logicalChild.GetRelativePath(db, "/"));
+
+                    if ((updateResult.ChangeFlags & SyncEntryChangedFlags.ModifiedTimestamp) != 0)
+                    {
+                        logicalChild.UpdateInfo.UpdatedCreationTime = updateResult.ModifiedTime;
+                    }
+
+                    if ((updateResult.ChangeFlags & SyncEntryChangedFlags.CreatedTimestamp) != 0)
+                    {
+                        logicalChild.UpdateInfo.UpdatedCreationTime = updateResult.CreationTime;
+                    }
 
                     // Raise change notification so that the UI can be updated in "real time" rather than waiting for the analyze process to finish.
                     this.RaiseChangeDetected(adapter.Configuration.Id, logicalChild.UpdateInfo);
@@ -419,7 +429,7 @@ namespace SyncPro.Runtime
                 {
                     Logger.Verbose("Found child item {0} in database that matches adapter item.", logicalChild.Id);
 
-                    // The index already contains an entry for this item. Remove it from the index list, then update as needed.
+                    // The database already contains an entry for this item. Remove it from the list, then update as needed.
                     logicalChildren.Remove(logicalChild);
 
                     if (logicalChild.State.HasFlag(SyncEntryState.IsDeleted))
@@ -442,22 +452,34 @@ namespace SyncPro.Runtime
                         continue;
                     }
 
-                    SyncEntryChangedFlags changeFlags;
+                    EntryUpdateResult updateResult;
 
-                    // If the file/directory is being created after it was deleted, set the flags such that the create timestamp has changed.
                     // If the item differs from the entry in the index, an update will be required.
-                    if (logicalChild.UpdateInfo == null && adapter.IsEntryUpdated(logicalChild, adapterChild, out changeFlags))
+                    if (logicalChild.UpdateInfo == null && adapter.IsEntryUpdated(logicalChild, adapterChild, out updateResult))
                     {
                         Logger.Verbose("Child item {0} is out of sync.", logicalChild.Id);
 
                         // Create the update info for the new entry
-                        logicalChild.UpdateInfo = new EntryUpdateInfo(logicalChild, adapter, changeFlags, Path.Combine(relativePath, logicalChild.Name));
+                        logicalChild.UpdateInfo = new EntryUpdateInfo(
+                            logicalChild, 
+                            adapter,
+                            updateResult.ChangeFlags, 
+                            Path.Combine(relativePath, logicalChild.Name));
+
+                        if ((updateResult.ChangeFlags & SyncEntryChangedFlags.ModifiedTimestamp) != 0)
+                        {
+                            logicalChild.UpdateInfo.UpdatedModifiedTime = updateResult.ModifiedTime;
+                        }
+
+                        if ((updateResult.ChangeFlags & SyncEntryChangedFlags.CreatedTimestamp) != 0)
+                        {
+                            logicalChild.UpdateInfo.UpdatedCreationTime = updateResult.CreationTime;
+                        }
 
                         // Set the NotSynchronized flag so that we know this has not yet been committed to the database.
                         logicalChild.State = SyncEntryState.NotSynchronized;
 
                         // Raise change notification so that the UI can be updated in "real time" rather than waiting for the analyze process to finish.
-                        //this.AnalyzeOnSyncEntryChanged(this, new SyncEntryChangedEventArgs(logicalChild.UpdateInfo));
                         this.RaiseChangeDetected(adapter.Configuration.Id, logicalChild.UpdateInfo);
                     }
                 }

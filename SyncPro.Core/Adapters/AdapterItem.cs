@@ -1,12 +1,14 @@
 ﻿namespace SyncPro.Adapters
 {
     using System.Collections.Generic;
+    using System.Diagnostics;
 
     using SyncPro.Utility;
 
     /// <summary>
     /// Represents an item exposed by an adapter, such as a file or directory.
     /// </summary>
+    [DebuggerDisplay("{FullName}")]
     public abstract class AdapterItem : IAdapterItem
     {
         /// <summary>

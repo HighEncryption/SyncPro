@@ -252,7 +252,7 @@
             return new OneDriveFileUploadStream(this.oneDriveClient, session);
         }
 
-        public override void UpdateItem(SyncEntry entry, SyncEntryChangedFlags changeFlags)
+        public override void UpdateItem(EntryUpdateInfo updateInfo, SyncEntryChangedFlags changeFlags)
         {
             throw new NotImplementedException();
         }
@@ -281,7 +281,7 @@
             return adapterItems;
         }
 
-        public override bool IsEntryUpdated(SyncEntry childEntry, IAdapterItem adapterItem, out SyncEntryChangedFlags changeFlags)
+        public override bool IsEntryUpdated(SyncEntry childEntry, IAdapterItem adapterItem, out EntryUpdateResult result)
         {
             const long TicksPerMillisecond = 10000;
             const long Epsilon = TicksPerMillisecond * 2;
@@ -293,19 +293,19 @@
                 throw new ArgumentException("The adapter item is not of the correct type.", nameof(adapterItem));
             }
 
-            changeFlags = SyncEntryChangedFlags.None;
+            result = new EntryUpdateResult();
 
-            if (this.Relationship.Configuration.SyncTimestamps && item.Item.LastModifiedDateTime != null)
+            if (item.Item.LastModifiedDateTime != null &&
+                Math.Abs(childEntry.ModifiedDateTimeUtc.Ticks - item.Item.LastModifiedDateTime.Value.Ticks) > Epsilon)
             {
-                if (Math.Abs(childEntry.ModifiedDateTimeUtc.Ticks - item.Item.LastModifiedDateTime.Value.Ticks) > Epsilon)
-                {
-                    changeFlags |= SyncEntryChangedFlags.ModifiedTimestamp;
-                }
+                result.ChangeFlags |= SyncEntryChangedFlags.ModifiedTimestamp;
+                result.ModifiedTime = item.Item.LastModifiedDateTime.Value;
+            }
 
-                if (Math.Abs(childEntry.CreationDateTimeUtc.Ticks - item.Item.CreatedDateTime.Ticks) > Epsilon)
-                {
-                    changeFlags |= SyncEntryChangedFlags.CreatedTimestamp;
-                }
+            if (Math.Abs(childEntry.CreationDateTimeUtc.Ticks - item.Item.CreatedDateTime.Ticks) > Epsilon)
+            {
+                result.ChangeFlags |= SyncEntryChangedFlags.CreatedTimestamp;
+                result.CreationTime = item.Item.CreatedDateTime;
             }
 
             SyncEntryType fileType = SyncEntryType.Directory;
@@ -323,7 +323,7 @@
                         byte[] sha1Hash = HexToBytes(item.Item.File.Hashes.Sha1Hash);
                         if (!sha1Hash.SequenceEqual(childEntry.Sha1Hash))
                         {
-                            changeFlags |= SyncEntryChangedFlags.FileSize;
+                            result.ChangeFlags |= SyncEntryChangedFlags.FileSize;
                         }
                     }
                 }
@@ -331,7 +331,7 @@
 
             if (!string.Equals(item.Item.Name, childEntry.Name, StringComparison.Ordinal))
             {
-                changeFlags |= SyncEntryChangedFlags.Renamed;
+                result.ChangeFlags |= SyncEntryChangedFlags.Renamed;
             }
 
             // It is possible that a directory was created over a file that previously existed (with the same name). To 
@@ -342,7 +342,7 @@
                 throw new NotImplementedException();
             }
 
-            return changeFlags != SyncEntryChangedFlags.None;
+            return result.ChangeFlags != SyncEntryChangedFlags.None;
         }
 
         public override SyncEntry CreateSyncEntryForAdapterItem(IAdapterItem item, SyncEntry parentEntry)
