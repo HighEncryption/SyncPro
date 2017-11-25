@@ -84,6 +84,7 @@
     <Compile Include="Configuration\RelationshipConfiguration.cs" />
     <Compile Include="Configuration\ThrottlingConfiguration.cs" />
     <Compile Include="Configuration\TriggerConfiguration.cs" />
+    <Compile Include="Data\ISyncEntryMetadataChange.cs" />
     <Compile Include="TriggerScheduleInterval.cs" />
     <Compile Include="SyncScopeType.cs" />
     <Compile Include="OAuth\TokenHelper.cs" />
