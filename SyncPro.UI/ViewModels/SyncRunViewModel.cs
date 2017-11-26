@@ -143,7 +143,7 @@
 
                         this.AddEntryUpdate(
                             new EntryUpdateInfoViewModel(entry),
-                            entry.OriginalPath.Split('\\').ToList());
+                            entry.PathNew.Split('\\').ToList());
                     }
                 }
             });
@@ -174,13 +174,13 @@
                 if (entry.HasSyncEntryFlag(SyncEntryChangedFlags.NewFile))
                 {
                     this.ChangeMetricsList[0].Added++;
-                    this.ChangeMetricsList[2].Added += entry.Size;
-                    this.BytesToCopy += entry.Size;
+                    this.ChangeMetricsList[2].Added += entry.SizeNew;
+                    this.BytesToCopy += entry.SizeNew;
                 }
                 else if (entry.HasSyncEntryFlag(SyncEntryChangedFlags.Deleted))
                 {
                     this.ChangeMetricsList[0].Removed++;
-                    this.ChangeMetricsList[2].Removed += entry.Size;
+                    this.ChangeMetricsList[2].Removed += entry.SizeNew;
                 }
                 else if (entry.HasSyncEntryFlag(SyncEntryChangedFlags.CreatedTimestamp)
                          || entry.HasSyncEntryFlag(SyncEntryChangedFlags.ModifiedTimestamp))
@@ -191,8 +191,8 @@
                          || entry.HasSyncEntryFlag(SyncEntryChangedFlags.FileSize))
                 {
                     this.ChangeMetricsList[0].Modified++;
-                    this.ChangeMetricsList[2].Modified += entry.Size;
-                    this.BytesToCopy += entry.Size;
+                    this.ChangeMetricsList[2].Modified += entry.SizeNew;
+                    this.BytesToCopy += entry.SizeNew;
                 }
             }
         }

@@ -1,5 +1,6 @@
 ﻿namespace SyncPro.Adapters
 {
+    using System;
     using System.Collections.Generic;
     using System.Diagnostics;
 
@@ -28,6 +29,10 @@
 
         public long Size { get; }
 
+        public DateTime CreationTimeUtc { get; }
+
+        public DateTime ModifiedTimeUtc { get; }
+
         /// <summary>
         /// The adapter item that is the parent of this item.
         /// </summary>
@@ -46,7 +51,9 @@
             AdapterBase adapter, 
             SyncAdapterItemType itemType, 
             string uniqueId,
-            long size)
+            long size,
+            DateTime creationTimeUtc,
+            DateTime modifiedTimeUtc)
         {
             this.Name = name;
             this.Parent = parent;
@@ -54,6 +61,8 @@
             this.ItemType = itemType;
             this.UniqueId = uniqueId;
             this.Size = size;
+            this.CreationTimeUtc = creationTimeUtc;
+            this.ModifiedTimeUtc = modifiedTimeUtc;
         }
 
         private string fullName;

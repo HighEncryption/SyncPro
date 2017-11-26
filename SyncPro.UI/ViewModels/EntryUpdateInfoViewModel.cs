@@ -149,10 +149,10 @@
 
         public EntryUpdateInfoViewModel(SyncHistoryEntryData entry)
         {
-            var pathParts = entry.OriginalPath.Split('\\');
+            var pathParts = entry.PathNew.Split('\\');
 
             this.Name = pathParts.Last();
-            this.RelativePath = entry.OriginalPath;
+            this.RelativePath = entry.PathNew;
 
             this.IsDirectory = entry.SyncEntry.Type == SyncEntryType.Directory;
 
@@ -163,7 +163,7 @@
             this.IsDeletedItem = (entry.Flags & SyncEntryChangedFlags.Deleted) != 0;
 
             this.LastModified = entry.Timestamp;
-            this.Size = entry.Size;
+            this.Size = entry.SizeNew;
         }
 
         public ObservableCollection<EntryUpdateInfoViewModel> ChildEntries => 

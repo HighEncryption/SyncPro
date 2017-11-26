@@ -393,12 +393,28 @@
                         {
                             SyncHistoryId = this.syncHistoryId.Value,
                             SyncEntryId = entryUpdateInfo.Entry.Id,
-                            OriginalPath = entryUpdateInfo.RelativePath,
-                            Size = entryUpdateInfo.Entry.Size,
-                            Sha1Hash = entryUpdateInfo.Entry.Sha1Hash,
                             Result = entryUpdateInfo.State,
                             Flags = entryUpdateInfo.Flags,
                             Timestamp = DateTime.Now,
+
+                            // Keep these in order according to SyncHistoryEntryData
+                            SizeOld = entryUpdateInfo.SizeOld,
+                            SizeNew = entryUpdateInfo.SizeNew,
+
+                            Sha1HashOld = entryUpdateInfo.Sha1HashOld,
+                            Sha1HashNew = entryUpdateInfo.Sha1HashNew,
+
+                            Md5HashOld = entryUpdateInfo.Md5HashOld,
+                            Md5HashNew = entryUpdateInfo.Md5HashNew,
+
+                            CreationDateTimeUtcOld = entryUpdateInfo.CreationDateTimeUtcOld,
+                            CreationDateTimeUtcNew = entryUpdateInfo.CreationDateTimeUtcNew,
+
+                            ModifiedDateTimeUtcOld = entryUpdateInfo.ModifiedDateTimeUtcOld,
+                            ModifiedDateTimeUtcNew = entryUpdateInfo.ModifiedDateTimeUtcNew,
+
+                            PathOld = entryUpdateInfo.PathOld,
+                            PathNew = entryUpdateInfo.PathNew,
                         };
 
                         db.HistoryEntries.Add(historyEntry);
@@ -446,7 +462,7 @@
             SyncDatabase db)
         {
             if ((entryUpdateInfo.Flags & SyncEntryChangedFlags.IsNew) != 0 ||
-                entryUpdateInfo.Flags.HasFlag(SyncEntryChangedFlags.Restored))
+                (entryUpdateInfo.Flags & SyncEntryChangedFlags.Restored) != 0)
             {
                 // TODO: Check for any other (invalid) flags that are set and throw exception
                 // The item is new (on the source), so create the item on the destination. Metadata will be
@@ -466,7 +482,7 @@
                         .ConfigureAwait(false);
                 }
             }
-            else if (entryUpdateInfo.Flags.HasFlag(SyncEntryChangedFlags.Deleted))
+            else if ((entryUpdateInfo.Flags & SyncEntryChangedFlags.Deleted) != 0)
             {
                 // TODO: Check for any other (invalid) flags that are set and throw exception
                 // Delete the file on the adapter (the actual file). The entry will NOT be deleted from the
@@ -475,7 +491,7 @@
                 adapter.DeleteItem(entryUpdateInfo.Entry);
             }
             else if ((entryUpdateInfo.Flags & SyncEntryChangedFlags.IsUpdated) != 0 ||
-                     entryUpdateInfo.Flags.HasFlag(SyncEntryChangedFlags.Renamed))
+                     (entryUpdateInfo.Flags & SyncEntryChangedFlags.Renamed) != 0)
             {
                 // If IsUpdated is true (which is possible along with a rename) and the item is a file, update
                 // the file contents.
@@ -494,6 +510,11 @@
                 // by the UpdateItem call to the adapter.
                 Logger.Info("Updating item using adapter");
                 adapter.UpdateItem(entryUpdateInfo, entryUpdateInfo.Flags);
+
+                if ((entryUpdateInfo.Flags & SyncEntryChangedFlags.CreatedTimestamp) != 0)
+                {
+                    //entryUpdateInfo.CreationDateTimeUtcNew =
+                } 
             }
             else
             {
@@ -559,9 +580,17 @@
                 fromStream = fromAdapter.GetReadStreamForEntry(updateInfo.Entry);
                 toStream = toAdapter.GetWriteStreamForEntry(updateInfo.Entry, updateInfo.Entry.Size);
 
-                var result = await this.TransferDataWithHashAsync(fromStream, toStream, updateInfo, throttlingManager).ConfigureAwait(false);
+                TransferResult result = await this.TransferDataWithHashAsync(
+                        fromStream,
+                        toStream,
+                        updateInfo,
+                        throttlingManager)
+                    .ConfigureAwait(false);
 
-                updateInfo.Entry.Size = result.BytesTransferred;
+                updateInfo.SizeNew = result.BytesTransferred;
+                updateInfo.Sha1HashNew = result.Sha1Hash;
+                updateInfo.Md5HashNew = result.Md5Hash;
+
                 updateInfo.Entry.Sha1Hash = result.Sha1Hash;
                 updateInfo.Entry.Md5Hash = result.Md5Hash;
             }
@@ -599,6 +628,8 @@
 
                 while (true)
                 {
+                    // If we are using a throttling manager, get the necessary number of tokens to
+                    // transfer the data
                     if (throttlingManager != null)
                     {
                         int tokens = 0;
@@ -614,17 +645,24 @@
                         }
                     }
 
+                    // Read data from the source adapter
                     if ((read = sourceStream.Read(buffer, 0, buffer.Length)) <= 0)
                     {
                         // Read the end of the stream
                         break;
                     }
 
+                    // Increment the total number of bytes read from the source adapter
                     readTotal += read;
+
+                    // Pass the data through the required hashing algorithms
                     sha1.TransformBlock(buffer, 0, read, null, 0);
                     md5.TransformBlock(buffer, 0, read, null, 0);
+
+                    // Write the data to the destination adapter
                     destinationStream.Write(buffer, 0, read);
 
+                    // Increment the total number of bytes written to the desination adapter
                     this.bytesCompleted += read;
 
                     if (this.syncProgressUpdateStopwatch.ElapsedMilliseconds > 100)

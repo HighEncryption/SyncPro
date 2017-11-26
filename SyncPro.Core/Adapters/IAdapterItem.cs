@@ -1,5 +1,7 @@
 ﻿namespace SyncPro.Adapters
 {
+    using System;
+
     public enum SyncAdapterItemType
     {
         Undefined,
@@ -52,6 +54,16 @@
         string FullName { get; }
 
         long Size { get; }
+
+        /// <summary>
+        /// The DateTime when the item was first created
+        /// </summary>
+        DateTime CreationTimeUtc { get; }
+
+        /// <summary>
+        /// The DateTime
+        /// </summary>
+        DateTime ModifiedTimeUtc { get; }
 
         /// <summary>
         /// The adapter item that is the parent of this item.

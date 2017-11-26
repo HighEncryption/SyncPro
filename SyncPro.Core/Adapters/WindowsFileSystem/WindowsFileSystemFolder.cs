@@ -33,14 +33,25 @@
                     itemType, 
                     uniqueId, 
                     fileSystemInfo, 
-                    size);
+                    size,
+                    fileSystemInfo.CreationTimeUtc,
+                    fileSystemInfo.LastWriteTimeUtc);
             }
             catch (Exception exception)
             {
                 Logger.Debug("Failed to generate FileSystemFolder for '{0}'. The error was: {1}", fileSystemInfo.Name,
                     exception.Message);
 
-                return new FileSystemFolder(fileSystemInfo.Name, parent, adapter, itemType, null, fileSystemInfo, 0)
+                return new FileSystemFolder(
+                    fileSystemInfo.Name, 
+                    parent, 
+                    adapter, 
+                    itemType, 
+                    null, 
+                    fileSystemInfo, 
+                    0,
+                    DateTime.MinValue, 
+                    DateTime.MinValue)
                 {
                     ErrorMessage = exception.Message
                 };
@@ -60,7 +71,9 @@
                     SyncAdapterItemType.Directory, 
                     uniqueId,
                     directoryInfo,
-                    0);
+                    0,
+                    directoryInfo.CreationTimeUtc,
+                    directoryInfo.LastWriteTimeUtc);
             }
             catch (Exception exception)
             {
@@ -74,7 +87,9 @@
                     SyncAdapterItemType.Directory, 
                     null,
                     directoryInfo,
-                    0)
+                    0,
+                    DateTime.MinValue,
+                    DateTime.MinValue)
                 {
                     ErrorMessage = exception.Message
                 };
@@ -88,8 +103,18 @@
             SyncAdapterItemType itemType,
             string uniqueId,
             FileSystemInfo fileSystemInfo,
-            long size)
-            : base(name, parent, adapter, itemType, uniqueId, size)
+            long size,
+            DateTime creationTimeUtc,
+            DateTime modifiedTimeUtc)
+            : base(
+                  name, 
+                  parent, 
+                  adapter, 
+                  itemType, 
+                  uniqueId, 
+                  size,
+                  creationTimeUtc,
+                  modifiedTimeUtc)
         {
             this.FileSystemInfo = fileSystemInfo;
         }
