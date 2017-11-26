@@ -590,6 +590,9 @@
                 updateInfo.SizeNew = result.BytesTransferred;
                 updateInfo.Sha1HashNew = result.Sha1Hash;
                 updateInfo.Md5HashNew = result.Md5Hash;
+
+                updateInfo.Entry.Sha1Hash = result.Sha1Hash;
+                updateInfo.Entry.Md5Hash = result.Md5Hash;
             }
             finally
             {
