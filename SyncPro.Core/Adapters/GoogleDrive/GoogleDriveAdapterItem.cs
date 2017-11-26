@@ -11,7 +11,15 @@
         internal Item Item { get; set; }
 
         internal GoogleDriveAdapterItem(Item item, IAdapterItem parent, AdapterBase adapter)
-            : base(item.Name, parent, adapter, GetItemType(item), item.Id, item.Size)
+            : base(
+                  item.Name, 
+                  parent, 
+                  adapter, 
+                  GetItemType(item), 
+                  item.Id, 
+                  item.Size,
+                  item.CreatedTime,
+                  item.ModifiedTime)
         {
             this.Item = item;
         }
