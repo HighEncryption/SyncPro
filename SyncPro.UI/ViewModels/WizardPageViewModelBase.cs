@@ -1,6 +1,5 @@
 ﻿namespace SyncPro.UI.ViewModels
 {
-    using System.ComponentModel;
     using System.Diagnostics;
 
     using SyncPro.UI.Framework;

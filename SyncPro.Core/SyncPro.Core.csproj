@@ -112,7 +112,6 @@
     <Compile Include="Adapters\MicrosoftOneDrive\OneDriveFileDownloadStream.cs" />
     <Compile Include="Adapters\MicrosoftOneDrive\OneDriveFileUploadStream.cs" />
     <Compile Include="Adapters\MicrosoftOneDrive\OneDriveUploadSession.cs" />
-    <Compile Include="Adapters\MicrosoftOneDrive\TokenResponse.cs" />
     <Compile Include="Adapters\WindowsFileSystem\NativeMethodHelpers.cs" />
     <Compile Include="Adapters\WindowsFileSystem\WindowsFileSystemAdapter.cs" />
     <Compile Include="Adapters\WindowsFileSystem\WindowsFileSystemFolder.cs" />

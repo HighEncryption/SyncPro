@@ -1,7 +1,6 @@
 namespace SyncPro.UI.RelationshipEditor
 {
     using System.Collections.Generic;
-    using System.ComponentModel;
     using System.Diagnostics;
     using System.Linq;
 

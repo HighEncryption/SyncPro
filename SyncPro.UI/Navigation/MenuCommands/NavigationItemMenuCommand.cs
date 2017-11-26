@@ -1,6 +1,5 @@
 namespace SyncPro.UI.Navigation.MenuCommands
 {
-    using System.ComponentModel;
     using System.Diagnostics;
     using System.Windows.Input;
 
