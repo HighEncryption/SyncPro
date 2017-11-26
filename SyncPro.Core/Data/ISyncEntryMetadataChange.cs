@@ -37,22 +37,22 @@
         /// <summary>
         /// The previous CreationTime of the entry (if changed)
         /// </summary>
-        DateTime CreationDateTimeUtcOld { get; set; }
+        DateTime? CreationDateTimeUtcOld { get; set; }
 
         /// <summary>
         /// The CreationTime of the entry at the time it was synced.
         /// </summary>
-        DateTime CreationDateTimeUtcNew { get; set; }
+        DateTime? CreationDateTimeUtcNew { get; set; }
 
         /// <summary>
         /// The previous ModifiedTime of the entry (if changed)
         /// </summary>
-        DateTime ModifiedDateTimeUtcOld { get; set; }
+        DateTime? ModifiedDateTimeUtcOld { get; set; }
 
         /// <summary>
         /// The ModifiedTime of the entry at the time it was synced.
         /// </summary>
-        DateTime ModifiedDateTimeUtcNew { get; set; }
+        DateTime? ModifiedDateTimeUtcNew { get; set; }
 
         /// <summary>
         /// The previous full path of the item (from the root of the adapter) if changed.

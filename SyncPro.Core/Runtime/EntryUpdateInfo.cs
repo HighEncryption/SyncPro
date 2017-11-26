@@ -95,22 +95,22 @@
         /// <summary>
         /// The previous CreationTime of the entry (if changed)
         /// </summary>
-        public DateTime CreationDateTimeUtcOld { get; set; }
+        public DateTime? CreationDateTimeUtcOld { get; set; }
 
         /// <summary>
         /// The CreationTime of the entry at the time it was synced.
         /// </summary>
-        public DateTime CreationDateTimeUtcNew { get; set; }
+        public DateTime? CreationDateTimeUtcNew { get; set; }
 
         /// <summary>
         /// The previous ModifiedTime of the entry (if changed)
         /// </summary>
-        public DateTime ModifiedDateTimeUtcOld { get; set; }
+        public DateTime? ModifiedDateTimeUtcOld { get; set; }
 
         /// <summary>
         /// The ModifiedTime of the entry at the time it was synced.
         /// </summary>
-        public DateTime ModifiedDateTimeUtcNew { get; set; }
+        public DateTime? ModifiedDateTimeUtcNew { get; set; }
 
         /// <summary>
         /// The previous full path of the item (from the root of the adapter) if changed.

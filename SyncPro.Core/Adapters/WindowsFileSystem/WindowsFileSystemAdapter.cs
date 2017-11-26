@@ -132,12 +132,14 @@
 
             if ((changeFlags & SyncEntryChangedFlags.CreatedTimestamp) != 0)
             {
-                fileSystemInfo.CreationTimeUtc = updateInfo.CreationDateTimeUtcNew;
+                Pre.Assert(updateInfo.CreationDateTimeUtcNew != null, "updateInfo.CreationDateTimeUtcNew != null");
+                fileSystemInfo.CreationTimeUtc = updateInfo.CreationDateTimeUtcNew.Value;
             }
 
             if ((changeFlags & SyncEntryChangedFlags.ModifiedTimestamp) != 0)
             {
-                fileSystemInfo.LastWriteTimeUtc = updateInfo.ModifiedDateTimeUtcNew;
+                Pre.Assert(updateInfo.ModifiedDateTimeUtcNew != null, "updateInfo.ModifiedDateTimeUtcNew != null");
+                fileSystemInfo.LastWriteTimeUtc = updateInfo.ModifiedDateTimeUtcNew.Value;
             }
         }
 
