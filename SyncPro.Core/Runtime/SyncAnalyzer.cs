@@ -232,6 +232,11 @@ namespace SyncPro.Runtime
                     SyncEntryChangedFlags.Deleted,
                     logicalChild.GetRelativePath(db, "/"));
 
+                // Set all previous metadata values from the values in the sync entry. Since this is a 
+                // deletion, all of the previous metadata values will be populated and the current values
+                // will be null/empty.
+                logicalChild.UpdateInfo.SetOldMetadataFromSyncEntry();
+
                 this.RaiseChangeDetected(adapter.Configuration.Id, logicalChild.UpdateInfo);
                 return true;
             }
@@ -250,7 +255,8 @@ namespace SyncPro.Runtime
 
                 if (logicalChild.State.HasFlag(SyncEntryState.IsDeleted))
                 {
-                    // Handle the case where the item was previously deleted (TODO: verify that this is correct).
+                    // Handle the case where the item was previously deleted
+                    // TODO: verify that this is correct. Remove this comment once a unit test is added.
                     Logger.Verbose("Child item {0} was un-deleted.", logicalChild.Id);
 
                     // Clear the IsDeleted flag (needed in cases where the file was previously deleted).
@@ -263,8 +269,13 @@ namespace SyncPro.Runtime
                         SyncEntryChangedFlags.Restored, 
                         logicalChild.GetRelativePath(db, "/"));
 
-                    // Raise change notification so that the UI can be updated in "real time" rather than waiting for the analyze 
-                    // process to finish.
+                    // Because the item was previously deleted, all of the previous values will be null/empty.
+                    // Other metadata will need to be set for new properties
+                    logicalChild.UpdateInfo.CreationDateTimeUtcNew = changeAdapterItem.CreationTimeUtc;
+                    logicalChild.UpdateInfo.ModifiedDateTimeUtcNew = changeAdapterItem.ModifiedTimeUtc;
+
+                    // Raise change notification so that the UI can be updated in "real time" rather than waiting for
+                    // the analyze process to finish.
                     this.RaiseChangeDetected(adapter.Configuration.Id, logicalChild.UpdateInfo);
                     return true;
                 }
@@ -272,7 +283,8 @@ namespace SyncPro.Runtime
                 EntryUpdateResult updateResult;
 
                 // If the item differs from the entry in the index, an update will be required.
-                if (logicalChild.UpdateInfo == null && adapter.IsEntryUpdated(logicalChild, changeAdapterItem, out updateResult))
+                if (logicalChild.UpdateInfo == null && 
+                    adapter.IsEntryUpdated(logicalChild, changeAdapterItem, out updateResult))
                 {
                     Logger.Verbose("Child item {0} is out of sync.", logicalChild.Id);
 
@@ -283,22 +295,33 @@ namespace SyncPro.Runtime
                         updateResult.ChangeFlags,
                         logicalChild.GetRelativePath(db, "/"));
 
-                    if ((updateResult.ChangeFlags & SyncEntryChangedFlags.ModifiedTimestamp) != 0)
+                    // Set all of the previous metadata values to those from the sync entry
+                    logicalChild.UpdateInfo.SetOldMetadataFromSyncEntry();
+
+                    // Set the new timestamps according to what the adapter returns
+                    if (logicalChild.UpdateInfo.CreationDateTimeUtcOld != changeAdapterItem.CreationTimeUtc)
                     {
-                        logicalChild.UpdateInfo.UpdatedCreationTime = updateResult.ModifiedTime;
+                        logicalChild.UpdateInfo.CreationDateTimeUtcNew = changeAdapterItem.CreationTimeUtc;
                     }
 
-                    if ((updateResult.ChangeFlags & SyncEntryChangedFlags.CreatedTimestamp) != 0)
+                    if (logicalChild.UpdateInfo.ModifiedDateTimeUtcOld != changeAdapterItem.ModifiedTimeUtc)
                     {
-                        logicalChild.UpdateInfo.UpdatedCreationTime = updateResult.CreationTime;
+                        logicalChild.UpdateInfo.ModifiedDateTimeUtcNew = changeAdapterItem.ModifiedTimeUtc;
                     }
 
-                    // Raise change notification so that the UI can be updated in "real time" rather than waiting for the analyze process to finish.
+                    if (string.CompareOrdinal(logicalChild.UpdateInfo.RelativePath, logicalChild.UpdateInfo.PathOld) != 0)
+                    {
+                        logicalChild.UpdateInfo.PathNew = logicalChild.UpdateInfo.RelativePath;
+                    }
+
+                    // Raise change notification so that the UI can be updated in "real time" rather than waiting for 
+                    // the analyze process to finish.
                     this.RaiseChangeDetected(adapter.Configuration.Id, logicalChild.UpdateInfo);
                     return true;
                 }
 
-                // The change tracking indicates that this item has changed, but the adapter logic determined that it does not.
+                // The change tracking indicates that this item has changed, but the adapter logic determined that it 
+                // does not.
                 Logger.Verbose("Child item {0} is already synced.", logicalChild.Id);
                 return true;
             }
@@ -340,6 +363,10 @@ namespace SyncPro.Runtime
                     adapter,
                     GetFlagsForNewSyncEntry(changeAdapterItem),
                     logicalChild.GetRelativePath(db, "/"));
+
+                logicalChild.UpdateInfo.CreationDateTimeUtcNew = changeAdapterItem.CreationTimeUtc;
+                logicalChild.UpdateInfo.ModifiedDateTimeUtcNew = changeAdapterItem.ModifiedTimeUtc;
+                logicalChild.UpdateInfo.PathNew = logicalChild.UpdateInfo.RelativePath;
 
                 // Raise change notification so that the UI can be updated in "real time" rather than waiting for the analyze process to finish.
                 this.RaiseChangeDetected(adapter.Configuration.Id, logicalChild.UpdateInfo);
@@ -434,7 +461,7 @@ namespace SyncPro.Runtime
 
                     if (logicalChild.State.HasFlag(SyncEntryState.IsDeleted))
                     {
-                        Logger.Verbose("Child item {0} is currently deleted?", logicalChild.Id);
+                        Logger.Verbose("Child item {0} was un-deleted.", logicalChild.Id);
 
                         // Clear the IsDeleted flag (needed in cases where the file was previously deleted).
                         logicalChild.State &= ~SyncEntryState.IsDeleted;
@@ -443,8 +470,13 @@ namespace SyncPro.Runtime
                         logicalChild.UpdateInfo = new EntryUpdateInfo(
                             logicalChild,
                             adapter,
-                            GetFlagsForNewSyncEntry(adapterChild),
+                            SyncEntryChangedFlags.Restored,
                             Path.Combine(relativePath, logicalChild.Name));
+
+                        // Because the item was previously deleted, all of the previous values will be null/empty
+                        // Other metadata will need to be set for new properties
+                        logicalChild.UpdateInfo.CreationDateTimeUtcNew = adapterChild.CreationTimeUtc;
+                        logicalChild.UpdateInfo.ModifiedDateTimeUtcNew = adapterChild.ModifiedTimeUtc;
 
                         // Raise change notification so that the UI can be updated in "real time" rather than waiting for the analyze 
                         // process to finish.
@@ -466,14 +498,23 @@ namespace SyncPro.Runtime
                             updateResult.ChangeFlags, 
                             Path.Combine(relativePath, logicalChild.Name));
 
-                        if ((updateResult.ChangeFlags & SyncEntryChangedFlags.ModifiedTimestamp) != 0)
+                        // Set all of the previous metadata values to those from the sync entry
+                        logicalChild.UpdateInfo.SetOldMetadataFromSyncEntry();
+
+                        // Set the new timestamps according to what the adapter returns
+                        if (logicalChild.UpdateInfo.CreationDateTimeUtcOld != adapterChild.CreationTimeUtc)
                         {
-                            logicalChild.UpdateInfo.UpdatedModifiedTime = updateResult.ModifiedTime;
+                            logicalChild.UpdateInfo.CreationDateTimeUtcNew = adapterChild.CreationTimeUtc;
                         }
 
-                        if ((updateResult.ChangeFlags & SyncEntryChangedFlags.CreatedTimestamp) != 0)
+                        if (logicalChild.UpdateInfo.ModifiedDateTimeUtcOld != adapterChild.ModifiedTimeUtc)
                         {
-                            logicalChild.UpdateInfo.UpdatedCreationTime = updateResult.CreationTime;
+                            logicalChild.UpdateInfo.ModifiedDateTimeUtcNew = adapterChild.ModifiedTimeUtc;
+                        }
+
+                        if (string.CompareOrdinal(logicalChild.UpdateInfo.RelativePath, logicalChild.UpdateInfo.PathOld) != 0)
+                        {
+                            logicalChild.UpdateInfo.PathNew = logicalChild.UpdateInfo.RelativePath;
                         }
 
                         // Set the NotSynchronized flag so that we know this has not yet been committed to the database.
@@ -501,8 +542,11 @@ namespace SyncPro.Runtime
                         GetFlagsForNewSyncEntry(adapterChild),
                         Path.Combine(relativePath, logicalChild.Name));
 
+                    logicalChild.UpdateInfo.CreationDateTimeUtcNew = adapterChild.CreationTimeUtc;
+                    logicalChild.UpdateInfo.ModifiedDateTimeUtcNew = adapterChild.ModifiedTimeUtc;
+                    logicalChild.UpdateInfo.PathNew = logicalChild.UpdateInfo.RelativePath;
+
                     // Raise change notification so that the UI can be updated in "real time" rather than waiting for the analyze process to finish.
-                    //this.AnalyzeOnSyncEntryChanged(this, new SyncEntryChangedEventArgs(logicalChild.UpdateInfo));
                     this.RaiseChangeDetected(adapter.Configuration.Id, logicalChild.UpdateInfo);
                 }
 
@@ -545,8 +589,11 @@ namespace SyncPro.Runtime
                         SyncEntryChangedFlags.Deleted,
                         Path.Combine(relativePath, oldChild.Name));
 
-                    //this.RaiseSyncEntryChanged(oldChild, ItemChangeType.Deleted);
-                    //this.AnalyzeOnSyncEntryChanged(this, new SyncEntryChangedEventArgs(oldChild.UpdateInfo));
+                    // Set all previous metadata values from the values in the sync entry. Since this is a 
+                    // deletion, all of the previous metadata values will be populated and the current values
+                    // will be null/empty.
+                    oldChild.UpdateInfo.SetOldMetadataFromSyncEntry();
+
                     this.RaiseChangeDetected(adapter.Configuration.Id, oldChild.UpdateInfo);
 
                     // If the entry we are removing is a directory, we need to also check for subdirectories and files. We can do this by calling 

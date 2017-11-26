@@ -7,61 +7,61 @@
         /// <summary>
         /// The previous size in bytes of the entry (if changed)
         /// </summary>
-        long SizePrevious { get; set; }
+        long SizeOld { get; set; }
 
         /// <summary>
         /// The size of the entry (in bytes) at the time when it was synced.
         /// </summary>
-        long SizeCurrent { get; set; }
+        long SizeNew { get; set; }
 
         /// <summary>
         /// The previous SHA1 Hash of the file content (if changed)
         /// </summary>
-        byte[] Sha1HashPrevious { get; set; }
+        byte[] Sha1HashOld { get; set; }
 
         /// <summary>
         /// The SHA1 Hash of the file content at the time when it was synced.
         /// </summary>
-        byte[] Sha1HashCurrent { get; set; }
+        byte[] Sha1HashNew { get; set; }
 
         /// <summary>
         /// The previous MD5 Hash of the file content (if changed)
         /// </summary>
-        byte[] Md5HashPrevious { get; set; }
+        byte[] Md5HashOld { get; set; }
 
         /// <summary>
         /// The MD5 Hash of the file content at the time when it was synced.
         /// </summary>
-        byte[] Md5HashCurrent { get; set; }
+        byte[] Md5HashNew { get; set; }
 
         /// <summary>
         /// The previous CreationTime of the entry (if changed)
         /// </summary>
-        DateTime CreationDateTimeUtcPrevious { get; set; }
+        DateTime CreationDateTimeUtcOld { get; set; }
 
         /// <summary>
         /// The CreationTime of the entry at the time it was synced.
         /// </summary>
-        DateTime CreationDateTimeUtcCurrent { get; set; }
+        DateTime CreationDateTimeUtcNew { get; set; }
 
         /// <summary>
         /// The previous ModifiedTime of the entry (if changed)
         /// </summary>
-        DateTime ModifiedDateTimeUtcPrevious { get; set; }
+        DateTime ModifiedDateTimeUtcOld { get; set; }
 
         /// <summary>
         /// The ModifiedTime of the entry at the time it was synced.
         /// </summary>
-        DateTime ModifiedDateTimeUtcCurrent { get; set; }
+        DateTime ModifiedDateTimeUtcNew { get; set; }
 
         /// <summary>
         /// The previous full path of the item (from the root of the adapter) if changed.
         /// </summary>
-        string PathPrevious { get; set; }
+        string PathOld { get; set; }
 
         /// <summary>
         /// The full path of the item (from the root of the adapter) when it was synced.
         /// </summary>
-        string PathCurrent { get; set; }
+        string PathNew { get; set; }
     }
 }
