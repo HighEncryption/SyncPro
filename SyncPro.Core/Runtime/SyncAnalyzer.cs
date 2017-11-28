@@ -422,9 +422,10 @@ namespace SyncPro.Runtime
             if (!skipChildLookup)
             {
                 logicalChildren = db.Entries.Include(e => e.AdapterEntries).Where(e => e.ParentId == logicalParent.Id).ToList();
+                Logger.Verbose("Found {0} child items from database.", logicalChildren.Count);
             }
 
-            Logger.Verbose("Found {0} child items from database.", logicalChildren?.Count);
+            Logger.Verbose("Skipped child lookup from database.");
 
             // Loop through each of the items return by the adapter (eg files on disk)
             foreach (IAdapterItem adapterChild in adapterChildren)

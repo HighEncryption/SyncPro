@@ -340,7 +340,18 @@
                         break;
                     }
 
-                    Logger.Info("Processing update for entry {0} ({1}) with flags {2}",
+                    if (entryUpdateInfo.State == EntryUpdateState.Succeeded)
+                    {
+                        Logger.Info(
+                            "Skipping synchronization for already-synchronized entry {0} ({1})",
+                            entryUpdateInfo.Entry.Id,
+                            entryUpdateInfo.Entry.Name);
+
+                        continue;
+                    }
+
+                    Logger.Info(
+                        "Processing update for entry {0} ({1}) with flags {2}",
                         entryUpdateInfo.Entry.Id,
                         entryUpdateInfo.Entry.Name,
                         string.Join(",", StringExtensions.GetSetFlagNames<SyncEntryChangedFlags>(entryUpdateInfo.Flags)));
@@ -389,33 +400,12 @@
                     {
                         this.filesCompleted++;
 
-                        SyncHistoryEntryData historyEntry = new SyncHistoryEntryData()
-                        {
-                            SyncHistoryId = this.syncHistoryId.Value,
-                            SyncEntryId = entryUpdateInfo.Entry.Id,
-                            Result = entryUpdateInfo.State,
-                            Flags = entryUpdateInfo.Flags,
-                            Timestamp = DateTime.Now,
+                        SyncHistoryEntryData historyEntry = entryUpdateInfo.CreateSyncHistoryEntryData();
 
-                            // Keep these in order according to SyncHistoryEntryData
-                            SizeOld = entryUpdateInfo.SizeOld,
-                            SizeNew = entryUpdateInfo.SizeNew,
+                        Pre.Assert(this.syncHistoryId != null, "this.syncHistoryId != null");
 
-                            Sha1HashOld = entryUpdateInfo.Sha1HashOld,
-                            Sha1HashNew = entryUpdateInfo.Sha1HashNew,
-
-                            Md5HashOld = entryUpdateInfo.Md5HashOld,
-                            Md5HashNew = entryUpdateInfo.Md5HashNew,
-
-                            CreationDateTimeUtcOld = entryUpdateInfo.CreationDateTimeUtcOld,
-                            CreationDateTimeUtcNew = entryUpdateInfo.CreationDateTimeUtcNew,
-
-                            ModifiedDateTimeUtcOld = entryUpdateInfo.ModifiedDateTimeUtcOld,
-                            ModifiedDateTimeUtcNew = entryUpdateInfo.ModifiedDateTimeUtcNew,
-
-                            PathOld = entryUpdateInfo.PathOld,
-                            PathNew = entryUpdateInfo.PathNew,
-                        };
+                        historyEntry.SyncHistoryId = this.syncHistoryId.Value;
+                        historyEntry.SyncEntryId = entryUpdateInfo.Entry.Id;
 
                         db.HistoryEntries.Add(historyEntry);
                         db.SaveChanges();

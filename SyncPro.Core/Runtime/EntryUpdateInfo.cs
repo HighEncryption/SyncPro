@@ -164,5 +164,34 @@
             this.ModifiedDateTimeUtcNew = this.Entry.ModifiedDateTimeUtc;
             this.PathNew = this.Entry.UpdateInfo.RelativePath;
         }
+
+        public SyncHistoryEntryData CreateSyncHistoryEntryData()
+        {
+            return new SyncHistoryEntryData()
+            {
+                Result = this.State,
+                Flags = this.Flags,
+                Timestamp = DateTime.Now,
+
+                // Keep these in order according to SyncHistoryEntryData
+                SizeOld = this.SizeOld,
+                SizeNew = this.SizeNew,
+
+                Sha1HashOld = this.Sha1HashOld,
+                Sha1HashNew = this.Sha1HashNew,
+
+                Md5HashOld = this.Md5HashOld,
+                Md5HashNew = this.Md5HashNew,
+
+                CreationDateTimeUtcOld = this.CreationDateTimeUtcOld,
+                CreationDateTimeUtcNew = this.CreationDateTimeUtcNew,
+
+                ModifiedDateTimeUtcOld = this.ModifiedDateTimeUtcOld,
+                ModifiedDateTimeUtcNew = this.ModifiedDateTimeUtcNew,
+
+                PathOld = this.PathOld,
+                PathNew = this.PathNew,
+            };
+        }
     }
 }
