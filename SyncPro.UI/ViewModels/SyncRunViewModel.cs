@@ -112,6 +112,11 @@
                 this.Duration = this.EndTime - this.StartTime;
                 this.SetStatusDescription();
             }
+
+            if (this.SyncRelationship.State == SyncRelationshipState.Running)
+            {
+                this.SyncRunOnSyncStarted(this, new EventArgs());
+            }
         }
 
         public void BeginLoad()
