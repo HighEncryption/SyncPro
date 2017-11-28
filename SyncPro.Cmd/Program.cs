@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Data.Entity;
     using System.IO;
     using System.Linq;
 
@@ -25,6 +26,10 @@
                 if (args.ContainsKey("dumpConfig"))
                 {
                     DumpConfig();
+                }
+                if (args.ContainsKey("dumpDatabase"))
+                {
+                    DumpDatabase(args);
                 }
                 else if (args.ContainsKey("extractToken"))
                 {
@@ -138,6 +143,59 @@
                 }
 
                 Console.WriteLine();
+            }
+        }
+
+        private static void DumpDatabase(Dictionary<string, string> args)
+        {
+            Global.Initialize(false);
+
+            SyncRelationship relationship = GetRelationship(args);
+
+            using (var db = relationship.GetDatabase())
+            {
+                int i = 0;
+                foreach (SyncEntry syncEntry in db.Entries)
+                {
+                    i++;
+                    Console.WriteLine(
+                        "| {0} | {1} | {2} | {3} | {4} ",
+                        syncEntry.Id,
+                        syncEntry.ParentId,
+                        syncEntry.Name,
+                        syncEntry.State,
+                        syncEntry.Type);
+                }
+
+                Console.WriteLine("Total Entries: " + i);
+
+                Console.WriteLine("----------------------------------");
+
+                var historyList = db.History.ToList();
+                foreach (var history in historyList)
+                {
+                    Console.WriteLine(
+                        "History: {0}, {1}, {2}",
+                        history.Id,
+                        history.TotalFiles,
+                        history.TotalBytes);
+
+                    i = 0;
+                    foreach (SyncHistoryEntryData entryData in db.HistoryEntries.Where(e => e.SyncHistoryId == history.Id))
+                    {
+                        i++;
+                        Console.WriteLine(
+                            "| {0} | {1} | {2} | {3} | {4} ",
+                            entryData.Id,
+                            entryData.PathNew,
+                            entryData.Result,
+                            entryData.Flags,
+                            entryData.SyncEntryId);
+                    }
+
+                    Console.WriteLine("Total history entries: " + i);
+                    Console.WriteLine("----------------------------------");
+                }
             }
         }
 
