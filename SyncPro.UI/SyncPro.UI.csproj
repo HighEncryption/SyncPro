@@ -515,6 +515,9 @@
   <ItemGroup>
     <Resource Include="Resources\Graphics\error_64.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Graphics\powershell_16.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>git describe --always --dirty &gt; $(ProjectDir)\version.txt</PreBuildEvent>
