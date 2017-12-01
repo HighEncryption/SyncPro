@@ -145,6 +145,8 @@
                         Logger.Error("Failed to load relationship " + guid.ToString("D") + ": " + e);
                         continue;
                     }
+
+                    Global.SyncRelationships.Add(relationship);
                     
                     //relationship.BeginInitialize();
 

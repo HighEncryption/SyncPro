@@ -311,7 +311,7 @@
             </DockPanel>
 
             <Button Grid.Column="1" Style="{StaticResource TransparentButtonStyle}" Margin="2,0"
-                    Command="{Binding Path=CreateRelationshipCommand}" UseLayoutRounding="True">
+                    Command="{Binding Path=StartPowerShellCommand}" UseLayoutRounding="True">
                 <StackPanel Margin="8,0">
                     <Image Source="Resources/Graphics/powershell_16.png" />
                     <TextBlock Text="PowerShell" Margin="0,8,0,0" Foreground="#7d7d7d" />

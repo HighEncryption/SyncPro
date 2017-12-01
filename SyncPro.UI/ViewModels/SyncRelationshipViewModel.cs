@@ -432,6 +432,7 @@
                 throw new InvalidOperationException("Relationship cannot be deleted");
             }
 
+            Global.SyncRelationships.Remove(this.BaseModel);
             App.Current.MainWindowsViewModel.SyncRelationships.Remove(this);
             SyncRelationshipNodeViewModel navigationNode = App.Current.MainWindowsViewModel.NavigationItems
                 .OfType<SyncRelationshipNodeViewModel>()
@@ -491,6 +492,11 @@
             if (initializeAfterSave)
             {
                 await this.BaseModel.InitializeAsync().ConfigureAwait(false);
+            }
+
+            if (!Global.SyncRelationships.Contains(this.BaseModel))
+            {
+                Global.SyncRelationships.Add(this.BaseModel);
             }
         }
 

@@ -20,6 +20,8 @@
 
     public class MainWindowViewModel : ViewModelBase, IRequestClose
     {
+        public ICommand StartPowerShellCommand { get; }
+
         public ICommand CreateRelationshipCommand { get; }
 
         public ICommand CloseWindowCommand { get; }
@@ -114,6 +116,7 @@
 
         public MainWindowViewModel()
         {
+            this.StartPowerShellCommand = new DelegatedCommand(this.StartPowerShell);
             this.CreateRelationshipCommand = new DelegatedCommand(this.CreateRelationship);
             this.CloseWindowCommand = new DelegatedCommand(this.CloseWindow);
             this.BeginSearchCommand = new DelegatedCommand(this.BeginSearch);
@@ -153,6 +156,7 @@
             string gitStatus;
             using (Stream stream = executingAssembly.GetManifestResourceStream("SyncPro.UI.version.txt"))
             {
+                Pre.Assert(stream != null, "stream != null");
                 using (StreamReader reader = new StreamReader(stream))
                 {
                     gitStatus = reader.ReadToEnd().Trim();
@@ -217,28 +221,16 @@
             }
         }
 
+        private void StartPowerShell(object obj)
+        {
+            Logger.Info("Starting PowerShell window");
+
+            PowerShell.RuntimeHost.Start();
+        }
+
         private void CreateRelationship(object obj)
         {
             SyncRelationship newRelationship = SyncRelationship.Create();
-
-#if DEBUG_UI
-            WindowsFileSystemAdapter sourceAdapter = new WindowsFileSystemAdapter(newRelationship)
-            {
-                //RootDirectory = @"C:\NoIndex\test",
-                Configuration = {IsOriginator = true}
-            };
-
-
-            WindowsFileSystemAdapter destAdapter = new WindowsFileSystemAdapter(newRelationship)
-            {
-                //RootDirectory = @"C:\NoIndex\out"
-            };
-
-            newRelationship.Adapters.Add(sourceAdapter);
-            newRelationship.Adapters.Add(destAdapter);
-
-            newRelationship.Name = null;
-#endif
 
             newRelationship.Description =
                 string.Format("Sync relationship created on {0:MM/dd/yyyy} at {0:h:mm tt}", DateTime.Now);
