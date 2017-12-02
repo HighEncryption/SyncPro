@@ -54,6 +54,9 @@
 
                     this.SelectedNavigationItem = relationshipViewModel;
                     this.selectedSyncRelationship = null;
+
+                    Global.SelectedSyncRelationship = 
+                        relationshipViewModel.Relationship.GetSyncRelationship();
                 }
             }
         }

@@ -1,4 +1,4 @@
-﻿namespace SyncPro.Cmdlets
+﻿namespace SyncPro.Cmdlets.Commands
 {
     using System.Management.Automation;
 

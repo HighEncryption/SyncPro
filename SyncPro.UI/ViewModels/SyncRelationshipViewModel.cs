@@ -461,6 +461,11 @@
             return this.BaseModel.GetDatabase();
         }
 
+        internal SyncRelationship GetSyncRelationship()
+        {
+            return this.BaseModel;
+        }
+
         #region Context
 
         public sealed override void LoadContext()

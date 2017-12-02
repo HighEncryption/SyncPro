@@ -11,10 +11,14 @@
 
     public static class Global
     {
+        public static bool IsInitialized { get; private set; }
+
         public static void Initialize(bool testMode)
         {
             string localAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             Global.Initialize(Path.Combine(localAppDataPath, "SyncPro"), testMode);
+
+            IsInitialized = true;
         }
 
         // Test Hook
@@ -78,5 +82,7 @@
         public static string AppDataRoot { get; private set; }
 
         public static List<SyncRelationship> SyncRelationships { get; }
+
+        public static SyncRelationship SelectedSyncRelationship { get; set; }
     }
 }
