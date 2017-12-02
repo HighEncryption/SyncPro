@@ -244,7 +244,15 @@
         {
             if (this.ActiveSyncRun != null)
             {
-                this.SyncStatusDescription = "Sync Is Running";
+                if (this.ActiveSyncRun.IsAnalyzeOnly)
+                {
+                    this.SyncStatusDescription = "Analyze is running";
+                }
+                else
+                {
+                    this.SyncStatusDescription = "Sync Is Running";
+                }
+
                 this.IsNeverSynchronized = false;
                 return;
             }
@@ -444,6 +452,11 @@
             }
 
             this.BaseModel.Delete();
+        }
+
+        public void ClearActiveAnalyzeRun()
+        {
+            this.BaseModel.ActiveAnalyzeRun = null;
         }
 
         private bool CanDeleteRelationship(object obj)

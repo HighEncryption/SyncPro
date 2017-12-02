@@ -41,6 +41,7 @@
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private ViewModelBase selectedSyncRelationship;
 
+        // The sync relationship selected in the dashboard
         public ViewModelBase SelectedSyncRelationship
         {
             get { return this.selectedSyncRelationship; }
@@ -54,9 +55,6 @@
 
                     this.SelectedNavigationItem = relationshipViewModel;
                     this.selectedSyncRelationship = null;
-
-                    Global.SelectedSyncRelationship = 
-                        relationshipViewModel.Relationship.GetSyncRelationship();
                 }
             }
         }
@@ -81,6 +79,7 @@
                     if (value is DashboardNodeViewModel)
                     {
                         this.CurrentNavigationRoot = value;
+                        Global.SelectedSyncRelationship = null;
                         return;
                     }
 
@@ -93,6 +92,13 @@
 
                     this.CurrentNavigationRoot = element;
                     value.IsSelected = true;
+
+                    var syncRelationshipNode = element as SyncRelationshipNodeViewModel;
+                    if (syncRelationshipNode != null)
+                    {
+                        Global.SelectedSyncRelationship =
+                            syncRelationshipNode.Relationship.GetSyncRelationship();
+                    }
                 }
             }
         }

@@ -23,6 +23,7 @@ namespace SyncPro.UI.Navigation.MenuCommands
         protected override void InvokeCommand(object obj)
         {
             this.viewModel.Parent.Children.Remove(this.viewModel);
+            this.relationship.ClearActiveAnalyzeRun();
         }
     }
 }
