@@ -33,6 +33,8 @@
 
         public DateTime ModifiedTimeUtc { get; }
 
+        public byte[] Sha1Hash { get; set; }
+
         /// <summary>
         /// The adapter item that is the parent of this item.
         /// </summary>

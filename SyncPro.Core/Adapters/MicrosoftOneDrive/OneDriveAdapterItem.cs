@@ -44,6 +44,11 @@ namespace SyncPro.Adapters.MicrosoftOneDrive
             this.Item = item;
             this.IsDeleted = item.Deleted != null;
             this.ParentUniqueId = item.ParentReference.Id;
+
+            if (item.File?.Hashes?.Sha1Hash != null)
+            {
+                this.Sha1Hash = Convert.FromBase64String(item.File.Hashes.Sha1Hash);
+            }
         }
 
         private static SyncAdapterItemType GetItemType(Item item)
