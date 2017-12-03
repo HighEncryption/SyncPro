@@ -38,8 +38,13 @@
 
         private void AddSyncRunHistory(SyncRunViewModel syncRunViewModel)
         {
-            SyncRunPanelViewModel syncRunPanel = new SyncRunPanelViewModel(this.relationship) { SyncRun = syncRunViewModel };
+            SyncRunPanelViewModel syncRunPanel = new SyncRunPanelViewModel(this.relationship)
+            {
+                SyncRun = syncRunViewModel
+            };
+
             this.Children.Add(new SyncRunNodeViewModel(this, syncRunPanel));
+            this.RaisePropertyChanged(nameof(this.Children));
         }
     }
 }
