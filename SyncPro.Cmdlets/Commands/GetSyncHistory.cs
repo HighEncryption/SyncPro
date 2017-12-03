@@ -1,74 +1,62 @@
 ﻿namespace SyncPro.Cmdlets.Commands
 {
     using System;
-    using System.Collections.Generic;
     using System.Linq;
     using System.Management.Automation;
 
     using SyncPro.Adapters;
+    using SyncPro.Data;
     using SyncPro.Runtime;
 
-    [Cmdlet(VerbsCommon.Get, "SyncProAnalyzeRun")]
-    public class GetAnalyzeRun : PSCmdlet
+    [Cmdlet(VerbsCommon.Get, "SyncProHistory")]
+    public class GetSyncHistory : PSCmdlet
     {
         [Parameter]
         [Alias("Rid")]
         public Guid RelationshipId { get; set; }
 
+        [Parameter]
+        public int SyncHistoryId { get; set; }
+
         protected override void ProcessRecord()
         {
             SyncRelationship relationship = CmdletCommon.GetSyncRelationship(this.RelationshipId);
 
-            if (relationship.ActiveAnalyzeRun == null)
+            if (this.SyncHistoryId > 0)
             {
-                throw new ItemNotFoundException("There is no active analyze run for this relationship");
+                this.WriteObject(
+                    relationship.GetSyncRunHistory().FirstOrDefault(r => r.Id == this.SyncHistoryId));
+                return;
             }
 
-            var psRun = new PSAnalyzeRun(relationship.ActiveAnalyzeRun);
+            using (var db = relationship.GetDatabase())
+            {
+                if (this.SyncHistoryId > 0)
+                {
+                    this.WriteObject(
+                        db.History.FirstOrDefault(h => h.Id == this.SyncHistoryId));
+                    return;
+                }
 
-            this.WriteObject(psRun);
+                // Copy all history items to a list to prevent enumerating multiple
+                // tables at the same time.
+                var histories = db.History.ToList();
+                foreach (var history in histories)
+                {
+                    this.WriteObject(history);
+                }
+            }
         }
     }
 
-    public class PSAnalyzeRun
+    public class PSSyncHistoryEntry
     {
-        private readonly SyncRun syncRun;
-
-        public DateTime StartTime => this.syncRun.StartTime;
-        public DateTime? EndTime => this.syncRun.EndTime;
-
-        public PSAnalyzeRelationshipResult AnalyzeResult { get; }
-
-        public PSAnalyzeRun(SyncRun syncRun)
+        public PSSyncHistoryEntry(SyncHistoryEntryData info)
         {
-            this.syncRun = syncRun;
-
-            this.AnalyzeResult = new PSAnalyzeRelationshipResult(
-                this.syncRun.AnalyzeResult);
-        }
-    }
-
-    public class PSAnalyzeRelationshipResult
-    {
-        private readonly AnalyzeRelationshipResult result;
-
-        public IReadOnlyList<PSAnalyzeResult> AnalyzeResults { get; }
-
-        public PSAnalyzeRelationshipResult(AnalyzeRelationshipResult result)
-        {
-            this.result = result;
-
-            this.AnalyzeResults = result.AdapterResults.SelectMany(pair =>
-                pair.Value.EntryResults).Select(r => new PSAnalyzeResult(r)).ToList();
-        }
-    }
-
-    public class PSAnalyzeResult
-    {
-        public PSAnalyzeResult(EntryUpdateInfo info)
-        {
+            this.Id = info.Id;
+            this.SyncEntryId = info.SyncEntryId;
             this.Flags = info.Flags;
-            this.State = info.State;
+            this.Result = info.Result;
             this.SizeOld = info.SizeOld;
             this.SizeNew = info.SizeNew;
             this.Sha1HashOld = this.GetHashString(info.Sha1HashOld);
@@ -83,9 +71,27 @@
             this.PathNew = info.PathNew;
         }
 
+        /// <summary>
+        /// The database ID of the history entry.
+        /// </summary>
+        public int Id { get; }
+
+        /// <summary>
+        /// The ID of the <see cref="SyncEntry"/> this this entry refers to.
+        /// </summary>
+        public long SyncEntryId { get; }
+
         public SyncEntryChangedFlags Flags { get; }
 
-        public EntryUpdateState State { get; set; }
+        /// <summary>
+        /// The result of the change (succeeded/failed).
+        /// </summary>
+        public EntryUpdateState Result { get; }
+
+        /// <summary>
+        /// The timestamp when the change was applied (and this <see cref="SyncHistoryEntryData"/> was created).
+        /// </summary>
+        public DateTime Timestamp { get; set; }
 
         public long SizeOld { get; }
 

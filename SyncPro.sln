@@ -14,6 +14,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JsonLog", "..\JsonLog\JsonLog\JsonLog.csproj", "{6028CE31-C870-4ECB-BF55-B4C4D4953B9D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SyncPro.UI", "SyncPro.UI\SyncPro.UI.csproj", "{1B87A69A-1070-4948-BA38-F400735E81F6}"
+	ProjectSection(ProjectDependencies) = postProject
+		{E6B13763-4727-4872-B78B-271E2C361A5B} = {E6B13763-4727-4872-B78B-271E2C361A5B}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SyncPro.Cmd", "SyncPro.Cmd\SyncPro.Cmd.csproj", "{FC0A577A-2461-4F0A-8674-E177DF5E284B}"
 EndProject

@@ -5,7 +5,7 @@
 
     using SyncPro.Runtime;
 
-    [Cmdlet(VerbsCommon.Get, "SyncRun")]
+    [Cmdlet(VerbsCommon.Get, "SyncProRun")]
     public class GetSyncRun : PSCmdlet
     {
         [Parameter]

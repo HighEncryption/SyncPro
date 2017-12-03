@@ -8,7 +8,7 @@
     using SyncPro.Data;
     using SyncPro.Runtime;
 
-    [Cmdlet(VerbsCommon.Get, "SyncEntry")]
+    [Cmdlet(VerbsCommon.Get, "SyncProEntry")]
     public class GetSyncEntry : PSCmdlet
     {
         [Parameter]

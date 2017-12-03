@@ -4,7 +4,7 @@
 
     using SyncPro.Runtime;
 
-    [Cmdlet(VerbsCommon.Get, "SyncRelationship")]
+    [Cmdlet(VerbsCommon.Get, "SyncProRelationship")]
     public class GetSyncRelationship : PSCmdlet
     {
         protected override void ProcessRecord()
