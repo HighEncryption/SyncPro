@@ -52,6 +52,10 @@
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Management.Automation, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(MSBuildProgramFiles32)\Reference Assemblies\Microsoft\WindowsPowerShell\3.0\System.Management.Automation.dll</HintPath>
+    </Reference>
     <Reference Include="System.Numerics" />
     <Reference Include="System.Security" />
     <Reference Include="System.Web" />
@@ -85,6 +89,7 @@
     <Compile Include="Configuration\ThrottlingConfiguration.cs" />
     <Compile Include="Configuration\TriggerConfiguration.cs" />
     <Compile Include="Data\ISyncEntryMetadataChange.cs" />
+    <Compile Include="PowerShell\RuntimeHost.cs" />
     <Compile Include="TriggerScheduleInterval.cs" />
     <Compile Include="SyncScopeType.cs" />
     <Compile Include="OAuth\TokenHelper.cs" />

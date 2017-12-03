@@ -538,6 +538,8 @@
             private set { this.SetProperty(ref this.activeSyncRun, value); }
         }
 
+        public SyncRun ActiveAnalyzeRun { get; set; }
+
         public event EventHandler<SyncRun> SyncRunStarted;
         public event EventHandler<SyncRun> SyncRunFinished;
 
@@ -573,6 +575,11 @@
                 AnalyzeResult = previousResult
             };
 
+            if (analyzeOnly)
+            {
+                this.ActiveAnalyzeRun = this.ActiveSyncRun;
+            }
+
             this.ActiveSyncRun.SyncStarted += (sender, args) =>
             {
                 this.SyncRunStarted?.Invoke(this, this.ActiveSyncRun); 
@@ -592,11 +599,9 @@
 
         public IList<SyncRun> GetSyncRunHistory()
         {
-            //throw new NotImplementedException("No idea what this code is supposed to do!");
             List<SyncRun> runs = new List<SyncRun>();
             using (var db = this.GetDatabase())
             {
-                //runs.AddRange(this.Database.GetSyncHistoryForRelationship(connection, this));
                 foreach (SyncHistoryData historyData in db.History)
                 {
                     runs.Add(SyncRun.FromHistoryEntry(this, historyData));

@@ -65,6 +65,8 @@
         /// </summary>
         DateTime ModifiedTimeUtc { get; }
 
+        byte[] Sha1Hash { get; }
+
         /// <summary>
         /// The adapter item that is the parent of this item.
         /// </summary>

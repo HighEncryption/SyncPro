@@ -244,7 +244,15 @@
         {
             if (this.ActiveSyncRun != null)
             {
-                this.SyncStatusDescription = "Sync Is Running";
+                if (this.ActiveSyncRun.IsAnalyzeOnly)
+                {
+                    this.SyncStatusDescription = "Analyze is running";
+                }
+                else
+                {
+                    this.SyncStatusDescription = "Sync Is Running";
+                }
+
                 this.IsNeverSynchronized = false;
                 return;
             }
@@ -432,6 +440,7 @@
                 throw new InvalidOperationException("Relationship cannot be deleted");
             }
 
+            Global.SyncRelationships.Remove(this.BaseModel);
             App.Current.MainWindowsViewModel.SyncRelationships.Remove(this);
             SyncRelationshipNodeViewModel navigationNode = App.Current.MainWindowsViewModel.NavigationItems
                 .OfType<SyncRelationshipNodeViewModel>()
@@ -443,6 +452,11 @@
             }
 
             this.BaseModel.Delete();
+        }
+
+        public void ClearActiveAnalyzeRun()
+        {
+            this.BaseModel.ActiveAnalyzeRun = null;
         }
 
         private bool CanDeleteRelationship(object obj)
@@ -458,6 +472,11 @@
         public SyncDatabase GetDatabase()
         {
             return this.BaseModel.GetDatabase();
+        }
+
+        internal SyncRelationship GetSyncRelationship()
+        {
+            return this.BaseModel;
         }
 
         #region Context
@@ -491,6 +510,11 @@
             if (initializeAfterSave)
             {
                 await this.BaseModel.InitializeAsync().ConfigureAwait(false);
+            }
+
+            if (!Global.SyncRelationships.Contains(this.BaseModel))
+            {
+                Global.SyncRelationships.Add(this.BaseModel);
             }
         }
 
