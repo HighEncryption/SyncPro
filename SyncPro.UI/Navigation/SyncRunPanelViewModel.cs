@@ -5,6 +5,7 @@ namespace SyncPro.UI.Navigation
 
     using SyncPro.UI.Framework;
     using SyncPro.UI.Framework.MVVM;
+    using SyncPro.UI.Navigation.ViewModels;
     using SyncPro.UI.ViewModels;
 
     public enum SyncRunFilesViewMode
@@ -72,6 +73,15 @@ namespace SyncPro.UI.Navigation
         {
             get { return this.syncRun; }
             set { this.SetProperty(ref this.syncRun, value); }
+        }
+
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private EntryUpdateInfoViewModel selectedSyncEntry;
+
+        public EntryUpdateInfoViewModel SelectedSyncEntry
+        {
+            get { return this.selectedSyncEntry; }
+            set { this.SetProperty(ref this.selectedSyncEntry, value); }
         }
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
