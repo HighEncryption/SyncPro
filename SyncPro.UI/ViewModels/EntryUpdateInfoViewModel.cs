@@ -286,6 +286,11 @@
                 changes.Add("Modified Time");
             }
 
+            if ((flags & SyncEntryChangedFlags.Md5Hash) == SyncEntryChangedFlags.Md5Hash)
+            {
+                changes.Add("HD5 Hash Changed");
+            }
+
             return changes;
         }
     }

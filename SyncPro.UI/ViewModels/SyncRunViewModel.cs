@@ -193,6 +193,7 @@
                     this.ChangeMetricsList[0].Metadata++;
                 }
                 else if (entry.HasSyncEntryFlag(SyncEntryChangedFlags.Sha1Hash)
+                         || entry.HasSyncEntryFlag(SyncEntryChangedFlags.Md5Hash)
                          || entry.HasSyncEntryFlag(SyncEntryChangedFlags.FileSize))
                 {
                     this.ChangeMetricsList[0].Modified++;
@@ -432,6 +433,7 @@
                     this.ChangeMetricsList[0].Metadata++;
                 }
                 else if (info.HasSyncEntryFlag(SyncEntryChangedFlags.Sha1Hash)
+                         || info.HasSyncEntryFlag(SyncEntryChangedFlags.Md5Hash)
                          || info.HasSyncEntryFlag(SyncEntryChangedFlags.FileSize))
                 {
                     this.ChangeMetricsList[0].Modified++;

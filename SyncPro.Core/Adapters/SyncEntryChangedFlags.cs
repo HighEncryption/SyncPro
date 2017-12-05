@@ -59,12 +59,17 @@ namespace SyncPro.Adapters
         Restored = 0x0100,
 
         /// <summary>
+        /// Indicates that the MD5 has of the file has changed (files only)
+        /// </summary>
+        Md5Hash = 0x0200,
+
+        /// <summary>
         /// Indicates that the change is a new file or directory
         /// </summary>
         IsNew = NewFile | NewDirectory,
 
         // Should Renamed be included here?
-        IsUpdated = CreatedTimestamp | ModifiedTimestamp | FileSize | Sha1Hash,
+        IsUpdated = CreatedTimestamp | ModifiedTimestamp | FileSize | Sha1Hash | Md5Hash,
         IsNewOrUpdated = IsNew | IsUpdated,
 
         /// <summary>

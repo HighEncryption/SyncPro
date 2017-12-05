@@ -324,6 +324,7 @@
                         if (!sha1Hash.SequenceEqual(childEntry.Sha1Hash))
                         {
                             result.ChangeFlags |= SyncEntryChangedFlags.FileSize;
+                            result.ChangeFlags |= SyncEntryChangedFlags.Sha1Hash;
                         }
                     }
                 }
