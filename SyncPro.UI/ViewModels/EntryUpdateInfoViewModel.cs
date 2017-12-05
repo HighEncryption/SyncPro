@@ -5,6 +5,7 @@
     using System.Collections.ObjectModel;
     using System.Diagnostics;
     using System.Linq;
+    using System.Windows.Media;
 
     using SyncPro.Adapters;
     using SyncPro.Data;
@@ -160,6 +161,27 @@
                 }
 
                 return this.typeName;
+            }
+        }
+
+        private ImageSource largeIcon;
+
+        public ImageSource LargeIcon
+        {
+            get
+            {
+                if (this.typeName == null)
+                {
+                    if (this.IsDirectory)
+                    {
+                        this.typeName = "Folder";
+                    }
+
+                    FileInfo fileInfo = FileInfoCache.GetFileInfo(this.Name.ToLowerInvariant());
+                    this.largeIcon = fileInfo.LargeIcon;
+                }
+
+                return this.largeIcon;
             }
         }
 

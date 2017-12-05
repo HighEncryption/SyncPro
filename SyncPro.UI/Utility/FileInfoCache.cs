@@ -12,6 +12,8 @@
     {
         public ImageSource SmallIcon { get; set; }
 
+        public ImageSource LargeIcon { get; set; }
+
         public string DisplayName { get; set; }
 
         public string TypeName { get; set; }
@@ -40,6 +42,10 @@
                 if (FileInfoCache.Cache.ContainsKey(extension) == false)
                 {
                     FileInfo fileInfo = FileInfoCache.InternalGetFileInfo(extension, false, IconSize.Small);
+                    FileInfo fileInfo2 = FileInfoCache.InternalGetFileInfo(extension, false, IconSize.Large);
+
+                    fileInfo.LargeIcon = fileInfo2.LargeIcon;
+
                     FileInfoCache.Cache[extension] = fileInfo;
                 }
 
@@ -113,10 +119,18 @@
 
             FileInfo fileInfo = new FileInfo
             {
-                SmallIcon = icon.ToImageSource(),
                 DisplayName = shfi.szDisplayName,
                 TypeName = shfi.szTypeName
             };
+
+            if (IconSize.Small == size)
+            {
+                fileInfo.SmallIcon = icon.ToImageSource();
+            }
+            else
+            {
+                fileInfo.LargeIcon = icon.ToImageSource();
+            }
 
             return fileInfo;
         }

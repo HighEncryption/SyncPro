@@ -523,6 +523,11 @@ namespace SyncPro.Runtime
                             logicalChild.UpdateInfo.PathNew = logicalChild.UpdateInfo.RelativePath;
                         }
 
+                        if (logicalChild.UpdateInfo.SizeOld != adapterChild.Size)
+                        {
+                            logicalChild.UpdateInfo.SizeNew = adapterChild.Size;
+                        }
+
                         // Set the NotSynchronized flag so that we know this has not yet been committed to the database.
                         logicalChild.State = SyncEntryState.NotSynchronized;
 
