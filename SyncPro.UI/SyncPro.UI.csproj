@@ -123,6 +123,7 @@
     <Compile Include="Converters\NullImageConverter.cs" />
     <Compile Include="Converters\ObjectToVisibilityConverter.cs" />
     <Compile Include="Converters\StringToBooleanConverter.cs" />
+    <Compile Include="Converters\SyncEntryChangedFlagsToForegroundConverter.cs" />
     <Compile Include="Converters\SyncEntryChangedFlagsToVisibilityConverter.cs" />
     <Compile Include="Converters\SyncRunStageToVisiblityConverter.cs" />
     <Compile Include="DesignTimeData\MainWindowViewModel.cs" />

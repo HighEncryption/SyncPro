@@ -34,4 +34,6 @@
     <converters:NullImageConverter x:Key="NullImageConverter" />
 
     <converters:SyncEntryChangedFlagsToVisibilityConverter x:Key="SyncEntryChangedFlagsToVisibility" />
+
+    <converters:SyncEntryChangedFlagsToForegroundConverter x:Key="SyncEntryChangedFlagsToForeground" />
 </ResourceDictionary>
