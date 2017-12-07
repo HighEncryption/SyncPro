@@ -399,13 +399,15 @@
                                Visibility="{Binding Path=SelectedSyncEntry.Flags, Converter={StaticResource SyncEntryChangedFlagsToVisibility}, ConverterParameter={x:Static adapters:SyncEntryChangedFlags.ModifiedTimestamp}}"
                                Text="{Binding Path=SelectedSyncEntry.ModifiedDateTimeUtcOld}"/>
 
-                    <TextBlock Grid.Column="0" Grid.Row="4" Text="Size" Foreground="#7d7d7d" Margin="0,2,0,0" />
-                    <TextBlock Grid.Column="3" Grid.Row="4" Margin="4,2,0,0" 
+                    <TextBlock Grid.Column="0" Grid.Row="4" Text="Size" Foreground="#7d7d7d" Margin="0,2,0,0" 
+                               Visibility="{Binding Path=SelectedSyncEntry.IsDirectory, Converter={StaticResource BooleanToVisibilityCollapsedReversed}}" />
+                    <TextBlock Grid.Column="3" Grid.Row="4" Margin="4,2,0,0"
+                               Visibility="{Binding Path=SelectedSyncEntry.IsDirectory, Converter={StaticResource BooleanToVisibilityCollapsedReversed}}"
                                Text="{Binding Path=SelectedSyncEntry.SizeNew, Converter={StaticResource FileSize}}"
                                Foreground="{Binding Path=SelectedSyncEntry.Flags, Converter={StaticResource SyncEntryChangedFlagsToForeground}, ConverterParameter={x:Static adapters:SyncEntryChangedFlags.FileSize}}"
                                ToolTip="{Binding Path=SelectedSyncEntry.SizeNew}"/>
                     <TextBlock Grid.Column="3" Grid.Row="5" Margin="4,2,0,0" Foreground="Red"
-                               Visibility="{Binding Path=SelectedSyncEntry.Flags, Converter={StaticResource SyncEntryChangedFlagsToVisibility}, ConverterParameter={x:Static adapters:SyncEntryChangedFlags.FileSize}}"
+                               Visibility="{Binding Path=SelectedSyncEntry.ShowSizeOld, Converter={StaticResource BooleanToVisibilityCollapsed}}"
                                Text="{Binding Path=SelectedSyncEntry.SizeOld, Converter={StaticResource FileSize}}"
                                ToolTip="{Binding Path=SelectedSyncEntry.SizeOld}"/>
 

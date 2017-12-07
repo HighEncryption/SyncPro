@@ -225,7 +225,6 @@
 
         public EntryUpdateInfoViewModel(SyncHistoryEntryData entry)
         {
-            this.metadataChange = entry;
             var pathParts = entry.PathNew.Split('\\');
 
             this.Name = pathParts.Last();
@@ -254,10 +253,10 @@
             this.PathNew = entry.PathNew;
         }
 
-        private ISyncEntryMetadataChange metadataChange;
-
         public ObservableCollection<EntryUpdateInfoViewModel> ChildEntries => 
             this.childEntries ?? (this.childEntries = new ObservableCollection<EntryUpdateInfoViewModel>());
+
+        public bool ShowSizeOld => (this.Flags & SyncEntryChangedFlags.FileSize) != 0 && !this.IsDirectory;
 
         private static IList<string> GetChangeNamesFromFlags(SyncEntryChangedFlags flags)
         {
