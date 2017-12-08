@@ -147,7 +147,7 @@
                         this.CalculateChangeMetrics(entry);
 
                         this.AddEntryUpdate(
-                            new EntryUpdateInfoViewModel(entry),
+                            new EntryUpdateInfoViewModel(entry, this.SyncRelationship),
                             entry.PathNew.Split('\\').ToList());
                     }
                 }
@@ -390,7 +390,7 @@
                     this.CalculateChangeMetrics(syncRunProgressInfo.UpdateInfo);
 
                     this.AddEntryUpdate(
-                        new EntryUpdateInfoViewModel(syncRunProgressInfo.UpdateInfo), 
+                        new EntryUpdateInfoViewModel(syncRunProgressInfo.UpdateInfo, this.SyncRelationship), 
                         pathStack);
                 }
             });

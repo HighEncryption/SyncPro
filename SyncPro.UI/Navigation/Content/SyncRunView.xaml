@@ -436,10 +436,10 @@
                     <TextBlock Grid.Column="0" Grid.Row="10" Text="Last Synchronized" Foreground="#7d7d7d" Margin="0,16,0,0" />
                     <TextBlock Grid.Column="3" Grid.Row="10" Margin="4,16,0,0" 
                                Text="{Binding Path=SelectedSyncEntry.EntryLastUpdatedDateTimeUtc}"/>
-<!--
-                    <TextBlock Grid.Column="0" Grid.Row="4" Text="Sync Runs" Foreground="#7d7d7d" Margin="0,16,0,0" />
-                    <ItemsControl Grid.Column="2" Grid.Row="4" Margin="4,16,0,0"
-                                  ItemsSource="{Binding Path=SelectedChildEntry.SyncRunReferences}">
+
+                    <TextBlock Grid.Column="0" Grid.Row="12" Text="Sync Runs" Foreground="#7d7d7d" Margin="0,16,0,0" />
+                    <ItemsControl Grid.Column="3" Grid.Row="12" Margin="4,16,0,0"
+                                  ItemsSource="{Binding Path=SelectedSyncEntry.SyncRunReferences}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding Path=DisplayName}" TextDecorations="Underline"
@@ -459,11 +459,10 @@
                         </ItemsControl.ItemTemplate>
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <StackPanel Orientation="Horizontal"/>
+                                <StackPanel Orientation="Vertical"/>
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                     </ItemsControl>
-                    -->
                 </Grid>
             </StackPanel>
         </Border>

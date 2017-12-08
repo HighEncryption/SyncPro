@@ -5,12 +5,14 @@
     using System.Collections.ObjectModel;
     using System.Diagnostics;
     using System.Linq;
+    using System.Threading.Tasks;
     using System.Windows.Media;
 
     using SyncPro.Adapters;
     using SyncPro.Data;
     using SyncPro.Runtime;
     using SyncPro.UI.Framework;
+    using SyncPro.UI.Navigation.ViewModels;
     using SyncPro.UI.Utility;
 
     /// <summary>
@@ -19,6 +21,7 @@
     /// </summary>
     public class EntryUpdateInfoViewModel : ViewModelBase, ISyncEntryMetadataChange
     {
+        private readonly SyncRelationshipViewModel syncRelationship;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private string name;
@@ -133,7 +136,6 @@
 
         #endregion
 
-
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private bool isExpanded;
 
@@ -181,15 +183,18 @@
                     this.largeIcon = fileInfo.LargeIcon;
                 }
 
+                this.BeginLoadSyncRunReferences();
+
                 return this.largeIcon;
             }
         }
 
-
-        public EntryUpdateInfoViewModel(EntryUpdateInfo info)
+        public EntryUpdateInfoViewModel(EntryUpdateInfo info, SyncRelationshipViewModel syncRelationship)
         {
+            this.syncRelationship = syncRelationship;
             this.Name = info.Entry.Name;
             this.RelativePath = info.RelativePath;
+            this.syncEntryId = info.Entry.Id;
 
             this.IsDirectory = info.Entry.Type == SyncEntryType.Directory;
 
@@ -223,9 +228,11 @@
 
         private ObservableCollection<EntryUpdateInfoViewModel> childEntries;
 
-        public EntryUpdateInfoViewModel(SyncHistoryEntryData entry)
+        public EntryUpdateInfoViewModel(SyncHistoryEntryData entry, SyncRelationshipViewModel syncRelationship)
         {
+            this.syncRelationship = syncRelationship;
             var pathParts = entry.PathNew.Split('\\');
+            this.syncEntryId = entry.SyncEntryId;
 
             this.Name = pathParts.Last();
             this.RelativePath = entry.PathNew;
@@ -257,6 +264,52 @@
             this.childEntries ?? (this.childEntries = new ObservableCollection<EntryUpdateInfoViewModel>());
 
         public bool ShowSizeOld => (this.Flags & SyncEntryChangedFlags.FileSize) != 0 && !this.IsDirectory;
+
+        private ObservableCollection<SyncRunReferenceViewModel> syncRunReferences;
+
+        public ObservableCollection<SyncRunReferenceViewModel> SyncRunReferences
+            => this.syncRunReferences ?? (this.syncRunReferences = new ObservableCollection<SyncRunReferenceViewModel>());
+
+        private volatile object loadLock = new object();
+
+        private bool isLoadingStarted = false;
+        private readonly long syncEntryId;
+
+        private void BeginLoadSyncRunReferences()
+        {
+            if (!this.isLoadingStarted)
+            {
+                lock (this.loadLock)
+                {
+                    if (!this.isLoadingStarted)
+                    {
+                        this.isLoadingStarted = true;
+                        Task.Factory.StartNew(this.BeginLoadSyncRunReferencesInternal);
+                    }
+                }
+            }
+        }
+
+        private void BeginLoadSyncRunReferencesInternal()
+        {
+            using (var db = this.syncRelationship.GetDatabase())
+            {
+                // Get the list of sync history entries for this file (slow)
+                List<SyncHistoryEntryData> historyEntries =
+                    db.HistoryEntries.Where(e => e.SyncEntryId == this.syncEntryId).ToList();
+                var idList = historyEntries.Select(e => e.SyncHistoryId).ToList();
+
+                // Get the sync runs for those entries (fast)
+                IQueryable<SyncHistoryData> matches = db.History.Where(
+                    EntityFrameworkExtensions.BuildOrExpression<SyncHistoryData, int>(p => p.Id, idList));
+
+                foreach (SyncHistoryData historyData in matches)
+                {
+                    App.DispatcherInvoke(() => this.SyncRunReferences.Add(new SyncRunReferenceViewModel(
+                        historyData.Start.ToString("g"), historyData.Id)));
+                }
+            }
+        }
 
         private static IList<string> GetChangeNamesFromFlags(SyncEntryChangedFlags flags)
         {
