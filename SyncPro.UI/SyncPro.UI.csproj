@@ -215,6 +215,7 @@
     <Compile Include="Utility\FileInfoCache.cs" />
     <Compile Include="ViewModels\Adapters\GoogleDriveAdapterViewModel.cs" />
     <Compile Include="ViewModels\Adapters\OneDriveAdapterViewModel.cs" />
+    <Compile Include="ViewModels\ChangeMetrics.cs" />
     <Compile Include="ViewModels\EntryUpdateInfoViewModel.cs" />
     <Compile Include="ViewModels\Adapters\ISyncTargetViewModel.cs" />
     <Compile Include="ViewModels\Errors\OneDriveTokenExpiredErrorViewModel.cs" />

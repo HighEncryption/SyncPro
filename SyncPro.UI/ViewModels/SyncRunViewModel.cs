@@ -6,7 +6,6 @@
     using System.ComponentModel;
     using System.Data.Entity;
     using System.Diagnostics;
-    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -25,39 +24,6 @@
     {
         OnlyChanges,
         AllFiles,
-    }
-
-    public class ChangeMetrics : NotifyPropertyChangedSlim
-    {
-        public ChangeMetrics(string displayName, bool displayAsByteSize = false)
-        {
-            this.DisplayName = displayName;
-            this.DisplayAsByteSize = displayAsByteSize;
-        }
-
-        public bool DisplayAsByteSize { get; }
-
-        public string DisplayName { get; }
-
-        public long Added { get; set; }
-
-        public long Modified { get; set; }
-
-        public long Metadata { get; set; }
-
-        public long Removed { get; set; }
-
-        public long Unchanged { get; set; }
-
-        [SuppressMessage("ReSharper", "ExplicitCallerInfoArgument")]
-        public void RaisePropertiesChanged()
-        {
-            this.RaisePropertyChanged(nameof(this.Added));
-            this.RaisePropertyChanged(nameof(this.Modified));
-            this.RaisePropertyChanged(nameof(this.Metadata));
-            this.RaisePropertyChanged(nameof(this.Removed));
-            this.RaisePropertyChanged(nameof(this.Unchanged));
-        }
     }
 
     public class SyncRunViewModel : ViewModelBase, IRequestClose
@@ -150,6 +116,11 @@
                             new EntryUpdateInfoViewModel(entry, this.SyncRelationship),
                             entry.PathNew.Split('\\').ToList());
                     }
+                }
+
+                foreach (ChangeMetrics changeMetrics in this.ChangeMetricsList)
+                {
+                    changeMetrics.RaisePropertiesChanged();
                 }
             });
 
