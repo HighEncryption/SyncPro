@@ -7,9 +7,9 @@
     using System.Threading;
     using System.Threading.Tasks;
 
-    using JsonLog;
-
     using Microsoft.Win32.SafeHandles;
+
+    using SyncPro.Tracing;
 
     public static class RuntimeHost
     {
@@ -29,8 +29,7 @@
         {
             if (task.Exception != null)
             {
-                Logger.Error("PowerShell runtime exited with exception.");
-                Logger.LogException(task.Exception);
+                Logger.LogException(task.Exception, "PowerShell runtime exited with exception.");
             }
         }
 

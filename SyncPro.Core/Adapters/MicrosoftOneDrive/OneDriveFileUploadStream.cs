@@ -5,7 +5,7 @@ namespace SyncPro.Adapters.MicrosoftOneDrive
     using System.IO;
     using System.Linq;
 
-    using JsonLog;
+    using SyncPro.Tracing;
 
     /// <summary>
     /// Provides a Stream implementation for writing a file to OneDrive storage.

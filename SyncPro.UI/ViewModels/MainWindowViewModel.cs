@@ -9,9 +9,8 @@
     using System.Reflection;
     using System.Windows.Input;
 
-    using JsonLog;
-
     using SyncPro.Runtime;
+    using SyncPro.Tracing;
     using SyncPro.UI.Framework;
     using SyncPro.UI.Framework.MVVM;
     using SyncPro.UI.Navigation;

@@ -6,11 +6,10 @@
     using System.Linq;
     using System.Threading.Tasks;
 
-    using JsonLog;
-
     using SyncPro.Configuration;
     using SyncPro.Data;
     using SyncPro.Runtime;
+    using SyncPro.Tracing;
 
     public class WindowsFileSystemAdapter : AdapterBase
     {

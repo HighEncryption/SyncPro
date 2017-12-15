@@ -9,14 +9,13 @@
     using System.Threading.Tasks;
     using System.Web;
 
-    using JsonLog;
-
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
 
     using SyncPro.Adapters.GoogleDrive.DataModel;
     using SyncPro.Adapters.MicrosoftOneDrive;
     using SyncPro.OAuth;
+    using SyncPro.Tracing;
 
     public class AuthenticationResult
     {

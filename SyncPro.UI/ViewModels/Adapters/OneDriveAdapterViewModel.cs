@@ -7,9 +7,8 @@
     using System.Windows.Input;
     using System.Windows.Interop;
 
-    using JsonLog;
-
     using SyncPro.Adapters.MicrosoftOneDrive;
+    using SyncPro.Tracing;
     using SyncPro.UI.Controls;
     using SyncPro.UI.FolderBrowser;
     using SyncPro.UI.Framework.MVVM;

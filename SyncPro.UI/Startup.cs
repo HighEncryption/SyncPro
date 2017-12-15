@@ -3,8 +3,7 @@
     using System;
     using System.Collections.Generic;
 
-    using JsonLog;
-
+    using SyncPro.Tracing;
     using SyncPro.Utility;
 
     public class Startup

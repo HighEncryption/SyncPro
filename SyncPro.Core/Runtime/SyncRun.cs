@@ -9,10 +9,9 @@
     using System.Threading;
     using System.Threading.Tasks;
 
-    using JsonLog;
-
     using SyncPro.Adapters;
     using SyncPro.Data;
+    using SyncPro.Tracing;
 
     /// <summary>
     /// Enumeration of the options for the result of a sync run

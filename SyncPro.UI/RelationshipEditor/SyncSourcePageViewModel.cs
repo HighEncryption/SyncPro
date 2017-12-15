@@ -2,9 +2,8 @@ namespace SyncPro.UI.RelationshipEditor
 {
     using System.Linq;
 
-    using JsonLog;
-
     using SyncPro.Adapters;
+    using SyncPro.Tracing;
     using SyncPro.UI.ViewModels;
     using SyncPro.UI.ViewModels.Adapters;
 

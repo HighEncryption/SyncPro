@@ -3,7 +3,7 @@
     using System;
     using System.IO;
 
-    using JsonLog;
+    using SyncPro.Tracing;
 
     public class FileSystemFolder : AdapterItem
     {

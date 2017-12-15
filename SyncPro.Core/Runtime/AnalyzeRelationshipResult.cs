@@ -4,9 +4,8 @@ namespace SyncPro.Runtime
     using System.Linq;
     using System.Threading.Tasks;
 
-    using JsonLog;
-
     using SyncPro.Adapters;
+    using SyncPro.Tracing;
 
     public class AnalyzeRelationshipResult
     {

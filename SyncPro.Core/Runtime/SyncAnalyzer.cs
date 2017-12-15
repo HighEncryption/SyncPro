@@ -9,10 +9,9 @@ namespace SyncPro.Runtime
     using System.Threading;
     using System.Threading.Tasks;
 
-    using JsonLog;
-
     using SyncPro.Adapters;
     using SyncPro.Data;
+    using SyncPro.Tracing;
 
     public class SyncAnalyzer
     {

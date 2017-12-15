@@ -8,11 +8,10 @@
     using System.Threading;
     using System.Threading.Tasks;
 
-    using JsonLog;
-
     using SyncPro.Adapters;
     using SyncPro.Configuration;
     using SyncPro.Data;
+    using SyncPro.Tracing;
 
     /// <summary>
     /// Represents that state of a <see cref="SyncRelationship"/>

@@ -8,12 +8,11 @@
     using System.Threading;
     using System.Threading.Tasks;
 
-    using JsonLog;
-
     using SyncPro.Adapters.MicrosoftOneDrive.DataModel;
     using SyncPro.Data;
     using SyncPro.OAuth;
     using SyncPro.Runtime;
+    using SyncPro.Tracing;
 
     public class OneDriveAdapter : AdapterBase, IChangeTracking, IChangeNotification
     {
@@ -581,8 +580,7 @@
                 }
                 catch (Exception exception)
                 {
-                    Logger.Error("Failed to pull changes from OneDrive");
-                    Logger.LogException(exception);
+                    Logger.LogException(exception, "Failed to pull changes from OneDrive");
                 }
 
                 if (changes != null &&

@@ -151,9 +151,9 @@
     <None Include="SyncPro.ruleset" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\JsonLog\JsonLog\JsonLog.csproj">
-      <Project>{6028ce31-c870-4ecb-bf55-b4c4d4953b9d}</Project>
-      <Name>JsonLog</Name>
+    <ProjectReference Include="..\SyncPro.Tracing\SyncPro.Tracing.csproj">
+      <Project>{CE6A7780-BC06-4818-B15F-8DAD91032A71}</Project>
+      <Name>SyncPro.Tracing</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
