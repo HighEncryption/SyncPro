@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.IO;
     using System.Reflection;
+    using System.Text;
 
     using SyncPro.Runtime;
     using SyncPro.Tracing;
@@ -30,12 +31,11 @@
                 Directory.CreateDirectory(Global.AppDataRoot);
             }
 
-            InitializeLogging(Global.AppDataRoot, isTestMode); 
+            InitializeLogging(Global.AppDataRoot, isTestMode);
 
-            Logger.Info("Logging initialized.");
-
-            Logger.Info("AssemblyLocation=" + Assembly.GetExecutingAssembly().Location);
-            Logger.Info("AppDataRoot=" + Global.AppDataRoot);
+            Logger.GlobalInitComplete(
+                Assembly.GetExecutingAssembly().Location,
+                Global.AppDataRoot);
         }
 
         private static void InitializeLogging(string logDir, bool autoLaunchLogViewer)

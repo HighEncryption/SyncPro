@@ -228,10 +228,14 @@
             string relationshipDir = Path.Combine(Global.AppDataRoot, relationshipId.ToString("N"));
             RelationshipConfiguration config = RelationshipConfiguration.Load(relationshipDir);
 
-            Logger.Info(
-                "Loaded sync relationship: RelationshipId={0}, Name={1}",
+            Logger.RelationshipLoaded(
                 config.RelationshipId,
-                config.Name);
+                new Dictionary<string,object>()
+                {
+                    { "Name", config.Name },
+                    { "InitiallyCreatedUtc", config.InitiallyCreatedUtc },
+                    { "Scope", config.Scope }
+                });
 
             SyncRelationship relationship = new SyncRelationship(config);
 
