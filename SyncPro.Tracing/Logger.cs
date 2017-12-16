@@ -46,7 +46,7 @@
             string formattedMessage = string.Format(message, args);
 
             SyncProEventSource.Log.LogError(
-                string.Format("{0}\r\n\r\n{1}", formattedMessage, exception));
+                string.Format("{0}\n\n{1}", formattedMessage, exception));
         }
 
         public static void GlobalInitComplete(string assemblyLocation, string appDataRoot)
@@ -115,7 +115,8 @@
                 sb.AppendLineFeed("{0}: {1}", pair.Key, pair.Value);
             }
 
-            return sb.ToString();
+            // Return all but the last char (a \n character)
+            return sb.ToString(0, sb.Length - 1);
         }
 
         private static void LogMessageWithProperties(
