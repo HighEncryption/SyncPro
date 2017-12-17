@@ -205,10 +205,12 @@
             // Finally save the configuration for the relationship itself
             this.Configuration.Save(this.RelationshipRootPath);
 
-            Logger.Info(
-                "Saved sync relationship: RelationshipId={0}, Name={1}",
-                this.Configuration.RelationshipId,
-                this.Configuration.Name);
+            Logger.RelationshipSaved(
+                new Dictionary<string, object>()
+                {
+                    { "RelationshipId", this.Configuration.RelationshipId },
+                    { "Name", this.Configuration.Name },
+                });
         }
 
         public static SyncRelationship Create()
@@ -223,8 +225,6 @@
 
         public static SyncRelationship Load(Guid relationshipId)
         {
-            Logger.Debug("Loading configuration for relationship " + relationshipId);
-
             string relationshipDir = Path.Combine(Global.AppDataRoot, relationshipId.ToString("N"));
             RelationshipConfiguration config = RelationshipConfiguration.Load(relationshipDir);
 
@@ -233,6 +233,7 @@
                 new Dictionary<string,object>()
                 {
                     { "Name", config.Name },
+                    { "RelationshipId", config.RelationshipId },
                     { "InitiallyCreatedUtc", config.InitiallyCreatedUtc },
                     { "Scope", config.Scope }
                 });

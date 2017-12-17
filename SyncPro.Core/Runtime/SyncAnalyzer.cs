@@ -19,8 +19,6 @@ namespace SyncPro.Runtime
         private readonly CancellationToken cancellationToken;
         private readonly AnalyzeRelationshipResult analyzeResult;
 
-        private Guid syncAnalysisRunId;
-
         public EventHandler<SyncRunProgressInfo> ChangeDetected;
 
         public SyncAnalyzer(SyncRelationship relationship, CancellationToken cancellationToken)
@@ -33,7 +31,6 @@ namespace SyncPro.Runtime
         public async Task<AnalyzeRelationshipResult> AnalyzeChangesAsync()
         {
             List<Task> updateTasks = new List<Task>();
-            this.syncAnalysisRunId = Guid.NewGuid();
 
             // For each adapter (where changes can origiante from), start a task to analyze the change for that
             // adapter. This will allow multiple adapters to be examined in parallel.
@@ -128,7 +125,7 @@ namespace SyncPro.Runtime
 
                     if (adapter.SupportChangeTracking())
                     {
-                        IChangeTracking changeTracking = (IChangeTracking)adapter;
+                        IChangeTracking changeTracking = (IChangeTracking) adapter;
                         TrackedChange trackedChange = await changeTracking.GetChangesAsync().ConfigureAwait(false);
 
                         this.analyzeResult.TrackedChanges.Add(adapter, trackedChange);
@@ -145,18 +142,23 @@ namespace SyncPro.Runtime
                             rootIndexEntry,
                             string.Empty);
                     }
-
-                    Logger.AnalyzeChangesEnd(
-                        new Dictionary<string, object>()
-                        {
-                            { "SyncAnalysisRunId", this.syncAnalysisRunId },
-                            { "AdapterId", adapter.Configuration.Id },
-                        });
                 }
             }
             catch (Exception exception)
             {
                 this.analyzeResult.AdapterResults[adapter.Configuration.Id].Exception = exception;
+            }
+            finally
+            {
+                Logger.AnalyzeChangesEnd(
+                    new Dictionary<string, object>()
+                    {
+                        { "ResultId", this.analyzeResult.Id },
+                        { "AdapterId", adapter.Configuration.Id },
+                        { "IsUpToDate", this.analyzeResult.IsUpToDate },
+                        { "TotalSyncEntries", this.analyzeResult.TotalSyncEntries },
+                        { "TotalChangedEntriesCount", this.analyzeResult.TotalChangedEntriesCount },
+                    });
             }
         }
 
@@ -172,7 +174,7 @@ namespace SyncPro.Runtime
                     "AnalyzeChangesWithChangeTracking called with following properties:",
                     new Dictionary<string, object>()
                     {
-                        { "SyncAnalysisRunId", this.syncAnalysisRunId },
+                        { "ResultId", this.analyzeResult.Id },
                         { "AdapterId", adapter.Configuration.Id },
                         { "RootName", logicalParent.Name },
                         { "RootId", logicalParent.Id },
@@ -436,7 +438,7 @@ namespace SyncPro.Runtime
                     message,
                     new Dictionary<string, object>()
                     {
-                        { "SyncAnalysisRunId", this.syncAnalysisRunId },
+                        { "ResultId", this.analyzeResult.Id },
                         { "Id", logicalChild.Id },
                         { "Name", logicalChild.Name },
                         { "Flags", logicalChild.UpdateInfo.GetSetFlagNames() },
@@ -469,7 +471,7 @@ namespace SyncPro.Runtime
                     "AnalyzeChangesWithoutChangeTracking called with following properties:",
                     new Dictionary<string, object>()
                     {
-                        { "SyncAnalysisRunId", this.syncAnalysisRunId },
+                        { "ResultId", this.analyzeResult.Id },
                         { "AdapterId", adapter.Configuration.Id },
                         { "RootName", logicalParent.Name },
                         { "RootId", logicalParent.Id },
