@@ -13,9 +13,8 @@
 
     using Hardcodet.Wpf.TaskbarNotification;
 
-    using JsonLog;
-
     using SyncPro.Runtime;
+    using SyncPro.Tracing;
     using SyncPro.UI.Framework.MVVM;
     using SyncPro.UI.Navigation;
     using SyncPro.UI.Navigation.ViewModels;

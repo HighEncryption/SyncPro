@@ -418,13 +418,13 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\JsonLog\JsonLog\JsonLog.csproj">
-      <Project>{6028CE31-C870-4ECB-BF55-B4C4D4953B9D}</Project>
-      <Name>JsonLog</Name>
-    </ProjectReference>
     <ProjectReference Include="..\SyncPro.Core\SyncPro.Core.csproj">
       <Project>{DE859CDC-6879-4C28-AB26-354806276E04}</Project>
       <Name>SyncPro.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SyncPro.Tracing\SyncPro.Tracing.csproj">
+      <Project>{ce6a7780-bc06-4818-b15f-8dad91032a71}</Project>
+      <Name>SyncPro.Tracing</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

@@ -2,7 +2,7 @@
 {
     using System;
 
-    using JsonLog;
+    using SyncPro.Tracing;
 
     public abstract class PropertyValidationRule : Attribute, IPropertyValidationRule
     {

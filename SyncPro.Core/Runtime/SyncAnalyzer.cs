@@ -9,10 +9,9 @@ namespace SyncPro.Runtime
     using System.Threading;
     using System.Threading.Tasks;
 
-    using JsonLog;
-
     using SyncPro.Adapters;
     using SyncPro.Data;
+    using SyncPro.Tracing;
 
     public class SyncAnalyzer
     {
@@ -110,7 +109,13 @@ namespace SyncPro.Runtime
 
         private async Task AnalyzeChangesFromAdapter(AdapterBase adapter)
         {
-            Logger.Info("Beginning AnalyzeChangesFromAdapter for adapter " + adapter.Configuration.Id);
+            Logger.AnalyzeChangesStart(
+                new Dictionary<string, object>()
+                {
+                    { "SyncAnalysisRunId", adapter.Configuration.Id },
+                    { "AdapterId", adapter.Configuration.Id },
+                    { "SupportChangeTracking", adapter.SupportChangeTracking() }
+                });
 
             try
             {
@@ -120,13 +125,11 @@ namespace SyncPro.Runtime
 
                     if (adapter.SupportChangeTracking())
                     {
-                        IChangeTracking changeTracking = (IChangeTracking)adapter;
+                        IChangeTracking changeTracking = (IChangeTracking) adapter;
                         TrackedChange trackedChange = await changeTracking.GetChangesAsync().ConfigureAwait(false);
 
                         this.analyzeResult.TrackedChanges.Add(adapter, trackedChange);
                         this.AnalyzeChangesWithChangeTracking(db, adapter, rootIndexEntry);
-
-                        Logger.Info("Finished AnalyzeChangesFromAdapter with change tracking for adapter " + adapter.Configuration.Id);
                     }
                     else
                     {
@@ -138,14 +141,24 @@ namespace SyncPro.Runtime
                             rootFolder,
                             rootIndexEntry,
                             string.Empty);
-
-                        Logger.Info("Finished AnalyzeChangesFromAdapter for adapter " + adapter.Configuration.Id);
                     }
                 }
             }
             catch (Exception exception)
             {
                 this.analyzeResult.AdapterResults[adapter.Configuration.Id].Exception = exception;
+            }
+            finally
+            {
+                Logger.AnalyzeChangesEnd(
+                    new Dictionary<string, object>()
+                    {
+                        { "ResultId", this.analyzeResult.Id },
+                        { "AdapterId", adapter.Configuration.Id },
+                        { "IsUpToDate", this.analyzeResult.IsUpToDate },
+                        { "TotalSyncEntries", this.analyzeResult.TotalSyncEntries },
+                        { "TotalChangedEntriesCount", this.analyzeResult.TotalChangedEntriesCount },
+                    });
             }
         }
 
@@ -154,16 +167,29 @@ namespace SyncPro.Runtime
             AdapterBase adapter,
             SyncEntry logicalParent)
         {
-            Logger.Verbose("---------------------------------------------------------------------");
-            Logger.Verbose("AnalyzeChangesWithChangeTracking called with root {0} (Name={1})", logicalParent.Id, logicalParent.Name);
-
             TrackedChange trackedChange = this.analyzeResult.TrackedChanges[adapter];
+
+            Logger.Debug(
+                Logger.BuildEventMessageWithProperties(
+                    "AnalyzeChangesWithChangeTracking called with following properties:",
+                    new Dictionary<string, object>()
+                    {
+                        { "ResultId", this.analyzeResult.Id },
+                        { "AdapterId", adapter.Configuration.Id },
+                        { "RootName", logicalParent.Name },
+                        { "RootId", logicalParent.Id },
+                        { "TrackedChangeState", trackedChange.State },
+                        { "TrackedChangeCount", trackedChange.Changes.Count },
+                    }));
 
             // When analyzing changes with change tracking, it is possible that changes arrive out of order (such as a
             // file creation arriving before the file's parent directory creation), which results in a change not being
             // able to be processed. If a change cannot be processed, it is 'skipped' by adding it back to the end of 
             // the queue of changes.
             Queue<IChangeTrackedAdapterItem> pendingChanges = new Queue<IChangeTrackedAdapterItem>(trackedChange.Changes);
+
+            // TODO: This is a perfrect candidate for an event message that should use activity GUIDs.
+            Logger.Debug("pendingChanges contains {0} items", pendingChanges.Count);
 
             // This field tracks the number of changes that are skipped. If the number of skipped changes exceeds the 
             // total number of changes to be analyzed, throw an exception.
@@ -212,12 +238,12 @@ namespace SyncPro.Runtime
                     Debugger.Break(); // This should almost never happen!
 #endif
 
-                    Logger.Info("Skipping delete for non-existent item " + changeAdapterItem.Name);
+                    Logger.Debug("Skipping delete for non-existent item " + changeAdapterItem.Name);
                     return true;
                 }
 
                 SyncEntry logicalChild = adapterEntry.SyncEntry;
-                Logger.Verbose("Child item {0} ({1}) was deleted.", logicalChild.Id, logicalChild.Name);
+                Logger.Debug("Child item {0} ({1}) was deleted.", logicalChild.Id, logicalChild.Name);
 
                 // Mark the sync entry as 'deleted' by setting the appropriate bit.
                 logicalChild.State |= SyncEntryState.IsDeleted;
@@ -238,6 +264,8 @@ namespace SyncPro.Runtime
                 logicalChild.UpdateInfo.SetOldMetadataFromSyncEntry();
 
                 this.RaiseChangeDetected(adapter.Configuration.Id, logicalChild.UpdateInfo);
+
+                this.LogSyncAnalyzerChangeFound(logicalChild);
                 return true;
             }
 
@@ -251,13 +279,13 @@ namespace SyncPro.Runtime
                     knownSyncEntries.Add(adapterEntry.AdapterEntryId, logicalChild);
                 }
 
-                Logger.Verbose("Found child item {0} in database that matches adapter item.", logicalChild.Id);
+                Logger.Debug("Found child item {0} in database that matches adapter item.", logicalChild.Id);
 
                 if (logicalChild.State.HasFlag(SyncEntryState.IsDeleted))
                 {
                     // Handle the case where the item was previously deleted
                     // TODO: verify that this is correct. Remove this comment once a unit test is added.
-                    Logger.Verbose("Child item {0} was un-deleted.", logicalChild.Id);
+                    Logger.Debug("Child item {0} was un-deleted.", logicalChild.Id);
 
                     // Clear the IsDeleted flag (needed in cases where the file was previously deleted).
                     logicalChild.State &= ~SyncEntryState.IsDeleted;
@@ -277,6 +305,8 @@ namespace SyncPro.Runtime
                     // Raise change notification so that the UI can be updated in "real time" rather than waiting for
                     // the analyze process to finish.
                     this.RaiseChangeDetected(adapter.Configuration.Id, logicalChild.UpdateInfo);
+
+                    this.LogSyncAnalyzerChangeFound(logicalChild);
                     return true;
                 }
 
@@ -286,7 +316,7 @@ namespace SyncPro.Runtime
                 if (logicalChild.UpdateInfo == null && 
                     adapter.IsEntryUpdated(logicalChild, changeAdapterItem, out updateResult))
                 {
-                    Logger.Verbose("Child item {0} is out of sync.", logicalChild.Id);
+                    Logger.Debug("Child item {0} is out of sync.", logicalChild.Id);
 
                     // Create the update info for the new entry
                     logicalChild.UpdateInfo = new EntryUpdateInfo(
@@ -317,17 +347,19 @@ namespace SyncPro.Runtime
                     // Raise change notification so that the UI can be updated in "real time" rather than waiting for 
                     // the analyze process to finish.
                     this.RaiseChangeDetected(adapter.Configuration.Id, logicalChild.UpdateInfo);
+
+                    this.LogSyncAnalyzerChangeFound(logicalChild);
                     return true;
                 }
 
                 // The change tracking indicates that this item has changed, but the adapter logic determined that it 
                 // does not.
-                Logger.Verbose("Child item {0} is already synced.", logicalChild.Id);
+                Logger.Debug("Child item {0} is already synced.", logicalChild.Id);
                 return true;
             }
             else
             {
-                Logger.Verbose("Child item {0} ({1}) was not found in database that matches adapter item.", changeAdapterItem.Name,
+                Logger.Debug("Child item {0} ({1}) was not found in database that matches adapter item.", changeAdapterItem.Name,
                     changeAdapterItem.UniqueId);
 
                 SyncEntry parentEntry;
@@ -375,8 +407,42 @@ namespace SyncPro.Runtime
 
                 // Raise change notification so that the UI can be updated in "real time" rather than waiting for the analyze process to finish.
                 this.RaiseChangeDetected(adapter.Configuration.Id, logicalChild.UpdateInfo);
+
+                this.LogSyncAnalyzerChangeFound(logicalChild);
                 return true;
             }
+        }
+
+        private void LogSyncAnalyzerChangeFound(SyncEntry logicalChild)
+        {
+            string message;
+            if (logicalChild.UpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.Deleted))
+            {
+                message = "The item was deleted";
+            }
+            else if (logicalChild.UpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.IsNew))
+            {
+                message = "A new item was found";
+            }
+            else if (logicalChild.UpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.IsUpdated))
+            {
+                message = "The item was updated";
+            }
+            else
+            {
+                message = "An unknown change has occurred in the item";
+            }
+
+            Logger.SyncAnalyzerChangeFound(
+                Logger.BuildEventMessageWithProperties(
+                    message,
+                    new Dictionary<string, object>()
+                    {
+                        { "ResultId", this.analyzeResult.Id },
+                        { "Id", logicalChild.Id },
+                        { "Name", logicalChild.Name },
+                        { "Flags", logicalChild.UpdateInfo.GetSetFlagNames() },
+                    }));
         }
 
         /// <summary>
@@ -400,18 +466,26 @@ namespace SyncPro.Runtime
         {
             IList<IAdapterItem> adapterChildren = new List<IAdapterItem>();
 
-            Logger.Verbose("---------------------------------------------------------------------");
-            Logger.Verbose("AnalyzeChangesWithoutChangeTracking called for entry {0} (Name={1})", logicalParent.Id, logicalParent.Name);
+            Logger.Debug(
+                Logger.BuildEventMessageWithProperties(
+                    "AnalyzeChangesWithoutChangeTracking called with following properties:",
+                    new Dictionary<string, object>()
+                    {
+                        { "ResultId", this.analyzeResult.Id },
+                        { "AdapterId", adapter.Configuration.Id },
+                        { "RootName", logicalParent.Name },
+                        { "RootId", logicalParent.Id },
+                    }));
 
             // Get files and folders in the given directory. If this given directory is null (such as when a directory was deleted),
             // the list will be empty (allowing deletes to occur recursivly).
             if (adapterParent != null)
             {
-                Logger.Verbose("Getting adapter item");
+                Logger.Debug("Getting child adapter items for item {0}", adapterParent.FullName);
                 adapterChildren = adapter.GetAdapterItems(adapterParent).ToList();
             }
 
-            Logger.Verbose("Found {0} child items from adapter.", adapterChildren.Count);
+            Logger.Debug("Found {0} child items from adapter.", adapterChildren.Count);
 
             // Get the children (files and directories) for a particular directory as identified by 'entry'.
             // Performance Note: Check if the logical parent is a new item. If so, then any of the children will
@@ -427,10 +501,12 @@ namespace SyncPro.Runtime
             if (!skipChildLookup)
             {
                 logicalChildren = db.Entries.Include(e => e.AdapterEntries).Where(e => e.ParentId == logicalParent.Id).ToList();
-                Logger.Verbose("Found {0} child items from database.", logicalChildren.Count);
+                Logger.Debug("Found {0} child items from database.", logicalChildren.Count);
             }
-
-            Logger.Verbose("Skipped child lookup from database.");
+            else
+            {
+                Logger.Debug("Skipped child lookup from database.");
+            }
 
             // Loop through each of the items return by the adapter (eg files on disk)
             foreach (IAdapterItem adapterChild in adapterChildren)
@@ -452,7 +528,7 @@ namespace SyncPro.Runtime
 
                 // Get the list of sync entries from the index. We will match these up with the adapter items to determine what has been 
                 // added, modified, or removed.
-                Logger.Verbose("Examining adapter child item {0}", adapterChild.FullName);
+                Logger.Debug("Examining adapter child item {0}", adapterChild.FullName);
 
                 // First check if there is an entry that matches the unique ID of the item
                 SyncEntry logicalChild = logicalChildren?.FirstOrDefault(c => c.HasUniqueId(adapterChild.UniqueId));
@@ -460,14 +536,14 @@ namespace SyncPro.Runtime
                 // A match was found, so determine
                 if (logicalChild != null)
                 {
-                    Logger.Verbose("Found child item {0} in database that matches adapter item.", logicalChild.Id);
+                    Logger.Debug("Found child item {0} in database that matches adapter item.", logicalChild.Id);
 
                     // The database already contains an entry for this item. Remove it from the list, then update as needed.
                     logicalChildren.Remove(logicalChild);
 
                     if (logicalChild.State.HasFlag(SyncEntryState.IsDeleted))
                     {
-                        Logger.Verbose("Child item {0} was un-deleted.", logicalChild.Id);
+                        Logger.Debug("Child item {0} was un-deleted.", logicalChild.Id);
 
                         // Clear the IsDeleted flag (needed in cases where the file was previously deleted).
                         logicalChild.State &= ~SyncEntryState.IsDeleted;
@@ -487,6 +563,8 @@ namespace SyncPro.Runtime
                         // Raise change notification so that the UI can be updated in "real time" rather than waiting for the analyze 
                         // process to finish.
                         this.RaiseChangeDetected(adapter.Configuration.Id, logicalChild.UpdateInfo);
+
+                        this.LogSyncAnalyzerChangeFound(logicalChild);
                         continue;
                     }
 
@@ -495,7 +573,7 @@ namespace SyncPro.Runtime
                     // If the item differs from the entry in the index, an update will be required.
                     if (logicalChild.UpdateInfo == null && adapter.IsEntryUpdated(logicalChild, adapterChild, out updateResult))
                     {
-                        Logger.Verbose("Child item {0} is out of sync.", logicalChild.Id);
+                        Logger.Debug("Child item {0} is out of sync.", logicalChild.Id);
 
                         // Create the update info for the new entry
                         logicalChild.UpdateInfo = new EntryUpdateInfo(
@@ -533,11 +611,12 @@ namespace SyncPro.Runtime
 
                         // Raise change notification so that the UI can be updated in "real time" rather than waiting for the analyze process to finish.
                         this.RaiseChangeDetected(adapter.Configuration.Id, logicalChild.UpdateInfo);
+                        this.LogSyncAnalyzerChangeFound(logicalChild);
                     }
                 }
                 else
                 {
-                    Logger.Verbose("Child item was not found in database that matches adapter item.");
+                    Logger.Debug("Child item was not found in database that matches adapter item.");
 
                     // This file/directory was not found in the index, so create a new entry for it. Note that while this is a call
                     // to the adapter, no object is created as a result of the call (the result is in-memory only).
@@ -559,6 +638,7 @@ namespace SyncPro.Runtime
 
                     // Raise change notification so that the UI can be updated in "real time" rather than waiting for the analyze process to finish.
                     this.RaiseChangeDetected(adapter.Configuration.Id, logicalChild.UpdateInfo);
+                    this.LogSyncAnalyzerChangeFound(logicalChild);
                 }
 
                 // If this is a directory, descend into it
@@ -585,7 +665,7 @@ namespace SyncPro.Runtime
                         break;
                     }
 
-                    Logger.Verbose("Child item {0} ({1}) was deleted.", oldChild.Id, oldChild.Name);
+                    Logger.Debug("Child item {0} ({1}) was deleted.", oldChild.Id, oldChild.Name);
 
                     // Mark the sync entry as 'deleted' by setting the appropriate bit.
                     oldChild.State |= SyncEntryState.IsDeleted;
@@ -606,6 +686,7 @@ namespace SyncPro.Runtime
                     oldChild.UpdateInfo.SetOldMetadataFromSyncEntry();
 
                     this.RaiseChangeDetected(adapter.Configuration.Id, oldChild.UpdateInfo);
+                    this.LogSyncAnalyzerChangeFound(oldChild);
 
                     // If the entry we are removing is a directory, we need to also check for subdirectories and files. We can do this by calling 
                     // this method recursivly, and passing null for adapter folder (indicating that is no longer exists according to the 

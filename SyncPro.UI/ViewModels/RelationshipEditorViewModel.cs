@@ -8,8 +8,7 @@
     using System.Windows;
     using System.Windows.Input;
 
-    using JsonLog;
-
+    using SyncPro.Tracing;
     using SyncPro.UI.Framework;
     using SyncPro.UI.Framework.MVVM;
     using SyncPro.UI.Framework.Validation.Rules;

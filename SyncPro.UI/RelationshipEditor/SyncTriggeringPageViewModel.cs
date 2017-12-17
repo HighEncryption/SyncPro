@@ -2,11 +2,10 @@
 {
     using System.Diagnostics;
 
-    using JsonLog;
-
     using Newtonsoft.Json;
 
     using SyncPro.Data;
+    using SyncPro.Tracing;
     using SyncPro.UI.ViewModels;
 
     public class SyncTriggeringPageViewModel : WizardPageViewModelBase

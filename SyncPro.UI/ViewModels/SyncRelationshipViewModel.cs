@@ -9,11 +9,10 @@
     using System.Threading.Tasks;
     using System.Windows.Input;
 
-    using JsonLog;
-
     using SyncPro.Adapters;
     using SyncPro.Data;
     using SyncPro.Runtime;
+    using SyncPro.Tracing;
     using SyncPro.UI.Converters;
     using SyncPro.UI.Framework;
     using SyncPro.UI.Framework.MVVM;

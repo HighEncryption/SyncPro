@@ -9,10 +9,9 @@
     using System.Threading;
     using System.Threading.Tasks;
 
-    using JsonLog;
-
     using SyncPro.Adapters;
     using SyncPro.Data;
+    using SyncPro.Tracing;
 
     /// <summary>
     /// Enumeration of the options for the result of a sync run
@@ -282,8 +281,11 @@
         /// <returns>Nothing (async task)</returns>
         private async Task SyncInternalAsync()
         {
-            Logger.Info("--------------------------------------------");
-            Logger.Info("Beginning SyncInternal()");
+            Logger.SynchronizeChangesStart(
+                new Dictionary<string, object>
+                {
+                    { "AnalyzeResultId", this.AnalyzeResult.Id },
+                });
 
             // Get the list of EntryUpdateInfo object for each change that needs to be synchronzied. Be sure that we are
             // gathering the results from each adapter, which is needed in bidirectional sync.
@@ -342,7 +344,7 @@
 
                     if (entryUpdateInfo.State == EntryUpdateState.Succeeded)
                     {
-                        Logger.Info(
+                        Logger.Debug(
                             "Skipping synchronization for already-synchronized entry {0} ({1})",
                             entryUpdateInfo.Entry.Id,
                             entryUpdateInfo.Entry.Name);
@@ -350,7 +352,7 @@
                         continue;
                     }
 
-                    Logger.Info(
+                    Logger.Debug(
                         "Processing update for entry {0} ({1}) with flags {2}",
                         entryUpdateInfo.Entry.Id,
                         entryUpdateInfo.Entry.Name,
@@ -369,6 +371,8 @@
                         a => a.Configuration.Id != entryUpdateInfo.OriginatingAdapter.Configuration.Id);
                     Pre.Assert(adapter != null, "adapter != null");
 
+                    string message = string.Empty;
+
                     try
                     {
                         fileProcessed = await this.ProcessEntryAsync(
@@ -377,6 +381,8 @@
                                 throttlingManager,
                                 db)
                             .ConfigureAwait(false);
+
+                        message = "The change was successfully synchronized";
                     }
                     catch (TaskCanceledException)
                     {
@@ -384,16 +390,30 @@
 
                         entryUpdateInfo.ErrorMessage = "Processing was cancelled";
                         entryUpdateInfo.State = EntryUpdateState.Failed;
+
+                        message = "The change was cancelled during processing";
                     }
                     catch (Exception exception)
                     {
                         Logger.Warning(
-                            "Processing failed with {0}: {1}", 
+                            "Processing failed with {0}: {1}",
                             exception.GetType().FullName,
                             exception.Message);
 
                         entryUpdateInfo.ErrorMessage = exception.Message;
                         entryUpdateInfo.State = EntryUpdateState.Failed;
+
+                        message = "An error occurred while synchronzing the changed.";
+                    }
+                    finally
+                    {
+                        Logger.ChangeSynchronzied(
+                            Logger.BuildEventMessageWithProperties(
+                                message,
+                                new Dictionary<string, object>()
+                                {
+                                    { "AnalyzeResultId", this.AnalyzeResult.Id },
+                                }));
                     }
 
                     if (fileProcessed)
@@ -457,13 +477,13 @@
                 // TODO: Check for any other (invalid) flags that are set and throw exception
                 // The item is new (on the source), so create the item on the destination. Metadata will be
                 // set by this method as well.
-                Logger.Info("Creating item using adapter");
+                Logger.Debug("Creating item using adapter");
                 await adapter.CreateItemAsync(entryUpdateInfo.Entry).ConfigureAwait(false);
 
                 // If the item is a file, copy the contents
                 if (entryUpdateInfo.Entry.Type == SyncEntryType.File)
                 {
-                    Logger.Info("Copying file contents to new item");
+                    Logger.Debug("Copying file contents to new item");
                     await this.CopyFileAsync(
                             entryUpdateInfo.OriginatingAdapter,
                             adapter,
@@ -477,7 +497,7 @@
                 // TODO: Check for any other (invalid) flags that are set and throw exception
                 // Delete the file on the adapter (the actual file). The entry will NOT be deleted from the
                 // database as a part of this method.
-                Logger.Info("Deleting item using adapter");
+                Logger.Debug("Deleting item using adapter");
                 adapter.DeleteItem(entryUpdateInfo.Entry);
             }
             else if ((entryUpdateInfo.Flags & SyncEntryChangedFlags.IsUpdated) != 0 ||
@@ -487,7 +507,7 @@
                 // the file contents.
                 if (entryUpdateInfo.Entry.Type == SyncEntryType.File)
                 {
-                    Logger.Info("Copying file contents to existing item");
+                    Logger.Debug("Copying file contents to existing item");
                     await this.CopyFileAsync(
                             entryUpdateInfo.OriginatingAdapter,
                             adapter,
@@ -498,7 +518,7 @@
 
                 // The item was either renamed or the metadata was updated. Either way, this will be handled
                 // by the UpdateItem call to the adapter.
-                Logger.Info("Updating item using adapter");
+                Logger.Debug("Updating item using adapter");
                 adapter.UpdateItem(entryUpdateInfo, entryUpdateInfo.Flags);
 
                 if ((entryUpdateInfo.Flags & SyncEntryChangedFlags.CreatedTimestamp) != 0)
@@ -551,7 +571,7 @@
                 db.UpdateSyncEntry(entryUpdateInfo.Entry);
             }
 
-            Logger.Info("Item processed successfully");
+            Logger.Debug("Item processed successfully");
 
             return true;
         }

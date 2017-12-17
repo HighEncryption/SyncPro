@@ -1,12 +1,12 @@
 namespace SyncPro.Runtime
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
 
-    using JsonLog;
-
     using SyncPro.Adapters;
+    using SyncPro.Tracing;
 
     public class AnalyzeRelationshipResult
     {
@@ -60,8 +60,11 @@ namespace SyncPro.Runtime
         /// </summary>
         public int UnchangedFolderCount { get; set; }
 
+        public Guid Id { get; }
+
         public AnalyzeRelationshipResult()
         {
+            this.Id = Guid.NewGuid();
             this.AdapterResults = new Dictionary<int, AnalyzeAdapterResult>();
             this.TrackedChanges = new Dictionary<AdapterBase, TrackedChange>();
         }

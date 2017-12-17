@@ -8,12 +8,11 @@
     using System.Threading;
     using System.Threading.Tasks;
 
-    using JsonLog;
-
     using SyncPro.Adapters.MicrosoftOneDrive.DataModel;
     using SyncPro.Data;
     using SyncPro.OAuth;
     using SyncPro.Runtime;
+    using SyncPro.Tracing;
 
     public class OneDriveAdapter : AdapterBase, IChangeTracking, IChangeNotification
     {
@@ -398,6 +397,13 @@
         /// <inheritdoc />
         public override void LoadConfiguration()
         {
+            Dictionary<string, object> properties =
+                new Dictionary<string, object>
+                {
+                    { "TargetPath", this.Config.TargetPath },
+                    { "LatestDeltaToken", this.Config.LatestDeltaToken }
+                };
+
             // The token is normally encrypted in the Configuration object. Because we need to have it 
             // in memory and unencrypted to use it, we keep a second (unencrypted) copy of the token
             // locally in the adapter.
@@ -406,18 +412,23 @@
                 this.CurrentToken = this.Config.CurrentToken.DuplicateToken();
                 this.CurrentToken.Unprotect();
 
-                Logger.Verbose(
-                    "OneDriveAdapter {0} loaded token with the following configuration:",
-                    this.Configuration.AdapterTypeId);
-                Logger.Verbose(
-                    "   [CurrentToken]: AcquireTime={0}, AccessTokenHash={1}, RefreshTokenHash={2}",
-                    this.CurrentToken.AcquireTime,
-                    this.CurrentToken.GetAccessTokenHash(),
-                    this.CurrentToken.GetRefreshTokenHash());
+                properties.Add(
+                    "CurrentToken",
+                    string.Format(
+                        "AcquireTime={0}, AccessTokenHash={1}, RefreshTokenHash={2}",
+                        this.CurrentToken.AcquireTime,
+                        this.CurrentToken.GetAccessTokenHash(),
+                        this.CurrentToken.GetRefreshTokenHash()));
+            }
+            else
+            {
+                properties.Add("CurrentToken", "(null)");
             }
 
-            Logger.Verbose("   [TargetPath]: {0}", this.Config.TargetPath);
-            Logger.Verbose("   [LatestDeltaToken]: {0}", this.Config.LatestDeltaToken);
+            Logger.AdapterLoaded(
+                "OneDriveAdapter",
+                OneDriveAdapter.TargetTypeId,
+                properties);
         }
 
         /// <inheritdoc />
@@ -581,8 +592,7 @@
                 }
                 catch (Exception exception)
                 {
-                    Logger.Error("Failed to pull changes from OneDrive");
-                    Logger.LogException(exception);
+                    Logger.LogException(exception, "Failed to pull changes from OneDrive");
                 }
 
                 if (changes != null &&

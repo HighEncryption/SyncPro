@@ -10,13 +10,12 @@
     using System.Threading.Tasks;
     using System.Web;
 
-    using JsonLog;
-
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
 
     using SyncPro.Adapters.MicrosoftOneDrive.DataModel;
     using SyncPro.OAuth;
+    using SyncPro.Tracing;
 
     public class AuthenticationResult
     {
