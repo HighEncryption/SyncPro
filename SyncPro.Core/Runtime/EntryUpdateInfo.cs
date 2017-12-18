@@ -147,6 +147,17 @@
             }
         }
 
+        private EntryUpdateInfo(SyncEntryChangedFlags flags, string relativePath)
+        {
+            this.Flags = flags;
+            this.RelativePath = relativePath;
+        }
+
+        internal static EntryUpdateInfo CreateForTests(SyncEntryChangedFlags flags, string relativePath)
+        {
+            return new EntryUpdateInfo(flags, relativePath);
+        }
+
         public void SetOldMetadataFromSyncEntry()
         {
             this.SizeOld = this.Entry.Size;

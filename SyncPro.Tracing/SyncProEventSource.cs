@@ -10,6 +10,19 @@ namespace SyncPro.Tracing
         #region Generic Events
 
         [Event(
+            EventIDs.LogCritical,
+            Channel = EventChannel.Operational,
+            Level = EventLevel.Critical, 
+            Task = Tasks.General,
+            Opcode = Opcodes.Critical,
+            Keywords = EventKeywords.None,
+            Message = "{0}")]
+        public void LogCritical(string message)
+        {
+            this.WriteEvent(EventIDs.LogCritical, message);
+        }
+
+        [Event(
             EventIDs.LogError,
             Channel = EventChannel.Operational,
             Level = EventLevel.Error, 
@@ -205,11 +218,12 @@ namespace SyncPro.Tracing
 
         public class Opcodes
         {
-            public const EventOpcode Error = (EventOpcode) 0x0b;
-            public const EventOpcode Warning = (EventOpcode) 0x0c;
-            public const EventOpcode Informational = (EventOpcode) 0x0d;
-            public const EventOpcode Verbose = (EventOpcode) 0x0e;
-            public const EventOpcode Debug = (EventOpcode) 0x0f;
+            public const EventOpcode Critical = (EventOpcode) 0x0b;
+            public const EventOpcode Error = (EventOpcode) 0x0c;
+            public const EventOpcode Warning = (EventOpcode) 0x0d;
+            public const EventOpcode Informational = (EventOpcode) 0x0e;
+            public const EventOpcode Verbose = (EventOpcode) 0x0f;
+            public const EventOpcode Debug = (EventOpcode) 0x10;
         }
     }
 }

@@ -53,7 +53,7 @@
 
         public int FilesTotal { get; private set; }
 
-        private int filesCompleted;
+        private long filesCompleted;
 
         private int? syncHistoryId;
 
@@ -118,7 +118,7 @@
                 new SyncRunProgressInfo(
                     updateInfo, 
                     this.FilesTotal, 
-                    this.filesCompleted, 
+                    Convert.ToInt32(Interlocked.Read(ref this.filesCompleted)), 
                     this.BytesTotal,
                     this.bytesCompleted,
                     bytesPerSecond));
@@ -291,21 +291,8 @@
             // gathering the results from each adapter, which is needed in bidirectional sync.
             List<EntryUpdateInfo> updateList = this.AnalyzeResult.AdapterResults.SelectMany(r => r.Value.EntryResults).ToList();
 
-            // Process all of the add/update updates first, then deletes afterward. Deleted need to be done in reverse order, so we will 
-            // order them before adding them back to the master list. Start by creating a list of all of the delete operations.
-            List<EntryUpdateInfo> deleteList = updateList.Where(e => e.Flags.HasFlag(SyncEntryChangedFlags.Deleted)).ToList();
-
-            // Remove the delete operations from the master list.
-            foreach (EntryUpdateInfo entry in deleteList)
-            {
-                updateList.Remove(entry);
-            }
-
-            // Sort the delete list in reverse alpha order. This *should* put deletes of children ahead of parents.
-            deleteList.Sort((e1, e2) => string.Compare(e2.RelativePath, e1.RelativePath, StringComparison.Ordinal));
-
-            // Add the sorted deletes to the end of the update list.
-            updateList.AddRange(deleteList);
+            // Sort the updates according to the specific logic in the EntryProcessingSorter
+            updateList.Sort(new EntryProcessingSorter());
 
             this.FilesTotal = updateList.Count;
             this.filesCompleted = 0;
@@ -329,108 +316,24 @@
                 throttlingManager = new ThrottlingManager(bytesPerSecond, bytesPerSecond * 3);
             }
 
-            bool syncWasCancelled = false;
-
             using(throttlingManager)
             using (var db = this.relationship.GetDatabase())
             {
-                foreach (EntryUpdateInfo entryUpdateInfo in updateList)
+#if SYNC_THREAD_POOLS
+                using (SemaphoreSlim semaphore = new SemaphoreSlim(5, 5))
                 {
-                    if (this.cancellationTokenSource.Token.IsCancellationRequested)
-                    {
-                        syncWasCancelled = true;
-                        break;
-                    }
-
-                    if (entryUpdateInfo.State == EntryUpdateState.Succeeded)
-                    {
-                        Logger.Debug(
-                            "Skipping synchronization for already-synchronized entry {0} ({1})",
-                            entryUpdateInfo.Entry.Id,
-                            entryUpdateInfo.Entry.Name);
-
-                        continue;
-                    }
-
-                    Logger.Debug(
-                        "Processing update for entry {0} ({1}) with flags {2}",
-                        entryUpdateInfo.Entry.Id,
-                        entryUpdateInfo.Entry.Name,
-                        string.Join(",", StringExtensions.GetSetFlagNames<SyncEntryChangedFlags>(entryUpdateInfo.Flags)));
-
-                    Pre.Assert(entryUpdateInfo.Flags != SyncEntryChangedFlags.None, "entryUpdateInfo.Flags != None");
-                    bool fileProcessed = false;
-
-                    // Find the adapter that this change should be synchronized to. This will be the 
-                    // adapter that is not the adapter originates from.
-                    // Dev Note: This is currently designed to only handle two adapters (one source and
-                    // one destination). When support is added to support more than 2 adapters in a 
-                    // relationship, the below code will need to be changed to call ProcessEntryAsync
-                    // for each adapter that the change needs to be synchronized to.
-                    AdapterBase adapter = this.relationship.Adapters.FirstOrDefault(
-                        a => a.Configuration.Id != entryUpdateInfo.OriginatingAdapter.Configuration.Id);
-                    Pre.Assert(adapter != null, "adapter != null");
-
-                    string message = string.Empty;
-
-                    try
-                    {
-                        fileProcessed = await this.ProcessEntryAsync(
-                                entryUpdateInfo,
-                                adapter,
-                                throttlingManager,
-                                db)
-                            .ConfigureAwait(false);
-
-                        message = "The change was successfully synchronized";
-                    }
-                    catch (TaskCanceledException)
-                    {
-                        Logger.Warning("Processing was cancelled");
-
-                        entryUpdateInfo.ErrorMessage = "Processing was cancelled";
-                        entryUpdateInfo.State = EntryUpdateState.Failed;
-
-                        message = "The change was cancelled during processing";
-                    }
-                    catch (Exception exception)
-                    {
-                        Logger.Warning(
-                            "Processing failed with {0}: {1}",
-                            exception.GetType().FullName,
-                            exception.Message);
-
-                        entryUpdateInfo.ErrorMessage = exception.Message;
-                        entryUpdateInfo.State = EntryUpdateState.Failed;
-
-                        message = "An error occurred while synchronzing the changed.";
-                    }
-                    finally
-                    {
-                        Logger.ChangeSynchronzied(
-                            Logger.BuildEventMessageWithProperties(
-                                message,
-                                new Dictionary<string, object>()
-                                {
-                                    { "AnalyzeResultId", this.AnalyzeResult.Id },
-                                }));
-                    }
-
-                    if (fileProcessed)
-                    {
-                        this.filesCompleted++;
-
-                        SyncHistoryEntryData historyEntry = entryUpdateInfo.CreateSyncHistoryEntryData();
-
-                        Pre.Assert(this.syncHistoryId != null, "this.syncHistoryId != null");
-
-                        historyEntry.SyncHistoryId = this.syncHistoryId.Value;
-                        historyEntry.SyncEntryId = entryUpdateInfo.Entry.Id;
-
-                        db.HistoryEntries.Add(historyEntry);
-                        db.SaveChanges();
-                    }
+                    await this.SyncInteralWithPoolingAsync(
+                        throttlingManager,
+                        db,
+                        updateList,
+                        semaphore);
                 }
+#else
+                await this.SyncInteralWithoutPoolingAsync(
+                    throttlingManager,
+                    db,
+                    updateList);
+#endif
             }
 
             // Invoke the ProgressChanged event one final time with a null EntryUpdateInfo object to flush
@@ -439,7 +342,7 @@
 
             this.EndTime = DateTime.UtcNow;
 
-            if (syncWasCancelled)
+            if (this.cancellationTokenSource.Token.IsCancellationRequested)
             {
                 this.SyncResult = SyncRunResult.Cancelled;
             }
@@ -457,11 +360,320 @@
                 var historyData = db.History.First(h => h.Id == this.syncHistoryId);
 
                 historyData.End = this.EndTime;
-                historyData.TotalFiles = this.filesCompleted;
+                historyData.TotalFiles = Convert.ToInt32(this.filesCompleted);
                 historyData.TotalBytes = this.bytesCompleted;
                 historyData.Result = this.SyncResult;
 
                 db.SaveChanges();
+            }
+        }
+
+        private async Task<bool> SyncInteralWithoutPoolingAsync(
+            ThrottlingManager throttlingManager,
+            SyncDatabase db,
+            List<EntryUpdateInfo> updateList)
+        {
+            foreach (EntryUpdateInfo entryUpdateInfo in updateList)
+            {
+                if (this.cancellationTokenSource.Token.IsCancellationRequested)
+                {
+                    return true;
+                }
+
+                if (entryUpdateInfo.State == EntryUpdateState.Succeeded)
+                {
+                    Logger.Debug(
+                        "Skipping synchronization for already-synchronized entry {0} ({1})",
+                        entryUpdateInfo.Entry.Id,
+                        entryUpdateInfo.Entry.Name);
+
+                    continue;
+                }
+
+                Logger.Debug(
+                    "Processing update for entry {0} ({1}) with flags {2}",
+                    entryUpdateInfo.Entry.Id,
+                    entryUpdateInfo.Entry.Name,
+                    string.Join(",", StringExtensions.GetSetFlagNames<SyncEntryChangedFlags>(entryUpdateInfo.Flags)));
+
+                Pre.Assert(entryUpdateInfo.Flags != SyncEntryChangedFlags.None, "entryUpdateInfo.Flags != None");
+                bool fileProcessed = false;
+
+                // Find the adapter that this change should be synchronized to. This will be the 
+                // adapter that is not the adapter originates from.
+                // Dev Note: This is currently designed to only handle two adapters (one source and
+                // one destination). When support is added to support more than 2 adapters in a 
+                // relationship, the below code will need to be changed to call ProcessEntryAsync
+                // for each adapter that the change needs to be synchronized to.
+                AdapterBase adapter = this.relationship.Adapters.FirstOrDefault(
+                    a => a.Configuration.Id != entryUpdateInfo.OriginatingAdapter.Configuration.Id);
+                Pre.Assert(adapter != null, "adapter != null");
+
+                string message = string.Empty;
+
+                try
+                {
+                    fileProcessed = await this.ProcessEntryAsync(
+                            entryUpdateInfo,
+                            adapter,
+                            throttlingManager,
+                            db)
+                        .ConfigureAwait(false);
+
+                    message = "The change was successfully synchronized";
+                }
+                catch (TaskCanceledException)
+                {
+                    Logger.Warning("Processing was cancelled");
+
+                    entryUpdateInfo.ErrorMessage = "Processing was cancelled";
+                    entryUpdateInfo.State = EntryUpdateState.Failed;
+
+                    message = "The change was cancelled during processing";
+                }
+                catch (Exception exception)
+                {
+                    Logger.Warning(
+                        "Processing failed with {0}: {1}",
+                        exception.GetType().FullName,
+                        exception.Message);
+
+                    entryUpdateInfo.ErrorMessage = exception.Message;
+                    entryUpdateInfo.State = EntryUpdateState.Failed;
+
+                    message = "An error occurred while synchronzing the changed.";
+                }
+                finally
+                {
+                    Logger.ChangeSynchronzied(
+                        Logger.BuildEventMessageWithProperties(
+                            message,
+                            new Dictionary<string, object>()
+                            {
+                                { "AnalyzeResultId", this.AnalyzeResult.Id },
+                            }));
+                }
+
+                if (fileProcessed)
+                {
+                    this.filesCompleted++;
+
+                    SyncHistoryEntryData historyEntry = entryUpdateInfo.CreateSyncHistoryEntryData();
+
+                    Pre.Assert(this.syncHistoryId != null, "this.syncHistoryId != null");
+
+                    historyEntry.SyncHistoryId = this.syncHistoryId.Value;
+                    historyEntry.SyncEntryId = entryUpdateInfo.Entry.Id;
+
+                    db.HistoryEntries.Add(historyEntry);
+                    db.SaveChanges();
+                }
+            }
+
+            return false;
+        }
+
+        private async Task<bool> SyncInteralWithPoolingAsync(
+            ThrottlingManager throttlingManager,
+            SyncDatabase db,
+            List<EntryUpdateInfo> updateList,
+            SemaphoreSlim semaphore)
+        {
+            List<Task> activeTasks = new List<Task>();
+
+            int addedTasks = 0;
+            int removedTasks = 0;
+
+            foreach (EntryUpdateInfo entryUpdateInfo in updateList)
+            {
+                if (this.cancellationTokenSource.Token.IsCancellationRequested)
+                {
+                    return true;
+                }
+
+                if (entryUpdateInfo.State == EntryUpdateState.Succeeded)
+                {
+                    Logger.Debug(
+                        "Skipping synchronization for already-synchronized entry {0} ({1})",
+                        entryUpdateInfo.Entry.Id,
+                        entryUpdateInfo.Entry.Name);
+
+                    continue;
+                }
+
+                await semaphore.WaitAsync().ConfigureAwait(false);
+
+                Logger.Debug(
+                    "Processing update for entry {0} ({1}) with flags {2}",
+                    entryUpdateInfo.Entry.Id,
+                    entryUpdateInfo.Entry.Name,
+                    string.Join(",", StringExtensions.GetSetFlagNames<SyncEntryChangedFlags>(entryUpdateInfo.Flags)));
+
+                Pre.Assert(entryUpdateInfo.Flags != SyncEntryChangedFlags.None, "entryUpdateInfo.Flags != None");
+
+                // Find the adapter that this change should be synchronized to. This will be the 
+                // adapter that is not the adapter originates from.
+                // Dev Note: This is currently designed to only handle two adapters (one source and
+                // one destination). When support is added to support more than 2 adapters in a 
+                // relationship, the below code will need to be changed to call ProcessEntryAsync
+                // for each adapter that the change needs to be synchronized to.
+                AdapterBase adapter = this.relationship.Adapters.FirstOrDefault(
+                    a => a.Configuration.Id != entryUpdateInfo.OriginatingAdapter.Configuration.Id);
+                Pre.Assert(adapter != null, "adapter != null");
+
+                EntryProcessingContext context = new EntryProcessingContext(
+                    entryUpdateInfo,
+                    semaphore,
+                    db);
+
+                // New directories and deletes are processed synchronously. They are already pre-ordered
+                // so that parent directories will be created before children and deletes of children 
+                // will occur before parents.
+                if (entryUpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.NewDirectory) ||
+                    entryUpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.Deleted))
+                {
+                    await this.ProcessEntryAsync(
+                            entryUpdateInfo,
+                            adapter,
+                            throttlingManager,
+                            db)
+                        .ContinueWith(this.ProcessEntryCompleteAsync, context)
+                        .ConfigureAwait(false);
+                }
+                else
+                {
+                    removedTasks += activeTasks.RemoveAll(t => t.IsCompleted);
+
+                    var entryTask = this.ProcessEntryAsync(
+                        entryUpdateInfo,
+                        adapter,
+                        throttlingManager,
+                        db);
+
+#pragma warning disable CS4014
+
+                    // We want fire-and-forget behavior for this
+                    var processingCompleteTask = entryTask
+                        .ContinueWith(this.ProcessEntryCompleteAsync, context);
+
+                    processingCompleteTask.ConfigureAwait(false);
+
+#pragma warning restore CS4014
+
+                    activeTasks.Add(processingCompleteTask);
+                    addedTasks++;
+                }
+            }
+
+            await Task.WhenAll(activeTasks).ConfigureAwait(false);
+            removedTasks += activeTasks.Count;
+
+            Logger.Debug(
+                "SyncInteralWithPoolingAsync completed with {0} added, {1} removed",
+                addedTasks,
+                removedTasks);
+
+            return false;
+        }
+
+        private volatile object dbLock = new object();
+
+        private class EntryProcessingContext
+        {
+            public EntryUpdateInfo EntryUpdateInfo { get; }
+
+            public SemaphoreSlim Semaphore { get; }
+
+            public SyncDatabase Db { get; }
+
+            public EntryProcessingContext(
+                EntryUpdateInfo entryUpdateInfo,
+                SemaphoreSlim semaphore,
+                SyncDatabase db)
+            {
+                this.EntryUpdateInfo = entryUpdateInfo;
+                this.Semaphore = semaphore;
+                this.Db = db;
+            }
+        }
+
+        private void ProcessEntryCompleteAsync(Task<bool> task, object context)
+        {
+            EntryProcessingContext ctx = (EntryProcessingContext)context;
+
+            try
+            {
+                string message;
+                if (task.IsCanceled)
+                {
+                    Logger.Warning("Processing was cancelled");
+
+                    ctx.EntryUpdateInfo.ErrorMessage = "Processing was cancelled";
+                    ctx.EntryUpdateInfo.State = EntryUpdateState.Failed;
+
+                    message = "The change was cancelled during processing";
+                }
+                else if (task.Exception != null)
+                {
+                    Logger.Warning(
+                        "Processing failed with {0}: {1}",
+                        task.Exception.GetType().FullName,
+                        task.Exception.Message);
+
+                    ctx.EntryUpdateInfo.ErrorMessage = task.Exception.Message;
+                    ctx.EntryUpdateInfo.State = EntryUpdateState.Failed;
+
+                    message = "An error occurred while synchronzing the changed.";
+                }
+                else
+                {
+                    message = "The change was successfully synchronized";
+
+                    // While accessing task.Result will throw an exception if an exception
+                    // was thrown in the task, that case should have already been handled
+                    // above, so this should be a safe call to make (ie will not except).
+                    if (task.Result)
+                    {
+                        Interlocked.Increment(ref this.filesCompleted);
+
+                        SyncHistoryEntryData historyEntry = 
+                            ctx.EntryUpdateInfo.CreateSyncHistoryEntryData();
+
+                        Pre.Assert(this.syncHistoryId != null, "this.syncHistoryId != null");
+
+                        historyEntry.SyncHistoryId = this.syncHistoryId.Value;
+                        //historyEntry.SyncEntryId = ctx.EntryUpdateInfo.Entry.Id;
+                        historyEntry.SyncEntry = ctx.EntryUpdateInfo.Entry;
+
+                        lock (this.dbLock)
+                        {
+                            ctx.Db.HistoryEntries.Add(historyEntry);
+                            ctx.Db.SaveChanges();
+                        }
+                    }
+                }
+
+                Logger.Debug(
+                    "Finished processing update for entry {0} ({1})",
+                    ctx.EntryUpdateInfo.Entry.Id,
+                    ctx.EntryUpdateInfo.Entry.Name);
+
+                Logger.ChangeSynchronzied(
+                    Logger.BuildEventMessageWithProperties(
+                        message,
+                        new Dictionary<string, object>()
+                        {
+                            { "AnalyzeResultId", this.AnalyzeResult.Id },
+                        }));
+            }
+            catch (Exception e)
+            {
+                Logger.Critical(
+                    "Caught an exception while completing entry processing. " + e);
+            }
+            finally
+            {
+                ctx.Semaphore.Release();
             }
         }
 
@@ -560,15 +772,21 @@
                 // Double-check that we have a legit parent ID
                 Pre.Assert(entryUpdateInfo.Entry.ParentId != null, "entryUpdateInfo.Entry.ParentId != null");
 
-                db.Entries.Add(entryUpdateInfo.Entry);
-
                 // Ensure that there are more than one adapter entry.
                 Pre.Assert(entryUpdateInfo.Entry.AdapterEntries.Count > 1, "entryUpdateInfo.Entry.AdapterEntries.Count > 1");
-                db.AdapterEntries.AddRange(entryUpdateInfo.Entry.AdapterEntries);
+
+                lock (this.dbLock)
+                {
+                    db.Entries.Add(entryUpdateInfo.Entry);
+                    db.AdapterEntries.AddRange(entryUpdateInfo.Entry.AdapterEntries);
+                }
             }
             else
             {
-                db.UpdateSyncEntry(entryUpdateInfo.Entry);
+                lock (this.dbLock)
+                {
+                    db.UpdateSyncEntry(entryUpdateInfo.Entry);
+                }
             }
 
             Logger.Debug("Item processed successfully");
@@ -666,8 +884,10 @@
                     readTotal += read;
 
                     // Pass the data through the required hashing algorithms
+                    // ReSharper disable AssignNullToNotNullAttribute
                     sha1.TransformBlock(buffer, 0, read, null, 0);
                     md5.TransformBlock(buffer, 0, read, null, 0);
+                    // ReSharper restore AssignNullToNotNullAttribute
 
                     // Write the data to the destination adapter
                     destinationStream.Write(buffer, 0, read);
@@ -712,6 +932,66 @@
             };
 
             return run;
+        }
+    }
+
+    internal class EntryProcessingSorter : IComparer<EntryUpdateInfo>
+    {
+        public int Compare(EntryUpdateInfo x, EntryUpdateInfo y)
+        {
+            if (x == null && y == null)
+            {
+                return 0;
+            }
+
+            if (x == null)
+            {
+                return -1;
+            }
+
+            if (y == null)
+            {
+                return 1;
+            }
+
+            // Deleted items come after non-deleted items
+            if (x.HasSyncEntryFlag(SyncEntryChangedFlags.Deleted) &&
+                !y.HasSyncEntryFlag(SyncEntryChangedFlags.Deleted))
+            {
+                return 1;
+            }
+
+            // Save as above with reversed order
+            if (!x.HasSyncEntryFlag(SyncEntryChangedFlags.Deleted) &&
+                y.HasSyncEntryFlag(SyncEntryChangedFlags.Deleted))
+            {
+                return -1;
+            }
+
+            // NewDirectory items come before non-NewDirectory items
+            if (x.HasSyncEntryFlag(SyncEntryChangedFlags.NewDirectory) &&
+                !y.HasSyncEntryFlag(SyncEntryChangedFlags.NewDirectory))
+            {
+                return -1;
+            }
+
+            // Save as above with reversed order
+            if (!x.HasSyncEntryFlag(SyncEntryChangedFlags.NewDirectory) &&
+                y.HasSyncEntryFlag(SyncEntryChangedFlags.NewDirectory))
+            {
+                return 1;
+            }
+
+            // Sort the delete list in reverse alpha order. This *should* put deletes of 
+            // children ahead of parents.
+            if (x.HasSyncEntryFlag(SyncEntryChangedFlags.Deleted) &&
+                y.HasSyncEntryFlag(SyncEntryChangedFlags.Deleted))
+            {
+                return StringComparer.Ordinal.Compare(y.RelativePath, x.RelativePath);
+            }
+
+            // All other cases, sort by name
+            return StringComparer.Ordinal.Compare(x.RelativePath, y.RelativePath);
         }
     }
 }
