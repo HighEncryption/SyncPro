@@ -316,9 +316,13 @@
                 throttlingManager = new ThrottlingManager(bytesPerSecond, bytesPerSecond * 3);
             }
 
-            using(throttlingManager)
+            Stopwatch syncTimeStopwatch = new Stopwatch();
+
+            using (throttlingManager)
             using (var db = this.relationship.GetDatabase())
             {
+                syncTimeStopwatch.Start();
+
 #if SYNC_THREAD_POOLS
                 using (SemaphoreSlim semaphore = new SemaphoreSlim(5, 5))
                 {
@@ -334,7 +338,10 @@
                     db,
                     updateList);
 #endif
+                syncTimeStopwatch.Stop();
             }
+
+            Logger.Verbose("Total sync time: " + syncTimeStopwatch.Elapsed);
 
             // Invoke the ProgressChanged event one final time with a null EntryUpdateInfo object to flush
             // out the final values for files and bytes.
