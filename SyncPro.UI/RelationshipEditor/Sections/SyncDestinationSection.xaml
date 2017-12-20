@@ -214,11 +214,47 @@
                                 <Button Style="{StaticResource ItemButtonStyle}" Margin="8,0,0,0" Command="{Binding BrowsePathCommand}">
                                     <TextBlock Text="Browse" />
                                 </Button>
-
                             </StackPanel>
 
                             <!--<TextBlock Grid.Column="0" Grid.Row="2" Style="{StaticResource ItemHeaderStyle}" Text="Container Name (Optional)" />
                             <TextBox Grid.Column="1" Grid.Row="2" Style="{StaticResource ItemTextBoxStyle}" Text="{Binding ContainerName}" />-->
+                        </Grid>
+                    </DataTemplate>
+                    <DataTemplate DataType="{x:Type adapters:BackblazeB2AdapterViewModel}">
+                        <Grid HorizontalAlignment="Left" >
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" MinWidth="140" />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition />
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Column="1" Grid.Row="0" Margin="0,3" Width="400" TextWrapping="Wrap" HorizontalAlignment="Left"
+                                       Text="You must first add your account information before selecting where files and folder will be synchronzied." />
+
+                            <Button Grid.Column="1" Grid.Row="1" Style="{StaticResource ItemButtonStyle}" Margin="0,4"
+                                     Command="{Binding Path=AddAccountInfoCommand}">
+                                <TextBlock Text="{Binding Path=AddAccountInfoButtonText}" Margin="8,4" />
+                            </Button>
+
+                            <TextBlock Grid.Column="1" Grid.Row="2" Text="{Binding Path=AccountInfoMessage}" 
+                                        FontStyle="Italic" Margin="0,3,0,8" VerticalAlignment="Center" />
+
+                            <TextBlock Grid.Column="0" Grid.Row="3" Style="{StaticResource ItemHeaderStyle}" Text="Folder" />
+                            <StackPanel Grid.Column="1" Grid.Row="3" Orientation="Horizontal" Margin="0,3" IsEnabled="{Binding Path=IsAccountInfoSet}">
+                                <TextBox Style="{StaticResource ItemTextBoxStyle}" Text="{Binding Path=DestinationPath}" IsReadOnly="True" />
+
+                                <Button Style="{StaticResource ItemButtonStyle}" Margin="8,0,0,0" Command="{Binding BrowsePathCommand}">
+                                    <TextBlock Text="Browse" />
+                                </Button>
+                            </StackPanel>
                         </Grid>
                     </DataTemplate>
                     <DataTemplate DataType="{x:Type adapters:PlaceholderAdapterViewModel}">

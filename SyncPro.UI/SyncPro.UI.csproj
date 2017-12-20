@@ -213,6 +213,7 @@
     <Compile Include="RelationshipEditor\SyncTriggeringPageViewModel.cs" />
     <Compile Include="Utility\BaseModelPropertyAttribute.cs" />
     <Compile Include="Utility\FileInfoCache.cs" />
+    <Compile Include="ViewModels\Adapters\BackblazeB2AdapterViewModel.cs" />
     <Compile Include="ViewModels\Adapters\GoogleDriveAdapterViewModel.cs" />
     <Compile Include="ViewModels\Adapters\OneDriveAdapterViewModel.cs" />
     <Compile Include="ViewModels\ChangeMetrics.cs" />
@@ -520,6 +521,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\Graphics\powershell_16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\ProviderLogos\backblaze_b2.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

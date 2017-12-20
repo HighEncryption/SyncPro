@@ -69,6 +69,11 @@
   <ItemGroup>
     <Compile Include="Adapters\AdapterFaultInformation.cs" />
     <Compile Include="Adapters\AdapterItem.cs" />
+    <Compile Include="Adapters\BackblazeB2\BackblazeB2Adapter.cs" />
+    <Compile Include="Adapters\BackblazeB2\BackblazeB2AdapterConfiguration.cs" />
+    <Compile Include="Adapters\BackblazeB2\BackblazeB2AdapterItem.cs" />
+    <Compile Include="Adapters\BackblazeB2\BackblazeB2Client.cs" />
+    <Compile Include="Adapters\BackblazeB2\BackblazeB2HttpException.cs" />
     <Compile Include="Adapters\GoogleDrive\Constants.cs" />
     <Compile Include="Adapters\GoogleDrive\DataModel\User.cs" />
     <Compile Include="Adapters\GoogleDrive\GoogleDriveAdapter.cs" />

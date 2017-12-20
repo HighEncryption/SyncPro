@@ -3,6 +3,7 @@
     using System;
 
     using SyncPro.Adapters;
+    using SyncPro.Adapters.BackblazeB2;
     using SyncPro.Adapters.GoogleDrive;
     using SyncPro.Adapters.MicrosoftOneDrive;
     using SyncPro.Adapters.WindowsFileSystem;
@@ -65,6 +66,12 @@
             {
                 return new GoogleDriveAdapterViewModel(
                     new GoogleDriveAdapter(relationship));
+            }
+
+            if (typeof(TAdapter) == typeof(BackblazeB2AdapterViewModel))
+            {
+                return new BackblazeB2AdapterViewModel(
+                    new BackblazeB2Adapter(relationship));
             }
 
             throw new NotImplementedException();
