@@ -2,11 +2,14 @@ namespace SyncPro.UI.ViewModels.Adapters
 {
     using System;
     using System.Diagnostics;
+    using System.Threading.Tasks;
     using System.Windows.Input;
 
     using SyncPro.Adapters;
     using SyncPro.Adapters.BackblazeB2;
+    using SyncPro.UI.Controls;
     using SyncPro.UI.Framework.MVVM;
+    using SyncPro.UI.Navigation.ViewModels;
 
     public class BackblazeB2AdapterViewModel : SyncAdapterViewModel
     {
@@ -100,6 +103,45 @@ namespace SyncPro.UI.ViewModels.Adapters
 
         private void AddAccountInfo(object obj)
         {
+            BackblazeCredentialDialogViewModel dialogViewModel = new BackblazeCredentialDialogViewModel();
+            BackblazeCredentialDialog dialog = new BackblazeCredentialDialog
+            {
+                DataContext = dialogViewModel
+            };
+
+            bool? dialogResult = dialog.ShowDialog();
+
+            if (dialogResult.HasValue && dialogResult.Value)
+            {
+                BackblazeB2AdapterConfiguration adapterConfiguration = 
+                    (BackblazeB2AdapterConfiguration)this.Adapter.Configuration;
+
+                adapterConfiguration.AccountId = dialogViewModel.AccountId;
+                adapterConfiguration.ApplicationKey = dialogViewModel.ApplicationKey;
+
+                this.Adapter.InitializeAsync()
+                    .ContinueWith(this.AdapterInitializationComplete)
+                    .ConfigureAwait(false);
+            }
+        }
+
+        private void AdapterInitializationComplete(Task obj)
+        {
+            if (!this.Adapter.IsInitialized)
+            {
+                return;
+            }
+
+            this.AccountInfoMessage = string.Format(
+                "Using Backblaze account {0}",
+                this.Adapter.AccountId);
+
+            this.IsAccountInfoAdded = true;
+            this.CanAddAccountInfo = true;
+
+            this.UpdateSignInButton();
+
+            CommandManager.InvalidateRequerySuggested();
         }
 
         private void BrowsePath(object obj)
@@ -111,20 +153,6 @@ namespace SyncPro.UI.ViewModels.Adapters
         {
             this.AddAccountInfoButtonText = 
                 this.IsAccountInfoAdded ? "Change account information" : "Add account information";
-        }
-
-        private void SignInComplete()
-        {
-            string accountId = this.Adapter.AccountId;
-
-            this.AccountInfoMessage = string.Format(
-                "Using Backblaze account {0}",
-                this.Adapter.AccountId);
-
-            this.IsAccountInfoAdded = true;
-            this.CanAddAccountInfo = true;
-            this.UpdateSignInButton();
-            CommandManager.InvalidateRequerySuggested();
         }
     }
 }

@@ -110,6 +110,9 @@
     <Compile Include="Controls\AdapterErrorView.xaml.cs">
       <DependentUpon>AdapterErrorView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\BackblazeCredentialDialog.xaml.cs">
+      <DependentUpon>BackblazeCredentialDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\BrowserAuthenticationWindow.xaml.cs">
       <DependentUpon>BrowserAuthenticationWindow.xaml</DependentUpon>
     </Compile>
@@ -171,6 +174,7 @@
     <Compile Include="Navigation\NavigationNodeViewModel.cs" />
     <Compile Include="Navigation\SyncRunPanelViewModel.cs" />
     <Compile Include="Navigation\ViewModels\AnalyzeResultsNodeViewModel.cs" />
+    <Compile Include="Navigation\ViewModels\BackblazeCredentialDialogViewModel.cs" />
     <Compile Include="Navigation\ViewModels\DashboardNodeViewModel.cs" />
     <Compile Include="Navigation\ViewModels\FilesAndFoldersNodeViewModel.cs" />
     <Compile Include="Navigation\ViewModels\LazyLoadPlaceholderNodeViewModel.cs" />
@@ -231,6 +235,10 @@
     <Compile Include="ViewModels\WizardPageViewModelBase.cs" />
     <Compile Include="WebBrowserWindow.cs" />
     <Page Include="Controls\AdapterErrorView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\BackblazeCredentialDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

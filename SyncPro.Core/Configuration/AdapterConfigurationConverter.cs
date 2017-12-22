@@ -6,6 +6,7 @@ namespace SyncPro.Configuration
     using Newtonsoft.Json.Linq;
     using Newtonsoft.Json.Serialization;
 
+    using SyncPro.Adapters.BackblazeB2;
     using SyncPro.Adapters.MicrosoftOneDrive;
     using SyncPro.Adapters.WindowsFileSystem;
 
@@ -46,9 +47,17 @@ namespace SyncPro.Configuration
                     jObject.ToString(), 
                     SerializerSettings);
             }
+
             if (typeId == WindowsFileSystemAdapter.TargetTypeId)
             {
                 return JsonConvert.DeserializeObject<WindowsFileSystemAdapterConfiguration>(
+                    jObject.ToString(), 
+                    SerializerSettings);
+            }
+
+            if (typeId == BackblazeB2Adapter.TargetTypeId)
+            {
+                return JsonConvert.DeserializeObject<BackblazeB2AdapterConfiguration>(
                     jObject.ToString(), 
                     SerializerSettings);
             }

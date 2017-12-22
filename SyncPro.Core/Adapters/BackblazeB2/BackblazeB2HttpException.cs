@@ -1,6 +1,7 @@
 ﻿namespace SyncPro.Adapters.BackblazeB2
 {
     using System;
+    using System.Net.Http;
     using System.Runtime.Serialization;
 
     /// <summary>
@@ -30,6 +31,11 @@
         protected BackblazeB2HttpException(
             SerializationInfo info,
             StreamingContext context) : base(info, context)
+        {
+        }
+
+        public BackblazeB2HttpException(BackblazeErrorResponse error)
+            : this(error.Message, error.Status, error.Code)
         {
         }
     }

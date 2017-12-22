@@ -281,13 +281,15 @@
                         // Re-add the access token now that it has been refreshed.
                         newRequest.Headers.Authorization = new AuthenticationHeaderValue("bearer", this.CurrentToken.AccessToken);
                         LogRequest(newRequest, client.BaseAddress);
+
+                        // Dispose of the previous response before creating the new one
+                        response.Dispose();
+
                         response = await client.SendAsync(newRequest).ConfigureAwait(false);
                         LogResponse(response);
                     }
                 }
             }
-
-            
 
             return response;
         }

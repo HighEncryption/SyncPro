@@ -69,6 +69,7 @@
   <ItemGroup>
     <Compile Include="EntryProcessingSorterTests.cs" />
     <Compile Include="GoogleDriveTests.cs" />
+    <Compile Include="JsonSerializationTests.cs" />
     <Compile Include="LocalFileSystemSyncTests.cs" />
     <Compile Include="OneDriveSyncTests.cs" />
     <Compile Include="TestHelper.cs" />
