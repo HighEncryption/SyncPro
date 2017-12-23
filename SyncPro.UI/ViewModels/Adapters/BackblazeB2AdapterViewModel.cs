@@ -1,12 +1,16 @@
 namespace SyncPro.UI.ViewModels.Adapters
 {
     using System;
+    using System.Collections.Generic;
+    using System.Collections.ObjectModel;
     using System.Diagnostics;
     using System.Threading.Tasks;
+    using System.Windows;
     using System.Windows.Input;
 
     using SyncPro.Adapters;
     using SyncPro.Adapters.BackblazeB2;
+    using SyncPro.Adapters.BackblazeB2.DataModel;
     using SyncPro.UI.Controls;
     using SyncPro.UI.Framework.MVVM;
     using SyncPro.UI.Navigation.ViewModels;
@@ -17,12 +21,14 @@ namespace SyncPro.UI.ViewModels.Adapters
             : base(adapter)
         {
             this.AddAccountInfoCommand = new DelegatedCommand(this.AddAccountInfo, o => this.CanAddAccountInfo);
-            this.BrowsePathCommand = new DelegatedCommand(this.BrowsePath);
+            this.CreateBucketCommand = new DelegatedCommand(this.CreateBucket);
 
             this.CanAddAccountInfo = true;
             this.AccountInfoMessage = "Account information not set";
 
             this.UpdateSignInButton();
+
+            this.Adapter.InitializationComplete += this.AdapterOnInitializationComplete;
         }
 
         public override string DisplayName => "Backblaze B2";
@@ -37,7 +43,7 @@ namespace SyncPro.UI.ViewModels.Adapters
 
         public ICommand AddAccountInfoCommand { get; }
 
-        public ICommand BrowsePathCommand { get; }
+        public ICommand CreateBucketCommand { get; }
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private string addAccountInfoButtonText;
@@ -73,6 +79,55 @@ namespace SyncPro.UI.ViewModels.Adapters
         {
             get { return this.isAccountInfoAdded; }
             set { this.SetProperty(ref this.isAccountInfoAdded, value); }
+        }
+
+        private ObservableCollection<Bucket> buckets;
+
+        public ObservableCollection<Bucket> Buckets =>
+            this.buckets ?? (this.buckets = new ObservableCollection<Bucket>());
+
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private Bucket selectedBucket;
+
+        public Bucket SelectedBucket
+        {
+            get { return this.selectedBucket; }
+            set
+            {
+                if (this.SetProperty(ref this.selectedBucket, value))
+                {
+                    if (value == null)
+                    {
+                        this.BucketTypeMessage = null;
+                        this.DestinationPath = null;
+                    }
+                    else
+                    {
+                        this.DestinationPath = value.BucketName;
+                        string type = value.BucketType;
+                        switch (type)
+                        {
+                            case Constants.BucketTypes.Public:
+                                type = "Public";
+                                break;
+                            case Constants.BucketTypes.Private:
+                                type = "Private";
+                                break;
+                        }
+
+                        this.BucketTypeMessage = "Bucket type is " + type;
+                    }
+                }
+            }
+        }
+
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private string bucketTypeMessage;
+
+        public string BucketTypeMessage
+        {
+            get { return this.bucketTypeMessage; }
+            set { this.SetProperty(ref this.bucketTypeMessage, value); }
         }
 
         public override void LoadContext()
@@ -119,13 +174,11 @@ namespace SyncPro.UI.ViewModels.Adapters
                 adapterConfiguration.AccountId = dialogViewModel.AccountId;
                 adapterConfiguration.ApplicationKey = dialogViewModel.ApplicationKey;
 
-                this.Adapter.InitializeAsync()
-                    .ContinueWith(this.AdapterInitializationComplete)
-                    .ConfigureAwait(false);
+                this.Adapter.InitializeAsync().ConfigureAwait(false);
             }
         }
 
-        private void AdapterInitializationComplete(Task obj)
+        private void AdapterOnInitializationComplete(object sender, EventArgs eventArgs)
         {
             if (!this.Adapter.IsInitialized)
             {
@@ -141,12 +194,51 @@ namespace SyncPro.UI.ViewModels.Adapters
 
             this.UpdateSignInButton();
 
+            Task.Factory.StartNew(async () =>
+            {
+                IList<Bucket> result = await this.Adapter.GetBucketsAsync().ConfigureAwait(false);
+
+                foreach (Bucket bucket in result)
+                {
+                    App.DispatcherInvoke(() => { this.Buckets.Add(bucket); });
+                }
+            });
+
             CommandManager.InvalidateRequerySuggested();
         }
 
-        private void BrowsePath(object obj)
+        private void CreateBucket(object obj)
         {
+            CreateBackblazeBucketDialogViewModel dialogViewModel = new CreateBackblazeBucketDialogViewModel();
+            CreateBackblazeBucketDialog dialog = new CreateBackblazeBucketDialog
+            {
+                DataContext = dialogViewModel
+            };
 
+            bool? dialogResult = dialog.ShowDialog();
+
+            if (dialogResult.HasValue && dialogResult.Value)
+            {
+                Task.Factory.StartNew(async () =>
+                {
+                    try
+                    {
+                        Bucket newBucket = await this.Adapter.CreateBucket(
+                            dialogViewModel.BucketName,
+                            dialogViewModel.BucketType);
+
+                        App.DispatcherInvoke(() =>
+                        {
+                            this.Buckets.Add(newBucket);
+                            this.SelectedBucket = newBucket;
+                        });
+                    }
+                    catch (Exception e)
+                    {
+                        MessageBox.Show(e.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }).ConfigureAwait(false);
+            }
         }
 
         private void UpdateSignInButton()

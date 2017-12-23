@@ -247,14 +247,20 @@
                             <TextBlock Grid.Column="1" Grid.Row="2" Text="{Binding Path=AccountInfoMessage}" 
                                         FontStyle="Italic" Margin="0,3,0,8" VerticalAlignment="Center" />
 
-                            <TextBlock Grid.Column="0" Grid.Row="3" Style="{StaticResource ItemHeaderStyle}" Text="Folder" />
-                            <StackPanel Grid.Column="1" Grid.Row="3" Orientation="Horizontal" Margin="0,3" IsEnabled="{Binding Path=IsAccountInfoSet}">
-                                <TextBox Style="{StaticResource ItemTextBoxStyle}" Text="{Binding Path=DestinationPath}" IsReadOnly="True" />
+                            <TextBlock Grid.Column="0" Grid.Row="3" Style="{StaticResource ItemHeaderStyle}" Text="Bucket" />
+                            <StackPanel Grid.Column="1" Grid.Row="3" Orientation="Horizontal" Margin="0,3" IsEnabled="{Binding Path=IsAccountInfoAdded}">
+                                <ComboBox ItemsSource="{Binding Path=Buckets}" Width="400"
+                                          DisplayMemberPath="BucketName"
+                                          SelectedItem="{Binding Path=SelectedBucket}" />
 
-                                <Button Style="{StaticResource ItemButtonStyle}" Margin="8,0,0,0" Command="{Binding BrowsePathCommand}">
-                                    <TextBlock Text="Browse" />
+                                <Button Style="{StaticResource ItemButtonStyle}" Margin="8,0,0,0" Command="{Binding CreateBucketCommand}">
+                                    <TextBlock Text="New Bucket" />
                                 </Button>
                             </StackPanel>
+
+                            <TextBlock Grid.Column="1" Grid.Row="4" Text="{Binding Path=BucketTypeMessage}" 
+                                       FontStyle="Italic" Margin="0,3,0,8" VerticalAlignment="Center"
+                                       Visibility="{Binding Path=SelectedBucket, Converter={StaticResource ObjectToVisibilityCollapsed}}" />
                         </Grid>
                     </DataTemplate>
                     <DataTemplate DataType="{x:Type adapters:PlaceholderAdapterViewModel}">

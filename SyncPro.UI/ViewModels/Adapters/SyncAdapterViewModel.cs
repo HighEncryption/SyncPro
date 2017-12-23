@@ -45,6 +45,11 @@
                 return new OneDriveAdapterViewModel((OneDriveAdapter)adapter);
             }
 
+            if (adapter.GetTargetTypeId() == BackblazeB2Adapter.TargetTypeId)
+            {
+                return new BackblazeB2AdapterViewModel((BackblazeB2Adapter)adapter);
+            }
+
             throw new NotImplementedException();
         }
 

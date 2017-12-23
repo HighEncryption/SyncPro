@@ -90,6 +90,24 @@
             return response.Buckets.ToList();
         }
 
+        public async Task<Bucket> CreateBucket(string bucketName, string bucketType)
+        {
+            HttpRequestMessage request = this.BuildJsonRequest(
+                Constants.ApiCreateBucketUrl,
+                HttpMethod.Post,
+                new JsonBuilder()
+                    .AddProperty("accountId", this.accountId)
+                    .AddProperty("bucketName", bucketName)
+                    .AddProperty("bucketType", bucketType)
+                    .ToString());
+
+            HttpResponseMessage responseMessage =
+                await this.SendRequestAsync(request, this.httpClient).ConfigureAwait(false);
+
+            return await responseMessage.Content.TryReadAsJsonAsync<Bucket>().ConfigureAwait(false);
+        }
+
+
         private async Task<HttpResponseMessage> SendRequestAsync(
             HttpRequestMessage request, 
             HttpClient client)

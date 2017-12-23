@@ -4,6 +4,7 @@
     {
         public const string DefaultApiUrl = "https://api.backblazeb2.com";
         public const string ApiAuthorizeAccountUrl = "/b2api/v1/b2_authorize_account";
+        public const string ApiCreateBucketUrl = "/b2api/v1/b2_create_bucket";
         public const string ApiListBucketsUrl = "/b2api/v1/b2_list_buckets";
         public const string ApiListFileNamesUrl = "/b2api/v1/b2_list_file_names";
 
@@ -12,6 +13,12 @@
             public const string Unauthorized = "unauthorized";
             public const string MissingPhoneNumber = "missing_phone_number";
             public const string ExpiredAuthToken = "expired_auth_token";
+        }
+
+        public static class BucketTypes
+        {
+            public const string Public = "allPublic";
+            public const string Private = "allPrivate";
         }
     }
 }

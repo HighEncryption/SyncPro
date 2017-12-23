@@ -36,4 +36,6 @@
     <converters:SyncEntryChangedFlagsToVisibilityConverter x:Key="SyncEntryChangedFlagsToVisibility" />
 
     <converters:SyncEntryChangedFlagsToForegroundConverter x:Key="SyncEntryChangedFlagsToForeground" />
+
+    <converters:EnumStringToBooleanConverter x:Key="EnumStringToBoolean" />
 </ResourceDictionary>

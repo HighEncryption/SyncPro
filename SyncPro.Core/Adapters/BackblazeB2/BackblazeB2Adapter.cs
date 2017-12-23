@@ -3,8 +3,10 @@
     using System;
     using System.Collections.Generic;
     using System.IO;
+    using System.Linq;
     using System.Threading.Tasks;
 
+    using SyncPro.Adapters.BackblazeB2.DataModel;
     using SyncPro.Data;
     using SyncPro.Runtime;
 
@@ -35,7 +37,7 @@
 
         public override Guid GetTargetTypeId()
         {
-            throw new NotImplementedException();
+            return TargetTypeId;
         }
 
         public override Task<SyncEntry> CreateRootEntry()
@@ -87,6 +89,12 @@
         {
             throw new NotImplementedException();
         }
+
+        public async Task<IList<Bucket>> GetBucketsAsync()
+        {
+            return await this.backblazeClient.ListBucketsAsync().ConfigureAwait(false);
+        }
+
         public async Task InitializeClient()
         {
             this.backblazeClient = new BackblazeB2Client(
@@ -103,10 +111,6 @@
 
             // Call the initization method to build the connection info if needed.
             await this.backblazeClient.InitializeAsync().ConfigureAwait(false);
-
-            // List the buckets in the account. This will have side effect fo refreshing the auth token 
-            // and throw an exception if the refresh token fails.
-            await this.backblazeClient.ListBucketsAsync().ConfigureAwait(false);
 
             this.IsInitialized = true;
             this.InitializationComplete?.Invoke(this, new EventArgs());
@@ -135,5 +139,15 @@
         {
             base.SaveConfiguration();
         }
+
+        public async Task<Bucket> CreateBucket(string bucketName, string bucketType)
+        {
+            return await this.backblazeClient.CreateBucket(bucketName, bucketType);
+        }
+    }
+
+    public class BackblazeB2AdapterInitCompleteEventArgs : EventArgs
+    {
+        public Bucket[] Buckets { get; set; }
     }
 }
