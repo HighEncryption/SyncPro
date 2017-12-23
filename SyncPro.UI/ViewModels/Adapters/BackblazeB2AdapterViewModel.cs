@@ -4,6 +4,7 @@ namespace SyncPro.UI.ViewModels.Adapters
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Diagnostics;
+    using System.Linq;
     using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Input;
@@ -29,6 +30,11 @@ namespace SyncPro.UI.ViewModels.Adapters
             this.UpdateSignInButton();
 
             this.Adapter.InitializationComplete += this.AdapterOnInitializationComplete;
+
+            if (this.Adapter.IsInitialized)
+            {
+                this.AdapterOnInitializationComplete(this, new EventArgs());
+            }
         }
 
         public override string DisplayName => "Backblaze B2";
@@ -136,6 +142,7 @@ namespace SyncPro.UI.ViewModels.Adapters
 
         public override void SaveContext()
         {
+            this.Adapter.TypedConfiguration.BucketId = this.SelectedBucket.BucketId;
         }
 
         public override Type GetAdapterType()
@@ -201,6 +208,12 @@ namespace SyncPro.UI.ViewModels.Adapters
                 foreach (Bucket bucket in result)
                 {
                     App.DispatcherInvoke(() => { this.Buckets.Add(bucket); });
+                }
+
+                if (!string.IsNullOrWhiteSpace(this.Adapter.TypedConfiguration.BucketId))
+                {
+                    this.SelectedBucket =
+                        this.Buckets.FirstOrDefault(b => string.Equals(b.BucketId, this.Adapter.TypedConfiguration.BucketId));
                 }
             });
 

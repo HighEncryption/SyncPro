@@ -17,6 +17,8 @@ namespace SyncPro.Adapters.BackblazeB2
         [JsonConverter(typeof(SecureStringToProtectedDataConverter))]
         public SecureString ApplicationKey { get; set; }
 
+        public string BucketId { get; set; }
+
         public BackblazeConnectionInfo ConnectionInfo { get; set; }
     }
 }
