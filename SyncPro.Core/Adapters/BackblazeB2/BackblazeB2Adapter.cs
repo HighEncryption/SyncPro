@@ -182,6 +182,25 @@
             base.SaveConfiguration();
         }
 
+        public override void FinalizeItemWrite(Stream stream, EntryUpdateInfo updateInfo)
+        {
+            BackblazeB2UploadStream uploadStream = (BackblazeB2UploadStream)stream;
+
+            SyncEntryAdapterData adapterData =
+                updateInfo.Entry.AdapterEntries.FirstOrDefault(a => a.AdapterId == this.Configuration.Id);
+
+            if (adapterData == null)
+            {
+                adapterData = new SyncEntryAdapterData
+                {
+                    SyncEntry = updateInfo.Entry,
+                    AdapterId = this.Configuration.Id
+                };
+            }
+
+            adapterData.AdapterEntryId = uploadStream.Session.UploadResponse.FileId;
+        }
+
         public async Task<Bucket> CreateBucket(string bucketName, string bucketType)
         {
             return await this.backblazeClient.CreateBucket(bucketName, bucketType);

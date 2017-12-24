@@ -111,28 +111,6 @@
                 fullPath = Path.Combine(this.Config.RootDirectory, entry.GetRelativePath(db, this.PathSeparator));
             }
 
-            if (!File.Exists(fullPath))
-            {
-                using (File.Create(fullPath))
-                {
-                }
-            }
-
-            SyncEntryAdapterData adapterEntry = entry.AdapterEntries.FirstOrDefault(e => e.AdapterId == this.Config.Id);
-
-            if (adapterEntry == null)
-            {
-                adapterEntry = new SyncEntryAdapterData()
-                {
-                    SyncEntry = entry,
-                    AdapterId = this.Configuration.Id,
-                };
-
-                entry.AdapterEntries.Add(adapterEntry);
-            }
-
-            adapterEntry.AdapterEntryId = GetItemId(fullPath, false);
-
             if (isWrite)
             {
                 return File.Open(fullPath, FileMode.OpenOrCreate, FileAccess.ReadWrite);
@@ -295,6 +273,35 @@
             }
 
             return this.CreateEntry(fileSystemItem.FileSystemInfo, parentEntry);
+        }
+
+        public override void FinalizeItemWrite(Stream stream, EntryUpdateInfo updateInfo)
+        {
+            stream.Flush();
+
+            SyncEntryAdapterData adapterEntry = 
+                updateInfo.Entry.AdapterEntries.FirstOrDefault(e => e.AdapterId == this.Config.Id);
+
+            if (adapterEntry == null)
+            {
+                adapterEntry = new SyncEntryAdapterData()
+                {
+                    SyncEntry = updateInfo.Entry,
+                    AdapterId = this.Configuration.Id,
+                };
+
+                updateInfo.Entry.AdapterEntries.Add(adapterEntry);
+            }
+
+            string fullPath;
+            using (var db = this.Relationship.GetDatabase())
+            {
+                fullPath = Path.Combine(
+                    this.Config.RootDirectory, 
+                    updateInfo.Entry.GetRelativePath(db, this.PathSeparator));
+            }
+
+            adapterEntry.AdapterEntryId = GetItemId(fullPath, false);
         }
 
         private static readonly string[] SuppressedDirectories = { "$RECYCLE.BIN", "System Volume Information" };

@@ -14,59 +14,57 @@ namespace SyncPro.Adapters.BackblazeB2
 
         private readonly BackblazeB2Adapter adapter;
 
-        private readonly BackblazeB2UploadSession session;
+        internal BackblazeB2UploadSession Session { get; }
 
         public BackblazeB2UploadStream(
             BackblazeB2Adapter adapter,
             BackblazeB2UploadSession session)
         {
             this.adapter = adapter;
-            this.session = session;
+            this.Session = session;
 
             this.memoryStream = new MemoryStream();
         }
 
         public override void Flush()
         {
-            if (this.memoryStream.Length < this.session.Entry.Size)
+            if (this.memoryStream.Length < this.Session.Entry.Size)
             {
                 return;
             }
 
-            this.adapter
-                .UploadFileDirect(this.session.Entry, this.memoryStream)
-                .ContinueWith(this.UploadComplete)
-                .Wait();
+            this.Session.UploadResponse = 
+                this.adapter.UploadFileDirect(this.Session.Entry, this.memoryStream).Result;
         }
 
-        private void UploadComplete(Task<BackblazeB2FileUploadResponse> uploadTask)
-        {
-            if (uploadTask.IsCanceled)
-            {
-                throw new UploadCancelledException();
-            }
+        //private void UploadComplete(Task<BackblazeB2FileUploadResponse> uploadTask)
+        //{
+        //    if (uploadTask.IsCanceled)
+        //    {
+        //        throw new UploadCancelledException();
+        //    }
 
-            if (uploadTask.IsFaulted)
-            {
-                throw new UploadException("An exception was thrown during the upload.", uploadTask.Exception);
-            }
+        //    if (uploadTask.IsFaulted)
+        //    {
+        //        throw new UploadException("An exception was thrown during the upload.", uploadTask.Exception);
+        //    }
 
-            BackblazeB2FileUploadResponse response = uploadTask.Result;
+        //    BackblazeB2FileUploadResponse response = uploadTask.Result;
 
-            SyncEntryAdapterData adapterData =
-                this.session.Entry.AdapterEntries.FirstOrDefault(a => a.AdapterId == this.adapter.Configuration.Id);
+        //    SyncEntryAdapterData adapterData =
+        //        this.Session.Entry.AdapterEntries.FirstOrDefault(a => a.AdapterId == this.adapter.Configuration.Id);
 
-            if (adapterData == null)
-            {
-                adapterData = new SyncEntryAdapterData
-                {
-                    SyncEntry = this.session.Entry,
-                    AdapterId = this.adapter.Configuration.Id
-                };
-            }
+        //    if (adapterData == null)
+        //    {
+        //        adapterData = new SyncEntryAdapterData
+        //        {
+        //            SyncEntry = this.Session.Entry,
+        //            AdapterId = this.adapter.Configuration.Id
+        //        };
+        //    }
 
-            adapterData.AdapterEntryId = response.FileId;
-        }
+        //    adapterData.AdapterEntryId = response.FileId;
+        //}
 
         public override long Seek(long offset, SeekOrigin origin)
         {

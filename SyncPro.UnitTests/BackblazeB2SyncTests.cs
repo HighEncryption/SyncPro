@@ -111,7 +111,7 @@ namespace SyncPro.UnitTests
 
             Assert.AreEqual(accountInfo.BucketId, uploadResponse.BucketId);
             Assert.AreEqual(data.Length, uploadResponse.ContentLength);
-            Assert.AreEqual(hashString, uploadResponse.ContentSha1);
+            Assert.AreEqual(hashString.ToUpperInvariant(), uploadResponse.ContentSha1.ToUpperInvariant());
             Assert.AreEqual(filename, uploadResponse.FileName);
         }
     }

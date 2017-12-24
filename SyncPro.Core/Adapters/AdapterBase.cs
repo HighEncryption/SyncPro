@@ -183,6 +183,8 @@ namespace SyncPro.Adapters
         {
             return this is IChangeTracking;
         }
+
+        public abstract void FinalizeItemWrite(Stream stream, EntryUpdateInfo updateInfo);
     }
 
     public class EntryUpdateResult

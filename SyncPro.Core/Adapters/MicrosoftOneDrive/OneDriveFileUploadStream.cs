@@ -25,9 +25,6 @@ namespace SyncPro.Adapters.MicrosoftOneDrive
         // The client used to write the data to OneDrive
         private readonly OneDriveClient client;
 
-        // The upload session containing the upload Url where the data is sent along with metadata about the upload
-        private readonly OneDriveUploadSession uploadSession;
-
         // The local list of buffers where data written to the stream is saved until enough data has accumulated to 
         // send to OneDrive. Each Write() call will result in the creation of a new buffer, so larger writes are 
         // preferred over small write. 
@@ -55,6 +52,9 @@ namespace SyncPro.Adapters.MicrosoftOneDrive
         /// </summary>
         public const int RecommendedSmallFragmentSize = 5242880;
 
+        // The upload session containing the upload Url where the data is sent along with metadata about the upload
+        internal OneDriveUploadSession UploadSession { get; }
+
         internal OneDriveFileUploadStream(OneDriveClient client, OneDriveUploadSession uploadSession)
             : this(client, uploadSession, DefaultFragmentSize)
         {
@@ -77,7 +77,7 @@ namespace SyncPro.Adapters.MicrosoftOneDrive
             }
 
             this.client = client;
-            this.uploadSession = uploadSession;
+            this.UploadSession = uploadSession;
             this.fragmentSize = fragmentSize;
             this.bytesRemaining = uploadSession.Length;
         }
@@ -98,7 +98,7 @@ namespace SyncPro.Adapters.MicrosoftOneDrive
                 byte[] fragmentBuffer = this.AccumulateBuffers();
 
                 // Upload the fragment to OneDrive
-                this.client.SendUploadFragment(this.uploadSession, fragmentBuffer, this.fragmentOffset).Wait();
+                this.client.SendUploadFragment(this.UploadSession, fragmentBuffer, this.fragmentOffset).Wait();
 
                 this.fragmentOffset += this.fragmentSize;
                 this.bytesRemaining -= fragmentBuffer.Length;
@@ -116,7 +116,7 @@ namespace SyncPro.Adapters.MicrosoftOneDrive
             Pre.ThrowIfTrue(buffer.Length == 0, "buffer.Length is 0");
             Pre.ThrowIfTrue(offset + count > buffer.Length, "offset + count > buffer.Length");
 
-            switch (this.uploadSession.State)
+            switch (this.UploadSession.State)
             {
                 case OneDriveFileUploadState.Completed:
                     throw new OneDriveException("Cannot write to completed upload session.");
@@ -127,13 +127,13 @@ namespace SyncPro.Adapters.MicrosoftOneDrive
             }
 
             // Check if the new data will be more than the file size specified in the session
-            if (this.totalSize + count > this.uploadSession.Length)
+            if (this.totalSize + count > this.UploadSession.Length)
             {
                 Logger.Error(
                     "OneDrive file upload overflow. File={0}, ParentId={1}, Length={2}, CurrentSize={3}, WriteSize={4}",
-                    this.uploadSession.ItemName,
-                    this.uploadSession.ParentId,
-                    this.uploadSession.Length,
+                    this.UploadSession.ItemName,
+                    this.UploadSession.ParentId,
+                    this.UploadSession.Length,
                     this.totalSize,
                     count);
 
@@ -252,19 +252,19 @@ namespace SyncPro.Adapters.MicrosoftOneDrive
             {
                 // If the upload session was uploaded successfully or has already been cancelled, then
                 // nothing needs to be done in dispose.
-                if (this.uploadSession.State == OneDriveFileUploadState.Completed ||
-                    this.uploadSession.State == OneDriveFileUploadState.Cancelled)
+                if (this.UploadSession.State == OneDriveFileUploadState.Completed ||
+                    this.UploadSession.State == OneDriveFileUploadState.Cancelled)
                 {
                     return;
                 }
 
                 // If the upload is not faulted, call flush to ensure that any remaining data has been written to OneDrive
-                if (this.uploadSession.State != OneDriveFileUploadState.Faulted)
+                if (this.UploadSession.State != OneDriveFileUploadState.Faulted)
                 {
                     this.Flush();
 
                     // If the flush succeeded and the upload is complete, return since we do not want to cancel the upload
-                    if (this.uploadSession.State == OneDriveFileUploadState.Completed)
+                    if (this.UploadSession.State == OneDriveFileUploadState.Completed)
                     {
                         return;
                     }
@@ -276,14 +276,14 @@ namespace SyncPro.Adapters.MicrosoftOneDrive
                 // and set the upload session as failed.
                 try
                 {
-                    this.client.CancelUploadSession(this.uploadSession).Wait();
+                    this.client.CancelUploadSession(this.UploadSession).Wait();
                 }
                 catch (Exception exception)
                 {
                     Logger.Info("Suppressing exception from CancelUploadSession(): " + exception.Message);
                 }
 
-                if (this.uploadSession.State == OneDriveFileUploadState.Cancelled)
+                if (this.UploadSession.State == OneDriveFileUploadState.Cancelled)
                 {
                     return;
                 }

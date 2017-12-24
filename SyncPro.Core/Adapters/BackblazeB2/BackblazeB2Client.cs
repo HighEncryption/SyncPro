@@ -451,6 +451,8 @@
         }
 
         public SyncEntry Entry { get; set; }
+
+        public BackblazeB2FileUploadResponse UploadResponse { get; set; }
     }
 
     public class GetUploadUrlResponse

@@ -119,6 +119,11 @@
             return this.CreateEntry(adapterItem.Item, parentEntry);
         }
 
+        public override void FinalizeItemWrite(Stream stream, EntryUpdateInfo updateInfo)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task SignIn(AuthenticationResult authenticationResult, string codeVerifier)
         {
             // Use the authentication result to get an access token

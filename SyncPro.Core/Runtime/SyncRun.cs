@@ -875,6 +875,8 @@
 
                 updateInfo.Entry.Sha1Hash = result.Sha1Hash;
                 updateInfo.Entry.Md5Hash = result.Md5Hash;
+
+                toAdapter.FinalizeItemWrite(toStream, updateInfo);
             }
             finally
             {
