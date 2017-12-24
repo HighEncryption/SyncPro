@@ -12,10 +12,10 @@ namespace SyncPro.Adapters.MicrosoftOneDrive
     /// </summary>
     /// <remarks>
     /// REST implementation: https://dev.onedrive.com/items/upload_large_files.htm
-    /// This class exposes a file upload session to OneDrive as a write-only stream. This allows methods that operate on
-    /// streams to write files directly to OneDrive. As data is written to the stream, it is cached in buffers local to
-    /// the stream until a threshold is met. One enough data has been accumulated in buffers, the data is sent syncronously
-    /// to OneDrive. The Write() method call will block until the write completes.
+    /// This class exposes a file upload session to OneDrive as a write-only stream. This allows methods that operate 
+    /// on streams to write files directly to OneDrive. As data is written to the stream, it is cached in buffers 
+    /// local to the stream until a threshold is met. One enough data has been accumulated in buffers, the data is 
+    /// sent syncronously to OneDrive. The Write() method call will block until the write completes.
     /// </remarks>
     public class OneDriveFileUploadStream : Stream
     {
@@ -28,9 +28,9 @@ namespace SyncPro.Adapters.MicrosoftOneDrive
         // The upload session containing the upload Url where the data is sent along with metadata about the upload
         private readonly OneDriveUploadSession uploadSession;
 
-        // The local list of buffers where data written to the stream is saved until enough data has accumulated to send
-        // to OneDrive. Each Write() call will result in the creation of a new buffer, so larger writes are preferred over 
-        // small write. 
+        // The local list of buffers where data written to the stream is saved until enough data has accumulated to 
+        // send to OneDrive. Each Write() call will result in the creation of a new buffer, so larger writes are 
+        // preferred over small write. 
         private readonly List<byte[]> buffers = new List<byte[]>();
 
         // The total size (length) of all buffers

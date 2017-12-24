@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
     using System.Net;
     using System.Net.Http;
@@ -14,6 +15,7 @@
     using Newtonsoft.Json.Linq;
 
     using SyncPro.Adapters.BackblazeB2.DataModel;
+    using SyncPro.Data;
     using SyncPro.Tracing;
     using SyncPro.Utility;
 
@@ -107,6 +109,36 @@
             return await responseMessage.Content.TryReadAsJsonAsync<Bucket>().ConfigureAwait(false);
         }
 
+        public async Task<BackblazeB2FileUploadResponse> UploadFile(SyncEntry entry, Stream stream)
+        {
+            HttpRequestMessage request = new HttpRequestMessage(
+                HttpMethod.Post,
+                this.connectionInfo.ApiUrl + Constants.ApiUploadFileUrl);
+
+            request.Headers.Add(
+                "Authorization",
+                this.connectionInfo.AuthorizationToken.GetDecrytped());
+
+            string relativePath = entry.GetRelativePath(null, "/");
+            request.Headers.Add(Constants.Headers.FileName, relativePath);
+
+            string sha1Hash = BitConverter.ToString(entry.Sha1Hash).Replace("-", "");
+            request.Headers.Add(Constants.Headers.ContentSha1, sha1Hash);
+
+            request.Headers.Add("Content-Length", entry.Size.ToString());
+
+            request.Content = new StreamContent(stream);
+
+            HttpResponseMessage responseMessage =
+                await this.SendRequestAsync(request, this.httpClient).ConfigureAwait(false);
+
+            return await responseMessage.Content.TryReadAsJsonAsync<BackblazeB2FileUploadResponse>();
+        }
+
+        public async Task<BackblazeB2UploadSession> StartLargeUpload(SyncEntry entry)
+        {
+            throw new NotImplementedException();
+        }
 
         private async Task<HttpResponseMessage> SendRequestAsync(
             HttpRequestMessage request, 
@@ -376,5 +408,15 @@
         public string AccountId { get; set; }
 
         public BackblazeConnectionInfo ConnectionInfo { get; set; }
+    }
+
+    public class BackblazeB2UploadSession
+    {
+        public BackblazeB2UploadSession(SyncEntry entry)
+        {
+            this.Entry = entry;
+        }
+
+        public SyncEntry Entry { get; set; }
     }
 }

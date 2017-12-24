@@ -647,6 +647,7 @@
             return JsonConvert.DeserializeObject<Item>(content);
         }
 
+        // See https://docs.microsoft.com/en-us/onedrive/developer/rest-api/api/driveitem_createuploadsession
         public async Task<OneDriveUploadSession> CreateUploadSession(string parentItemId, string name, long length)
         {
             if (string.IsNullOrWhiteSpace(parentItemId))

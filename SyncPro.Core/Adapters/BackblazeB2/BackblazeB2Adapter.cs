@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.IO;
+    using System.Linq;
     using System.Threading.Tasks;
 
     using SyncPro.Adapters.BackblazeB2.DataModel;
@@ -39,19 +40,40 @@
             return TargetTypeId;
         }
 
-        public override Task<SyncEntry> CreateRootEntry()
+        public override async Task<SyncEntry> CreateRootEntry()
         {
-            throw new NotImplementedException();
+            IList<Bucket> allBuckets = await this.backblazeClient.ListBucketsAsync();
+            Bucket bucket = allBuckets.First(b => string.Equals(b.BucketId, this.TypedConfiguration.BucketId));
+
+            return new SyncEntry()
+            {
+                Name = bucket.BucketName,
+                AdapterEntries = new List<SyncEntryAdapterData>(),
+                CreationDateTimeUtc = DateTime.MinValue,
+                ModifiedDateTimeUtc = DateTime.MinValue
+            };
         }
 
-        public override Task<IAdapterItem> GetRootFolder()
+        public override async Task<IAdapterItem> GetRootFolder()
         {
-            throw new NotImplementedException();
+            IList<Bucket> allBuckets = await this.backblazeClient.ListBucketsAsync();
+            Bucket bucket = allBuckets.First(b => string.Equals(b.BucketId, this.TypedConfiguration.BucketId));
+
+            return new BackblazeB2BucketItem()
+            {
+                Name = bucket.BucketName,
+                UniqueId = bucket.BucketId,
+                ItemType = SyncAdapterItemType.Directory,
+                FullName = bucket.BucketName,
+                CreationTimeUtc = DateTime.MinValue,
+                ModifiedTimeUtc = DateTime.MinValue,
+                Adapter = this
+            };
         }
 
-        public override Task CreateItemAsync(SyncEntry entry)
+        public override async Task CreateItemAsync(SyncEntry entry)
         {
-            throw new NotImplementedException();
+            await Task.Delay(0);
         }
 
         public override Stream GetReadStreamForEntry(SyncEntry entry)
@@ -61,7 +83,23 @@
 
         public override Stream GetWriteStreamForEntry(SyncEntry entry, long length)
         {
-            throw new NotImplementedException();
+            BackblazeB2UploadSession session;
+
+            if (length < this.TypedConfiguration.ConnectionInfo.RecommendedPartSize)
+            {
+                session = new BackblazeB2UploadSession(entry);
+            }
+            else
+            {
+                session = this.backblazeClient.StartLargeUpload(entry).Result;
+            }
+
+            return new BackblazeB2UploadStream(this, session);
+        }
+
+        public async Task<BackblazeB2FileUploadResponse> UploadFileDirect(SyncEntry entry, Stream contentStream)
+        {
+            return await this.backblazeClient.UploadFile(entry, contentStream);
         }
 
         public override void UpdateItem(EntryUpdateInfo updateInfo, SyncEntryChangedFlags changeFlags)
@@ -143,10 +181,5 @@
         {
             return await this.backblazeClient.CreateBucket(bucketName, bucketType);
         }
-    }
-
-    public class BackblazeB2AdapterInitCompleteEventArgs : EventArgs
-    {
-        public Bucket[] Buckets { get; set; }
     }
 }

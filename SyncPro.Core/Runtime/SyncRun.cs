@@ -36,28 +36,21 @@
         Sync
     }
 
+    /// <summary>
+    /// Contains the core logic for synchronizing (copying) files between two adapters.
+    /// </summary>
     public class SyncRun
     {
+        /// <summary>
+        /// The buffer size used for copying data between adapters (currently 64k).
+        /// </summary>
+        private const int transferBufferSize = 0x10000;
+
         private readonly SyncRelationship relationship;
-
-        public int Id { get; set; }
-
-        public DateTime StartTime { get; private set; }
-        public DateTime? EndTime { get; private set; }
-
-        public AnalyzeRelationshipResult AnalyzeResult { get; set; }
-
-        public bool HasStarted => this.StartTime != DateTime.MinValue;
-
-        public bool HasFinished => this.StartTime != DateTime.MinValue;
-
-        public int FilesTotal { get; private set; }
 
         private long filesCompleted;
 
         private int? syncHistoryId;
-
-        public long BytesTotal { get; private set; }
 
         private long bytesCompleted;
 
@@ -65,14 +58,60 @@
 
         private CancellationTokenSource cancellationTokenSource;
 
+        private Stopwatch syncProgressUpdateStopwatch;
+
+        /// <summary>
+        /// The unique Id of this sync run (unique within the relationship)
+        /// </summary>
+        public int Id { get; set; }
+
+        /// <summary>
+        /// The datetime when the synchronization process was started
+        /// </summary>
+        public DateTime StartTime { get; private set; }
+
+        /// <summary>
+        /// The datetime when the synchronization process finished
+        /// </summary>
+        public DateTime? EndTime { get; private set; }
+
+        /// <summary>
+        /// The analysis result indicating the items that are to be synchronized. If this property is set
+        /// prior to starting the sync run, the items specified in the analyze result will be used to 
+        /// determine what is synchronized. If this property is not set, the analysis will be done as
+        /// a part of the sync run, and those items will be synchronized.
+        /// </summary>
+        public AnalyzeRelationshipResult AnalyzeResult { get; set; }
+
+        /// <summary>
+        /// Indicates whether the sync run has started
+        /// </summary>
+        public bool HasStarted => this.StartTime != DateTime.MinValue;
+
+        /// <summary>
+        /// Indicates whether the sync run has finished
+        /// </summary>
+        public bool HasFinished => this.StartTime != DateTime.MinValue;
+
+        /// <summary>
+        /// The total number of files synchronized
+        /// </summary>
+        public int FilesTotal { get; private set; }
+
+        /// <summary>
+        /// The total number of bytes synchronized
+        /// </summary>
+        public long BytesTotal { get; private set; }
+
         /// <summary>
         /// The result of the sync run
         /// </summary>
         public SyncRunResult SyncResult { get; private set; }
 
-        // Buffer size is 64k
-        private const int transferBufferSize = 0x10000;
-
+        /// <summary>
+        /// Indicates whether this sync run is for analysis only (meaning that no items will 
+        /// be synchronized).
+        /// </summary>
         public bool AnalyzeOnly
         {
             get { return this.analyzeOnly; }
@@ -124,12 +163,14 @@
                     bytesPerSecond));
         }
 
+        /// <summary>
+        /// Create a new <see cref="SyncRun"/>
+        /// </summary>
+        /// <param name="relationship">The relationship to be synchonized</param>
         public SyncRun(SyncRelationship relationship)
         {
             this.relationship = relationship;
         }
-
-        private Stopwatch syncProgressUpdateStopwatch;
 
         public void Start(SyncTriggerType triggerType)
         {
@@ -148,12 +189,16 @@
 
         private bool analyzeOnly;
 
+        /// <summary>
+        /// The main processing method for the sync run.
+        /// </summary>
+        /// <returns>Async task</returns>
         private async Task RunMainThread()
         {
             this.StartTime = DateTime.Now;
             this.relationship.State = SyncRelationshipState.Running;
 
-            // Create a new sync history entry (not for analyze-only runs)
+            // Create a new sync history entry (except for analyze-only runs)
             this.CreateNewSyncHistoryRun();
 
             // Raise event that the sync has started
@@ -690,19 +735,21 @@
             ThrottlingManager throttlingManager,
             SyncDatabase db)
         {
-            if ((entryUpdateInfo.Flags & SyncEntryChangedFlags.IsNew) != 0 ||
-                (entryUpdateInfo.Flags & SyncEntryChangedFlags.Restored) != 0)
+            if (entryUpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.IsNew) ||
+                entryUpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.Restored))
             {
                 // TODO: Check for any other (invalid) flags that are set and throw exception
-                // The item is new (on the source), so create the item on the destination. Metadata will be
-                // set by this method as well.
-                Logger.Debug("Creating item using adapter");
-                await adapter.CreateItemAsync(entryUpdateInfo.Entry).ConfigureAwait(false);
-
-                // If the item is a file, copy the contents
-                if (entryUpdateInfo.Entry.Type == SyncEntryType.File)
+                // If the item being created is a directory, use the CreateItemAsync method to create the 
+                // item, since it does not have any content. Otherwise, use the CopyFileAsync method, which
+                // will create the item when setting the content.
+                if (entryUpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.NewDirectory))
                 {
-                    Logger.Debug("Copying file contents to new item");
+                    Logger.Debug("Creating item without content");
+                    await adapter.CreateItemAsync(entryUpdateInfo.Entry).ConfigureAwait(false);
+                }
+                else
+                {
+                    Logger.Debug("Creating item with content");
                     await this.CopyFileAsync(
                             entryUpdateInfo.OriginatingAdapter,
                             adapter,
@@ -843,6 +890,16 @@
             public byte[] Md5Hash { get; set; }
         }
 
+        /// <summary>
+        /// Transfer data from the source stream to the destination stream. This method also performs the necessary
+        /// data manipulation (throttling, hashing, encrypting, etc) as the data is streamed. This allows a the 
+        /// source stream to only be read a single time while performing multiple operations on the data.
+        /// </summary>
+        /// <param name="sourceStream">The stream that the data is read from</param>
+        /// <param name="destinationStream">The stream that the data is written to</param>
+        /// <param name="updateInfo">Metadata about the item being copied</param>
+        /// <param name="throttlingManager">The throttling manager (to handling throttling, if required)</param>
+        /// <returns>(async) The result of the transfer</returns>
         private async Task<TransferResult> TransferDataWithHashAsync(
             Stream sourceStream, 
             Stream destinationStream, 
@@ -854,9 +911,12 @@
 
             try
             {
+                // By default, we will compute the SHA1 and MD5 hashes of the file as it is streamed.
                 sha1 = new SHA1Cng();
                 md5 = new MD5Cng();
 
+                // Allocate the buffer that will be used to transfer the data. The source stream will be read one
+                // suffer-size as a time, then written to the destination.
                 byte[] buffer = new byte[transferBufferSize];
                 int read;
                 long readTotal = 0;
@@ -870,12 +930,17 @@
                         int tokens = 0;
                         while (true)
                         {
+                            // Get the number of tokens needed. We will require tokens equaling the number of
+                            // bytes to be transferred. This is a non-blocking calling and will return between
+                            // 0 and the number of requested tokens.
                             tokens += throttlingManager.GetTokens(transferBufferSize - tokens);
                             if (tokens >= transferBufferSize)
                             {
+                                // We have enough tokens to transfer the buffer
                                 break;
                             }
 
+                            // We don't (yet) have enough tokens, so wait for a short duration and try again
                             await Task.Delay(10, this.cancellationTokenSource.Token).ConfigureAwait(false);
                         }
                     }
@@ -890,7 +955,9 @@
                     // Increment the total number of bytes read from the source adapter
                     readTotal += read;
 
-                    // Pass the data through the required hashing algorithms
+                    // Pass the data through the required hashing algorithms. These are hash transforms, so 
+                    // there is no output buffer to provide (suppress warnings from ReSharper).
+
                     // ReSharper disable AssignNullToNotNullAttribute
                     sha1.TransformBlock(buffer, 0, read, null, 0);
                     md5.TransformBlock(buffer, 0, read, null, 0);
@@ -909,6 +976,7 @@
                     }
                 }
 
+                // Compute the last part of the SHA1 and MD5 hashes (this finished the algorithm's work).
                 sha1.TransformFinalBlock(buffer, 0, read);
                 md5.TransformFinalBlock(buffer, 0, read);
 

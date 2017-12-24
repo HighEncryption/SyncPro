@@ -7,6 +7,21 @@
         public const string ApiCreateBucketUrl = "/b2api/v1/b2_create_bucket";
         public const string ApiListBucketsUrl = "/b2api/v1/b2_list_buckets";
         public const string ApiListFileNamesUrl = "/b2api/v1/b2_list_file_names";
+        public const string ApiUploadFileUrl = "/b2api/v1/b2_upload_file";
+
+        // Per the Backblaze spec, minimum and maximum part sizes are 5MB and 5GB, respectively
+        // See: https://www.backblaze.com/b2/docs/large_files.html
+        public const long LimitPartMinimumSize = 0x500000;
+        public const long LimitPartMaximumSize = 0x140000000;
+
+        public const string HexDigitsAtEnd = "hex_digits_at_end";
+
+        public static class Headers
+        {
+            public const string FileName = "X-Bz-File-Name";
+            public const string ContentSha1 = "X-Bz-Content-Sha1";
+            public const string SrcLastModified = "X-Bz-Info-src_last_modified_millis";
+        }
 
         public static class ErrorCodes
         {

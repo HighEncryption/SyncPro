@@ -1,5 +1,7 @@
 ﻿namespace SyncPro.Adapters.BackblazeB2.DataModel
 {
+    using System;
+
     using Newtonsoft.Json;
 
     public class Bucket
@@ -15,5 +17,10 @@
 
         [JsonProperty("bucketType")]
         public string BucketType { get; set; }
+    }
+
+    public class File
+    {
+        
     }
 }

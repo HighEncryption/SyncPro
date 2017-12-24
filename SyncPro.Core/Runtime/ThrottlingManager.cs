@@ -41,7 +41,7 @@ namespace SyncPro.Runtime
             {
                 if (this.availableTokens <= 0)
                 {
-                    return -1;
+                    return 0;
                 }
 
                 if (count > this.availableTokens)
