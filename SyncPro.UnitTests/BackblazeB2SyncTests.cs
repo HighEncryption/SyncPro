@@ -4,6 +4,8 @@ namespace SyncPro.UnitTests
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Security.Cryptography;
+    using System.Text;
 
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -84,10 +86,33 @@ namespace SyncPro.UnitTests
         [TestMethod]
         public void BasicSyncLocalToB2()
         {
+            byte[] data = Encoding.UTF8.GetBytes("Hello World!");
+            string hashString;
+
+            using (SHA1Cng sha1 = new SHA1Cng())
+            {
+                byte[] hashData = sha1.ComputeHash(data);
+                hashString = BitConverter.ToString(hashData).Replace("-", "");
+            }
+
+            BackblazeB2FileUploadResponse uploadResponse;
+            string filename = Guid.NewGuid().ToString("N") + ".txt";
+
+            using (MemoryStream ms = new MemoryStream(data))
             using (BackblazeB2Client client = CreateClient())
             {
-                var foo = client.ListBucketsAsync().Result;
+                uploadResponse = client.UploadFile(
+                    filename,
+                    hashString,
+                    data.Length,
+                    accountInfo.BucketId,
+                    ms).Result;
             }
+
+            Assert.AreEqual(accountInfo.BucketId, uploadResponse.BucketId);
+            Assert.AreEqual(data.Length, uploadResponse.ContentLength);
+            Assert.AreEqual(hashString, uploadResponse.ContentSha1);
+            Assert.AreEqual(filename, uploadResponse.FileName);
         }
     }
 }

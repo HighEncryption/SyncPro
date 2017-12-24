@@ -8,6 +8,7 @@
         public const string ApiListBucketsUrl = "/b2api/v1/b2_list_buckets";
         public const string ApiListFileNamesUrl = "/b2api/v1/b2_list_file_names";
         public const string ApiUploadFileUrl = "/b2api/v1/b2_upload_file";
+        public const string ApiGetUploadUrl = "/b2api/v1/b2_get_upload_url";
 
         // Per the Backblaze spec, minimum and maximum part sizes are 5MB and 5GB, respectively
         // See: https://www.backblaze.com/b2/docs/large_files.html

@@ -109,25 +109,58 @@
             return await responseMessage.Content.TryReadAsJsonAsync<Bucket>().ConfigureAwait(false);
         }
 
-        public async Task<BackblazeB2FileUploadResponse> UploadFile(SyncEntry entry, Stream stream)
+        private async Task<GetUploadUrlResponse> GetUploadUrl(string bucketId)
         {
+            HttpRequestMessage request = this.BuildJsonRequest(
+                Constants.ApiGetUploadUrl,
+                HttpMethod.Post,
+                new JsonBuilder()
+                    .AddProperty("bucketId", bucketId)
+                    .ToString());
+
+            HttpResponseMessage responseMessage =
+                await this.SendRequestAsync(request, this.httpClient).ConfigureAwait(false);
+
+            return await responseMessage.Content.TryReadAsJsonAsync<GetUploadUrlResponse>().ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Upload a file to B2 in a single HTTP payload
+        /// </summary>
+        /// <param name="fileName">The full name of the file (including relative path)</param>
+        /// <param name="sha1Hash">The 40-character SHA1 hash of the file's content</param>
+        /// <param name="size">The size of the file in bytes</param>
+        /// <param name="bucketId">The bucket ID of the bucket where the file will be uploaded</param>
+        /// <param name="stream">The <see cref="Stream"/> that exposes the file content</param>
+        /// <returns>(async) The file upload response</returns>
+        /// <remarks>See https://www.backblaze.com/b2/docs/b2_upload_file.html for additional information</remarks>
+        public async Task<BackblazeB2FileUploadResponse> UploadFile(
+            string fileName, 
+            string sha1Hash,
+            long size,
+            string bucketId,
+            Stream stream)
+        {
+            // Get the upload information (destination URL and temporary auth token)
+            GetUploadUrlResponse uploadUrlResponse = await this.GetUploadUrl(bucketId);
+
             HttpRequestMessage request = new HttpRequestMessage(
                 HttpMethod.Post,
-                this.connectionInfo.ApiUrl + Constants.ApiUploadFileUrl);
+                uploadUrlResponse.UploadUrl);
 
+            // Add the authorization header for the temporary authorization token
             request.Headers.Add(
                 "Authorization",
-                this.connectionInfo.AuthorizationToken.GetDecrytped());
+                uploadUrlResponse.AuthorizationToken);
 
-            string relativePath = entry.GetRelativePath(null, "/");
-            request.Headers.Add(Constants.Headers.FileName, relativePath);
-
-            string sha1Hash = BitConverter.ToString(entry.Sha1Hash).Replace("-", "");
+            // Add the B2 require headers
+            request.Headers.Add(Constants.Headers.FileName, fileName);
             request.Headers.Add(Constants.Headers.ContentSha1, sha1Hash);
 
-            request.Headers.Add("Content-Length", entry.Size.ToString());
-
             request.Content = new StreamContent(stream);
+
+            // Set the content type to 'auto' where B2 will determine the content type
+            request.Content.Headers.ContentType = new MediaTypeHeaderValue("b2/x-auto");
 
             HttpResponseMessage responseMessage =
                 await this.SendRequestAsync(request, this.httpClient).ConfigureAwait(false);
@@ -418,5 +451,17 @@
         }
 
         public SyncEntry Entry { get; set; }
+    }
+
+    public class GetUploadUrlResponse
+    {
+        [JsonProperty("bucketId")]
+        public string BucketId { get; set; }
+
+        [JsonProperty("uploadUrl")]
+        public string UploadUrl { get; set; }
+
+        [JsonProperty("authorizationToken")]
+        public string AuthorizationToken { get; set; }
     }
 }

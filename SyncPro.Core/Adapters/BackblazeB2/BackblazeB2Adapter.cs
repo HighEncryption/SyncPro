@@ -99,7 +99,12 @@
 
         public async Task<BackblazeB2FileUploadResponse> UploadFileDirect(SyncEntry entry, Stream contentStream)
         {
-            return await this.backblazeClient.UploadFile(entry, contentStream);
+            return await this.backblazeClient.UploadFile(
+                entry.GetRelativePath(null, "/"),
+                BitConverter.ToString(entry.Sha1Hash).Replace("-", ""),
+                entry.Size,
+                this.TypedConfiguration.BucketId,
+                contentStream);
         }
 
         public override void UpdateItem(EntryUpdateInfo updateInfo, SyncEntryChangedFlags changeFlags)
