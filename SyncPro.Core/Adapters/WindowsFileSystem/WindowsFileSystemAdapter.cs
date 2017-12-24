@@ -111,6 +111,28 @@
                 fullPath = Path.Combine(this.Config.RootDirectory, entry.GetRelativePath(db, this.PathSeparator));
             }
 
+            if (!File.Exists(fullPath))
+            {
+                using (File.Create(fullPath))
+                {
+                }
+            }
+
+            SyncEntryAdapterData adapterEntry = entry.AdapterEntries.FirstOrDefault(e => e.AdapterId == this.Config.Id);
+
+            if (adapterEntry == null)
+            {
+                adapterEntry = new SyncEntryAdapterData()
+                {
+                    SyncEntry = entry,
+                    AdapterId = this.Configuration.Id,
+                };
+
+                entry.AdapterEntries.Add(adapterEntry);
+            }
+
+            adapterEntry.AdapterEntryId = GetItemId(fullPath, false);
+
             if (isWrite)
             {
                 return File.Open(fullPath, FileMode.OpenOrCreate, FileAccess.ReadWrite);
@@ -347,13 +369,18 @@
         private static string GetItemId(FileSystemInfo info)
         {
             // TODO: Need to take into account testing on various file systems (FAT32, ReFS, etc)
-            if (info.Attributes.HasFlag(FileAttributes.Directory))
+            return GetItemId(info.FullName, (info.Attributes & FileAttributes.Directory) != 0);
+        }
+
+        private static string GetItemId(string fullName, bool isDirectory)
+        {
+            if (isDirectory)
             {
                 // Item is a directory.
-                return Convert.ToBase64String(NativeMethodHelpers.GetDirectoryObjectId(info.FullName));
+                return Convert.ToBase64String(NativeMethodHelpers.GetDirectoryObjectId(fullName));
             }
 
-            return Convert.ToBase64String(NativeMethodHelpers.GetFileObjectId(info.FullName));
+            return Convert.ToBase64String(NativeMethodHelpers.GetFileObjectId(fullName));
         }
 
         public WindowsFileSystemAdapter(SyncRelationship relationship) 
