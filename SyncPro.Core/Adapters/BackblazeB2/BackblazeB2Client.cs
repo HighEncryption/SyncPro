@@ -84,12 +84,23 @@
                     .AddProperty("accountId", this.accountId)
                     .ToString());
 
-            HttpResponseMessage responseMessage = 
-                await this.SendRequestAsync(request, this.httpClient).ConfigureAwait(false);
+            List<Bucket> buckets;
 
-            ListBucketsResponse response = await responseMessage.Content.TryReadAsJsonAsync<ListBucketsResponse>().ConfigureAwait(false);
+            using (request)
+            {
+                HttpResponseMessage responseMessage =
+                    await this.SendRequestAsync(request).ConfigureAwait(false);
 
-            return response.Buckets.ToList();
+                using (responseMessage)
+                {
+                    ListBucketsResponse response = 
+                        await responseMessage.Content.TryReadAsJsonAsync<ListBucketsResponse>().ConfigureAwait(false);
+
+                    buckets = response.Buckets.ToList();
+                }
+            }
+
+            return buckets;
         }
 
         public async Task<Bucket> CreateBucket(string bucketName, string bucketType)
@@ -103,14 +114,26 @@
                     .AddProperty("bucketType", bucketType)
                     .ToString());
 
-            HttpResponseMessage responseMessage =
-                await this.SendRequestAsync(request, this.httpClient).ConfigureAwait(false);
+            Bucket response;
 
-            return await responseMessage.Content.TryReadAsJsonAsync<Bucket>().ConfigureAwait(false);
+            using (request)
+            {
+                HttpResponseMessage responseMessage =
+                    await this.SendRequestAsync(request).ConfigureAwait(false);
+
+                using (responseMessage)
+                {
+                    response = await responseMessage.Content.TryReadAsJsonAsync<Bucket>().ConfigureAwait(false);
+                }
+            }
+
+            return response;
         }
 
         private async Task<GetUploadUrlResponse> GetUploadUrl(string bucketId)
         {
+            GetUploadUrlResponse response;
+
             HttpRequestMessage request = this.BuildJsonRequest(
                 Constants.ApiGetUploadUrl,
                 HttpMethod.Post,
@@ -118,10 +141,19 @@
                     .AddProperty("bucketId", bucketId)
                     .ToString());
 
-            HttpResponseMessage responseMessage =
-                await this.SendRequestAsync(request, this.httpClient).ConfigureAwait(false);
+            using (request)
+            {
+                HttpResponseMessage responseMessage =
+                    await this.SendRequestAsync(request).ConfigureAwait(false);
 
-            return await responseMessage.Content.TryReadAsJsonAsync<GetUploadUrlResponse>().ConfigureAwait(false);
+                using (responseMessage)
+                {
+                    response =
+                        await responseMessage.Content.TryReadAsJsonAsync<GetUploadUrlResponse>().ConfigureAwait(false);
+                }
+            }
+
+            return response;
         }
 
         /// <summary>
@@ -144,33 +176,111 @@
             // Get the upload information (destination URL and temporary auth token)
             GetUploadUrlResponse uploadUrlResponse = await this.GetUploadUrl(bucketId);
 
+            BackblazeB2FileUploadResponse uploadResponse;
+
             HttpRequestMessage request = new HttpRequestMessage(
                 HttpMethod.Post,
                 uploadUrlResponse.UploadUrl);
 
-            // Add the authorization header for the temporary authorization token
-            request.Headers.Add(
-                "Authorization",
-                uploadUrlResponse.AuthorizationToken);
+            using (request)
+            {
+                // Add the authorization header for the temporary authorization token
+                request.Headers.Add(
+                    "Authorization",
+                    uploadUrlResponse.AuthorizationToken);
 
-            // Add the B2 require headers
-            request.Headers.Add(Constants.Headers.FileName, fileName);
-            request.Headers.Add(Constants.Headers.ContentSha1, sha1Hash);
+                // Add the B2 require headers
+                request.Headers.Add(Constants.Headers.FileName, fileName);
+                request.Headers.Add(Constants.Headers.ContentSha1, sha1Hash);
 
-            request.Content = new StreamContent(stream);
+                request.Content = new StreamContent(stream);
 
-            // Set the content type to 'auto' where B2 will determine the content type
-            request.Content.Headers.ContentType = new MediaTypeHeaderValue("b2/x-auto");
+                // Set the content type to 'auto' where B2 will determine the content type
+                request.Content.Headers.ContentType = new MediaTypeHeaderValue("b2/x-auto");
 
-            HttpResponseMessage responseMessage =
-                await this.SendRequestAsync(request, this.httpClient).ConfigureAwait(false);
+                HttpResponseMessage responseMessage =
+                    await this.SendRequestAsync(request).ConfigureAwait(false);
 
-            return await responseMessage.Content.TryReadAsJsonAsync<BackblazeB2FileUploadResponse>();
+                using (responseMessage)
+                {
+                    uploadResponse =
+                        await responseMessage.Content.TryReadAsJsonAsync<BackblazeB2FileUploadResponse>();
+                }
+            }
+
+            return uploadResponse;
         }
 
-        public async Task<BackblazeB2UploadSession> StartLargeUpload(SyncEntry entry)
+        public async Task<StartLargeFileResponse> StartLargeUpload(string bucketId, SyncEntry entry)
         {
-            throw new NotImplementedException();
+            HttpRequestMessage startLargeFileRequest = null;
+            HttpResponseMessage startLargeFileResponse = null;
+
+            StartLargeFileResponse response;
+
+            try
+            {
+                startLargeFileRequest = this.BuildJsonRequest(
+                    Constants.ApiStartLargeFileUrl,
+                    HttpMethod.Post,
+                    new JsonBuilder()
+                        .AddProperty("bucketId", bucketId)
+                        .AddProperty("fileName", entry.GetRelativePath(null, "/"))
+                        .AddProperty("contentType", "b2/x-auto")
+                        .ToString());
+
+                startLargeFileResponse =
+                    await this.SendRequestAsync(startLargeFileRequest).ConfigureAwait(false);
+
+                response = await startLargeFileResponse.Content
+                        .TryReadAsJsonAsync<StartLargeFileResponse>()
+                        .ConfigureAwait(false);
+            }
+            finally
+            {
+                startLargeFileResponse?.Dispose();
+                startLargeFileRequest?.Dispose();
+            }
+
+            return response;
+        }
+
+        public async Task<GetUploadPartUrlResponse> GetUploadPartUrl(string fileId)
+        {
+            HttpRequestMessage getUploadPartUrlRequest = null;
+            HttpResponseMessage getUploadPartUrlResponse = null;
+
+            GetUploadPartUrlResponse response;
+
+            try
+            {
+                getUploadPartUrlRequest = this.BuildJsonRequest(
+                    Constants.ApiStartLargeFileUrl,
+                    HttpMethod.Post,
+                    new JsonBuilder()
+                        .AddProperty("fileId", fileId)
+                        .ToString());
+
+                getUploadPartUrlResponse =
+                    await this.SendRequestAsync(getUploadPartUrlRequest).ConfigureAwait(false);
+
+                response = await getUploadPartUrlResponse.Content
+                        .TryReadAsJsonAsync<GetUploadPartUrlResponse>()
+                        .ConfigureAwait(false);
+            }
+            finally
+            {
+                getUploadPartUrlResponse?.Dispose();
+                getUploadPartUrlRequest?.Dispose();
+            }
+
+            return response;
+        }
+
+        private async Task<HttpResponseMessage> SendRequestAsync(
+            HttpRequestMessage request)
+        {
+            return await this.SendRequestAsync(request, this.httpClient).ConfigureAwait(false);
         }
 
         private async Task<HttpResponseMessage> SendRequestAsync(
@@ -453,12 +563,51 @@
         public SyncEntry Entry { get; set; }
 
         public BackblazeB2FileUploadResponse UploadResponse { get; set; }
+
+        public StartLargeFileResponse StartLargeFileResponse { get; set; }
+
+        public GetUploadPartUrlResponse GetUploadPartUrlResponse { get; set; }
+
+        public bool IsLargeFileUpload => this.StartLargeFileResponse != null;
     }
 
     public class GetUploadUrlResponse
     {
         [JsonProperty("bucketId")]
         public string BucketId { get; set; }
+
+        [JsonProperty("uploadUrl")]
+        public string UploadUrl { get; set; }
+
+        [JsonProperty("authorizationToken")]
+        public string AuthorizationToken { get; set; }
+    }
+
+    public class StartLargeFileResponse
+    {
+        [JsonProperty("fileId")]
+        public string FileId { get; set; }
+
+        [JsonProperty("fileName")]
+        public string FileName { get; set; }
+
+        [JsonProperty("accountId")]
+        public string AccountId { get; set; }
+
+        [JsonProperty("bucketId")]
+        public string BucketId { get; set; }
+
+        [JsonProperty("contentType")]
+        public string ContentType { get; set; }
+
+        [JsonProperty("uploadTimestamp")]
+        public int UploadTimestamp { get; set; }
+    }
+
+    public class GetUploadPartUrlResponse
+    {
+        [JsonProperty("fileId")]
+        public string FileId { get; set; }
 
         [JsonProperty("uploadUrl")]
         public string UploadUrl { get; set; }
