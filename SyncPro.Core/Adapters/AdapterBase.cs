@@ -7,6 +7,7 @@ namespace SyncPro.Adapters
     using System.Linq;
     using System.Threading.Tasks;
 
+    using SyncPro.Adapters.BackblazeB2;
     using SyncPro.Adapters.GoogleDrive;
     using SyncPro.Adapters.MicrosoftOneDrive;
     using SyncPro.Adapters.WindowsFileSystem;
@@ -182,6 +183,8 @@ namespace SyncPro.Adapters
         {
             return this is IChangeTracking;
         }
+
+        public abstract void FinalizeItemWrite(Stream stream, EntryUpdateInfo updateInfo);
     }
 
     public class EntryUpdateResult
@@ -209,6 +212,13 @@ namespace SyncPro.Adapters
                 return new OneDriveAdapter(
                     relationship, 
                     (OneDriveAdapterConfiguration)config);
+            }
+
+            if (config.AdapterTypeId == BackblazeB2Adapter.TargetTypeId)
+            {
+                return new BackblazeB2Adapter(
+                    relationship, 
+                    (BackblazeB2AdapterConfiguration)config);
             }
 
             throw new NotImplementedException("Unknown adapter type " + config.AdapterTypeId);

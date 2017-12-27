@@ -275,6 +275,36 @@
             return this.CreateEntry(fileSystemItem.FileSystemInfo, parentEntry);
         }
 
+        public override void FinalizeItemWrite(Stream stream, EntryUpdateInfo updateInfo)
+        {
+            stream.Flush();
+            stream.Close();
+
+            SyncEntryAdapterData adapterEntry = 
+                updateInfo.Entry.AdapterEntries.FirstOrDefault(e => e.AdapterId == this.Config.Id);
+
+            if (adapterEntry == null)
+            {
+                adapterEntry = new SyncEntryAdapterData()
+                {
+                    SyncEntry = updateInfo.Entry,
+                    AdapterId = this.Configuration.Id,
+                };
+
+                updateInfo.Entry.AdapterEntries.Add(adapterEntry);
+            }
+
+            string fullPath;
+            using (var db = this.Relationship.GetDatabase())
+            {
+                fullPath = Path.Combine(
+                    this.Config.RootDirectory, 
+                    updateInfo.Entry.GetRelativePath(db, this.PathSeparator));
+            }
+
+            adapterEntry.AdapterEntryId = GetItemId(fullPath, false);
+        }
+
         private static readonly string[] SuppressedDirectories = { "$RECYCLE.BIN", "System Volume Information" };
 
         private IEnumerable<IAdapterItem> GetItemsFromDirectory(DirectoryInfo directory, IAdapterItem parent)
@@ -347,13 +377,18 @@
         private static string GetItemId(FileSystemInfo info)
         {
             // TODO: Need to take into account testing on various file systems (FAT32, ReFS, etc)
-            if (info.Attributes.HasFlag(FileAttributes.Directory))
+            return GetItemId(info.FullName, (info.Attributes & FileAttributes.Directory) != 0);
+        }
+
+        private static string GetItemId(string fullName, bool isDirectory)
+        {
+            if (isDirectory)
             {
                 // Item is a directory.
-                return Convert.ToBase64String(NativeMethodHelpers.GetDirectoryObjectId(info.FullName));
+                return Convert.ToBase64String(NativeMethodHelpers.GetDirectoryObjectId(fullName));
             }
 
-            return Convert.ToBase64String(NativeMethodHelpers.GetFileObjectId(info.FullName));
+            return Convert.ToBase64String(NativeMethodHelpers.GetFileObjectId(fullName));
         }
 
         public WindowsFileSystemAdapter(SyncRelationship relationship) 

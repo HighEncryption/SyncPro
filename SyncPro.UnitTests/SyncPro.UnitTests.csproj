@@ -67,8 +67,12 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="BackblazeB2AccountInfo.cs" />
+    <Compile Include="BackblazeB2SyncTests.cs" />
+    <Compile Include="CredentialHelper.cs" />
     <Compile Include="EntryProcessingSorterTests.cs" />
     <Compile Include="GoogleDriveTests.cs" />
+    <Compile Include="JsonSerializationTests.cs" />
     <Compile Include="LocalFileSystemSyncTests.cs" />
     <Compile Include="OneDriveSyncTests.cs" />
     <Compile Include="TestHelper.cs" />

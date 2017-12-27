@@ -281,13 +281,15 @@
                         // Re-add the access token now that it has been refreshed.
                         newRequest.Headers.Authorization = new AuthenticationHeaderValue("bearer", this.CurrentToken.AccessToken);
                         LogRequest(newRequest, client.BaseAddress);
+
+                        // Dispose of the previous response before creating the new one
+                        response.Dispose();
+
                         response = await client.SendAsync(newRequest).ConfigureAwait(false);
                         LogResponse(response);
                     }
                 }
             }
-
-            
 
             return response;
         }
@@ -645,6 +647,7 @@
             return JsonConvert.DeserializeObject<Item>(content);
         }
 
+        // See https://docs.microsoft.com/en-us/onedrive/developer/rest-api/api/driveitem_createuploadsession
         public async Task<OneDriveUploadSession> CreateUploadSession(string parentItemId, string name, long length)
         {
             if (string.IsNullOrWhiteSpace(parentItemId))

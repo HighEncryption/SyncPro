@@ -110,8 +110,14 @@
     <Compile Include="Controls\AdapterErrorView.xaml.cs">
       <DependentUpon>AdapterErrorView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\BackblazeCredentialDialog.xaml.cs">
+      <DependentUpon>BackblazeCredentialDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\BrowserAuthenticationWindow.xaml.cs">
       <DependentUpon>BrowserAuthenticationWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\CreateBackblazeBucketDialog.xaml.cs">
+      <DependentUpon>CreateBackblazeBucketDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\NavigationTreeView.cs" />
     <Compile Include="Controls\NavigationTreeViewItem.cs" />
@@ -171,6 +177,8 @@
     <Compile Include="Navigation\NavigationNodeViewModel.cs" />
     <Compile Include="Navigation\SyncRunPanelViewModel.cs" />
     <Compile Include="Navigation\ViewModels\AnalyzeResultsNodeViewModel.cs" />
+    <Compile Include="Navigation\ViewModels\BackblazeCredentialDialogViewModel.cs" />
+    <Compile Include="Navigation\ViewModels\CreateBackblazeBucketDialogViewModel.cs" />
     <Compile Include="Navigation\ViewModels\DashboardNodeViewModel.cs" />
     <Compile Include="Navigation\ViewModels\FilesAndFoldersNodeViewModel.cs" />
     <Compile Include="Navigation\ViewModels\LazyLoadPlaceholderNodeViewModel.cs" />
@@ -213,6 +221,7 @@
     <Compile Include="RelationshipEditor\SyncTriggeringPageViewModel.cs" />
     <Compile Include="Utility\BaseModelPropertyAttribute.cs" />
     <Compile Include="Utility\FileInfoCache.cs" />
+    <Compile Include="ViewModels\Adapters\BackblazeB2AdapterViewModel.cs" />
     <Compile Include="ViewModels\Adapters\GoogleDriveAdapterViewModel.cs" />
     <Compile Include="ViewModels\Adapters\OneDriveAdapterViewModel.cs" />
     <Compile Include="ViewModels\ChangeMetrics.cs" />
@@ -230,6 +239,14 @@
     <Compile Include="ViewModels\WizardPageViewModelBase.cs" />
     <Compile Include="WebBrowserWindow.cs" />
     <Page Include="Controls\AdapterErrorView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\BackblazeCredentialDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\CreateBackblazeBucketDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -520,6 +537,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\Graphics\powershell_16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\ProviderLogos\backblaze_b2.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

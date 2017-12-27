@@ -251,6 +251,27 @@
             return new OneDriveFileUploadStream(this.oneDriveClient, session);
         }
 
+        public override void FinalizeItemWrite(Stream stream, EntryUpdateInfo updateInfo)
+        {
+            OneDriveFileUploadStream uploadStream = (OneDriveFileUploadStream) stream;
+
+            SyncEntryAdapterData adapterEntry = 
+                updateInfo.Entry.AdapterEntries.FirstOrDefault(e => e.AdapterId == this.Config.Id);
+
+            if (adapterEntry == null)
+            {
+                adapterEntry = new SyncEntryAdapterData()
+                {
+                    SyncEntry = updateInfo.Entry,
+                    AdapterId = this.Config.Id
+                };
+
+                updateInfo.Entry.AdapterEntries.Add(adapterEntry);
+            }
+
+            adapterEntry.AdapterEntryId = uploadStream.UploadSession.Item.Id;
+        }
+
         public override void UpdateItem(EntryUpdateInfo updateInfo, SyncEntryChangedFlags changeFlags)
         {
             throw new NotImplementedException();

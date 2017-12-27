@@ -4,11 +4,14 @@
     using System.Linq;
     using System.Text;
 
+    using Newtonsoft.Json;
+    using Newtonsoft.Json.Linq;
+
     public static class PathUtility
     {
         public static string Join(string pathSeparator, IList<string> values)
         {
-            int length = values.Sum(v => v.Length) + ((values.Count - 1) * pathSeparator.Length);
+            int length = values.Sum(v => v.Length) + (values.Count - 1) * pathSeparator.Length;
 
             if (length < 3)
             {
@@ -33,7 +36,9 @@
                 {
                     sb.Append(pathSeparator);
                     if (enumerator.Current != null)
+                    {
                         sb.Append(enumerator.Current.Trim('\\'));
+                    }
                 }
 
                 if (sb.Length == 2 && char.IsLetter(sb[0]) && sb[1] == ':')
@@ -43,6 +48,28 @@
 
                 return sb.ToString();
             }
+        }
+    }
+
+    public class JsonBuilder
+    {
+        private readonly JObject jObject = new JObject();
+
+        public JsonBuilder AddProperty(string name, string value)
+        {
+            this.jObject.Add(name, new JValue(value));
+            return this;
+        }
+
+        public JsonBuilder AddArrayProperty(string name, object value)
+        {
+            this.jObject.Add(name, JArray.FromObject(value));
+            return this;
+        }
+
+        public override string ToString()
+        {
+            return this.jObject.ToString();
         }
     }
 }

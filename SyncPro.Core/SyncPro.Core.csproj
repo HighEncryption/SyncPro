@@ -69,6 +69,23 @@
   <ItemGroup>
     <Compile Include="Adapters\AdapterFaultInformation.cs" />
     <Compile Include="Adapters\AdapterItem.cs" />
+    <Compile Include="Adapters\BackblazeB2\BackblazeB2Adapter.cs" />
+    <Compile Include="Adapters\BackblazeB2\BackblazeB2AdapterConfiguration.cs" />
+    <Compile Include="Adapters\BackblazeB2\BackblazeB2AdapterItem.cs" />
+    <Compile Include="Adapters\BackblazeB2\BackblazeB2LargeUploadStream.cs" />
+    <Compile Include="Adapters\BackblazeB2\BufferedUploadStream.cs" />
+    <Compile Include="Adapters\BackblazeB2\DataModel\BackblazeB2BucketItem.cs" />
+    <Compile Include="Adapters\BackblazeB2\BackblazeB2Client.cs" />
+    <Compile Include="Adapters\BackblazeB2\DataModel\BackblazeB2FileUploadResponse.cs" />
+    <Compile Include="Adapters\BackblazeB2\BackblazeB2HttpException.cs" />
+    <Compile Include="Adapters\BackblazeB2\BackblazeB2InitializationFault.cs" />
+    <Compile Include="Adapters\BackblazeB2\BackblazeB2UploadStream.cs" />
+    <Compile Include="Adapters\BackblazeB2\Constants.cs" />
+    <Compile Include="Adapters\BackblazeB2\DataModel\Bucket.cs" />
+    <Compile Include="Adapters\BackblazeB2\UploadCancelledException.cs" />
+    <Compile Include="Adapters\BackblazeB2\UploadException.cs" />
+    <Compile Include="Utility\SecureStringConverter.cs" />
+    <Compile Include="Utility\SecureStringToProtectedDataConverter.cs" />
     <Compile Include="Adapters\GoogleDrive\Constants.cs" />
     <Compile Include="Adapters\GoogleDrive\DataModel\User.cs" />
     <Compile Include="Adapters\GoogleDrive\GoogleDriveAdapter.cs" />
@@ -144,6 +161,7 @@
     <Compile Include="Runtime\ThrottlingManager.cs" />
     <Compile Include="Utility\CommandLineHelper.cs" />
     <Compile Include="Utility\PathUtility.cs" />
+    <Compile Include="Utility\SecureStringExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
