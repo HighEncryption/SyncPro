@@ -4,6 +4,7 @@
     using System.Linq;
     using System.Text;
 
+    using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
 
     public static class PathUtility
@@ -57,6 +58,12 @@
         public JsonBuilder AddProperty(string name, string value)
         {
             this.jObject.Add(name, new JValue(value));
+            return this;
+        }
+
+        public JsonBuilder AddArrayProperty(string name, object value)
+        {
+            this.jObject.Add(name, JArray.FromObject(value));
             return this;
         }
 

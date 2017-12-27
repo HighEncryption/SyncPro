@@ -211,7 +211,7 @@
             return uploadResponse;
         }
 
-        public async Task<StartLargeFileResponse> StartLargeUpload(string bucketId, SyncEntry entry)
+        public async Task<StartLargeFileResponse> StartLargeUpload(string bucketId, string filename)
         {
             HttpRequestMessage startLargeFileRequest = null;
             HttpResponseMessage startLargeFileResponse = null;
@@ -225,7 +225,7 @@
                     HttpMethod.Post,
                     new JsonBuilder()
                         .AddProperty("bucketId", bucketId)
-                        .AddProperty("fileName", entry.GetRelativePath(null, "/"))
+                        .AddProperty("fileName", filename)
                         .AddProperty("contentType", "b2/x-auto")
                         .ToString());
 
@@ -245,6 +245,103 @@
             return response;
         }
 
+        public async Task<FinishLargeFileResponse> FinishLargeFile(string fileId, string[] sha1Array)
+        {
+            HttpRequestMessage finishLargeFileRequest = null;
+            HttpResponseMessage finishLargeFileResponse = null;
+
+            FinishLargeFileResponse response;
+
+            try
+            {
+                finishLargeFileRequest = this.BuildJsonRequest(
+                    Constants.ApiFinishLargeFileUrl,
+                    HttpMethod.Post,
+                    new JsonBuilder()
+                        .AddProperty("fileId", fileId)
+                        .AddArrayProperty("partSha1Array", sha1Array)
+                        .ToString());
+
+                finishLargeFileResponse =
+                    await this.SendRequestAsync(finishLargeFileRequest).ConfigureAwait(false);
+
+                response = await finishLargeFileResponse.Content
+                    .TryReadAsJsonAsync<FinishLargeFileResponse>()
+                    .ConfigureAwait(false);
+            }
+            finally
+            {
+                finishLargeFileResponse?.Dispose();
+                finishLargeFileRequest?.Dispose();
+            }
+
+            return response;
+        }
+
+        public async Task<ListLargeUnfinishedFilesResponse> GetUnfinishedLargeFiles(string bucketId)
+        {
+            HttpRequestMessage listUnfinishedLargeFilesRequest = null;
+            HttpResponseMessage listUnfinishedLargeFilesResponse = null;
+
+            ListLargeUnfinishedFilesResponse response;
+
+            try
+            {
+                listUnfinishedLargeFilesRequest = this.BuildJsonRequest(
+                    Constants.ApiListLargeUnfinishedFilesUrl,
+                    HttpMethod.Post,
+                    new JsonBuilder()
+                        .AddProperty("bucketId", bucketId)
+                        .ToString());
+
+                listUnfinishedLargeFilesResponse =
+                    await this.SendRequestAsync(listUnfinishedLargeFilesRequest).ConfigureAwait(false);
+
+                response = await listUnfinishedLargeFilesResponse.Content
+                    .TryReadAsJsonAsync<ListLargeUnfinishedFilesResponse>()
+                    .ConfigureAwait(false);
+            }
+            finally
+            {
+                listUnfinishedLargeFilesResponse?.Dispose();
+                listUnfinishedLargeFilesRequest?.Dispose();
+            }
+
+            return response;
+        }
+
+        public async Task<CancelLargeFileResponse> CancelLargeFile(string fileId)
+        {
+            HttpRequestMessage cancelLargeFileRequest = null;
+            HttpResponseMessage cancelLargeFileResponse = null;
+
+            CancelLargeFileResponse response;
+
+            try
+            {
+                cancelLargeFileRequest = this.BuildJsonRequest(
+                    Constants.ApiCancelLargeFileUrl,
+                    HttpMethod.Post,
+                    new JsonBuilder()
+                        .AddProperty("fileId", fileId)
+                        .ToString());
+
+                cancelLargeFileResponse =
+                    await this.SendRequestAsync(cancelLargeFileRequest).ConfigureAwait(false);
+
+                response = await cancelLargeFileResponse.Content
+                    .TryReadAsJsonAsync<CancelLargeFileResponse>()
+                    .ConfigureAwait(false);
+            }
+            finally
+            {
+                cancelLargeFileResponse?.Dispose();
+                cancelLargeFileRequest?.Dispose();
+            }
+
+            return response;
+        }
+
         public async Task<GetUploadPartUrlResponse> GetUploadPartUrl(string fileId)
         {
             HttpRequestMessage getUploadPartUrlRequest = null;
@@ -255,7 +352,7 @@
             try
             {
                 getUploadPartUrlRequest = this.BuildJsonRequest(
-                    Constants.ApiStartLargeFileUrl,
+                    Constants.ApiGetUploadPartUrl,
                     HttpMethod.Post,
                     new JsonBuilder()
                         .AddProperty("fileId", fileId)
@@ -275,6 +372,47 @@
             }
 
             return response;
+        }
+
+        public async Task<BackblazeB2UploadPartResponse> UploadPart(
+            string uploadUrl,
+            SecureString authorizationToken,
+            int partNumber,
+            string sha1Hash,
+            long size,
+            Stream stream)
+        {
+            BackblazeB2UploadPartResponse uploadResponse;
+
+            HttpRequestMessage request = new HttpRequestMessage(
+                HttpMethod.Post,
+                uploadUrl);
+
+            using (request)
+            {
+                // Add the authorization header for the temporary authorization token
+                request.Headers.Add(
+                    "Authorization",
+                    authorizationToken.GetDecrytped());
+
+                // Add the B2 require headers
+                request.Headers.Add(Constants.Headers.PartNumber, partNumber.ToString());
+                request.Headers.Add(Constants.Headers.ContentSha1, sha1Hash);
+
+                request.Content = new StreamContent(stream);
+
+                HttpResponseMessage responseMessage =
+                    await this.SendRequestAsync(request).ConfigureAwait(false);
+
+                using (responseMessage)
+                {
+                    uploadResponse =
+                        await responseMessage.Content.TryReadAsJsonAsync<BackblazeB2UploadPartResponse>();
+                }
+            }
+
+            return uploadResponse;
+
         }
 
         private async Task<HttpResponseMessage> SendRequestAsync(
@@ -558,6 +696,12 @@
         public BackblazeB2UploadSession(SyncEntry entry)
         {
             this.Entry = entry;
+
+            this.PartHashes = new Dictionary<int, string>();
+
+            // Per the spec, part numbers start at 1 (not 0)
+            // See: https://www.backblaze.com/b2/docs/b2_upload_part.html
+            this.CurrentPartNumber = 1;
         }
 
         public SyncEntry Entry { get; set; }
@@ -568,7 +712,11 @@
 
         public GetUploadPartUrlResponse GetUploadPartUrlResponse { get; set; }
 
-        public bool IsLargeFileUpload => this.StartLargeFileResponse != null;
+        internal int CurrentPartNumber { get; set; }
+
+        internal Dictionary<int, string> PartHashes { get; }
+
+        internal long BytesUploaded { get; set; }
     }
 
     public class GetUploadUrlResponse
@@ -601,7 +749,7 @@
         public string ContentType { get; set; }
 
         [JsonProperty("uploadTimestamp")]
-        public int UploadTimestamp { get; set; }
+        public long UploadTimestamp { get; set; }
     }
 
     public class GetUploadPartUrlResponse
@@ -613,6 +761,88 @@
         public string UploadUrl { get; set; }
 
         [JsonProperty("authorizationToken")]
-        public string AuthorizationToken { get; set; }
+        [JsonConverter(typeof(SecureStringConverter))]
+        public SecureString AuthorizationToken { get; set; }
+    }
+
+    public class BackblazeB2UploadPartResponse
+    {
+        [JsonProperty("fileId")]
+        public string FileId { get; set; }
+
+        [JsonProperty("partNumber")]
+        public string PartNumber { get; set; }
+
+        [JsonProperty("contentLength")]
+        public string ContentLength { get; set; }
+
+        [JsonProperty("contentSha1")]
+        public string ContentSha1 { get; set; }
+    }
+
+    public class FinishLargeFileResponse
+    {
+        [JsonProperty("fileId")]
+        public string FileId { get; set; }
+
+        [JsonProperty("fileName")]
+        public string FileName { get; set; }
+
+        [JsonProperty("accountId")]
+        public string AccountId { get; set; }
+
+        [JsonProperty("bucketId")]
+        public string BucketId { get; set; }
+
+        [JsonProperty("contentLength")]
+        public long ContentLength { get; set; }
+
+        [JsonProperty("contentType")]
+        public string ContentType { get; set; }
+
+        [JsonProperty("uploadTimestamp")]
+        public long UploadTimestamp { get; set; }
+    }
+
+    public class ListLargeUnfinishedFilesResponse
+    {
+        [JsonProperty("files")]
+        public UnfinishedFile[] Files { get; set; }
+    }
+
+    public class UnfinishedFile
+    {
+        [JsonProperty("fileId")]
+        public string FileId { get; set; }
+
+        [JsonProperty("fileName")]
+        public string FileName { get; set; }
+
+        [JsonProperty("accountId")]
+        public string AccountId { get; set; }
+
+        [JsonProperty("bucketId")]
+        public string BucketId { get; set; }
+
+        [JsonProperty("contentType")]
+        public string ContentType { get; set; }
+
+        [JsonProperty("uploadTimestamp")]
+        public long UploadTimestamp { get; set; }
+    }
+
+    public class CancelLargeFileResponse
+    {
+        [JsonProperty("fileId")]
+        public string FileId { get; set; }
+
+        [JsonProperty("fileName")]
+        public string FileName { get; set; }
+
+        [JsonProperty("accountId")]
+        public string AccountId { get; set; }
+
+        [JsonProperty("bucketId")]
+        public string BucketId { get; set; }
     }
 }

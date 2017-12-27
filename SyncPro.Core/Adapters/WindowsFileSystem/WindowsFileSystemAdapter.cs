@@ -278,6 +278,7 @@
         public override void FinalizeItemWrite(Stream stream, EntryUpdateInfo updateInfo)
         {
             stream.Flush();
+            stream.Close();
 
             SyncEntryAdapterData adapterEntry = 
                 updateInfo.Entry.AdapterEntries.FirstOrDefault(e => e.AdapterId == this.Config.Id);

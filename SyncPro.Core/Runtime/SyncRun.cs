@@ -848,6 +848,14 @@
             return true;
         }
 
+        /// <summary>
+        /// Copy a file from the source adapter to the destination adapter
+        /// </summary>
+        /// <param name="fromAdapter">The source adapter</param>
+        /// <param name="toAdapter">The destination adapter</param>
+        /// <param name="updateInfo">The update information about the file being copied</param>
+        /// <param name="throttlingManager">The throtting manager</param>
+        /// <returns>The async task</returns>
         private async Task CopyFileAsync(
             AdapterBase fromAdapter, 
             AdapterBase toAdapter, 
@@ -869,17 +877,23 @@
                         throttlingManager)
                     .ConfigureAwait(false);
 
+                // Add the transfer information back to the update info (so that it can be persisted later)
                 updateInfo.SizeNew = result.BytesTransferred;
                 updateInfo.Sha1HashNew = result.Sha1Hash;
                 updateInfo.Md5HashNew = result.Md5Hash;
 
+                // Add the hash information to the entry that was copied
                 updateInfo.Entry.Sha1Hash = result.Sha1Hash;
                 updateInfo.Entry.Md5Hash = result.Md5Hash;
-
-                toAdapter.FinalizeItemWrite(toStream, updateInfo);
             }
             finally
             {
+                // Finalize the file transfer at the adapter-level. This method allows the adapter to call
+                // any necessary method to complete the transfer. Note that this method MUST be called in the 
+                // finally block (so that it is called even when the transfer throws an exception) and before 
+                // disposing of the streams.
+                toAdapter.FinalizeItemWrite(toStream, updateInfo);
+
                 fromStream?.Close();
                 toStream?.Close();
             }

@@ -25,10 +25,12 @@ namespace SyncPro.UnitTests
 
         private static BackblazeB2AccountInfo accountInfo;
 
+        private static string accountInfoFilePath;
+
         [ClassInitialize]
         public static void ClassInitialize(TestContext testContext)
         {
-            string accountInfoFilePath = Path.Combine(
+            accountInfoFilePath = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),
                 "BackblazeB2AccountInfo.json");
 
@@ -76,6 +78,8 @@ namespace SyncPro.UnitTests
             client.ConnectionInfoChanged += (sender, args) =>
             {
                 accountInfo.ConnectionInfo = args.ConnectionInfo;
+                string serializedInfo = JsonConvert.SerializeObject(accountInfo, Formatting.Indented);
+                File.WriteAllText(accountInfoFilePath, serializedInfo);
             };
 
             client.InitializeAsync().Wait();
@@ -113,6 +117,109 @@ namespace SyncPro.UnitTests
             Assert.AreEqual(data.Length, uploadResponse.ContentLength);
             Assert.AreEqual(hashString.ToUpperInvariant(), uploadResponse.ContentSha1.ToUpperInvariant());
             Assert.AreEqual(filename, uploadResponse.FileName);
+        }
+
+        [TestMethod]
+        public void BasicUploadLargeFile()
+        {
+            byte[] part1 = new byte[0x500000]; // 5MB
+            byte[] part2 = new byte[0x500000]; // 5MB
+            byte[] part3 = new byte[0x10000]; // 64K
+
+            FillByteArray(part1);
+            FillByteArray(part2);
+            FillByteArray(part3);
+
+            string[] sha1Array = new string[3];
+
+            using (SHA1Cng sha1 = new SHA1Cng())
+            {
+                sha1Array[0] = BitConverter.ToString(sha1.ComputeHash(part1)).Replace("-", "").ToLowerInvariant();
+                sha1Array[1] = BitConverter.ToString(sha1.ComputeHash(part2)).Replace("-", "").ToLowerInvariant();
+                sha1Array[2] = BitConverter.ToString(sha1.ComputeHash(part3)).Replace("-", "").ToLowerInvariant();
+            }
+
+            string filename = Guid.NewGuid().ToString("N") + ".txt";
+
+            using (BackblazeB2Client client = CreateClient())
+            {
+                ListLargeUnfinishedFilesResponse unfinishedFiles = 
+                    client.GetUnfinishedLargeFiles(accountInfo.BucketId).Result;
+
+                StartLargeFileResponse startLargeFileResponse = 
+                    client.StartLargeUpload(accountInfo.BucketId, filename).Result;
+
+                GetUploadPartUrlResponse getPartUploadResponse = 
+                    client.GetUploadPartUrl(startLargeFileResponse.FileId).Result;
+
+                using (MemoryStream memoryStream = new MemoryStream(part1))
+                {
+                    BackblazeB2UploadPartResponse partUploadResponse =
+                        client.UploadPart(
+                                getPartUploadResponse.UploadUrl,
+                                getPartUploadResponse.AuthorizationToken,
+                                1,
+                                sha1Array[0],
+                                part1.Length,
+                                memoryStream)
+                            .Result;
+
+                    Assert.AreEqual(5242880, partUploadResponse.ContentLength);
+                    Assert.AreEqual(1, partUploadResponse.PartNumber);
+                    Assert.AreEqual(sha1Array[0], partUploadResponse.ContentSha1);
+                }
+
+                using (MemoryStream memoryStream = new MemoryStream(part2))
+                {
+                    BackblazeB2UploadPartResponse partUploadResponse =
+                        client.UploadPart(
+                                getPartUploadResponse.UploadUrl,
+                                getPartUploadResponse.AuthorizationToken,
+                                2,
+                                sha1Array[1],
+                                part2.Length,
+                                memoryStream)
+                            .Result;
+
+                    Assert.AreEqual(5242880, partUploadResponse.ContentLength);
+                    Assert.AreEqual(2, partUploadResponse.PartNumber);
+                    Assert.AreEqual(sha1Array[1], partUploadResponse.ContentSha1);
+                }
+
+                using (MemoryStream memoryStream = new MemoryStream(part3))
+                {
+                    BackblazeB2UploadPartResponse partUploadResponse =
+                        client.UploadPart(
+                                getPartUploadResponse.UploadUrl,
+                                getPartUploadResponse.AuthorizationToken,
+                                3,
+                                sha1Array[2],
+                                part3.Length,
+                                memoryStream)
+                            .Result;
+
+                    Assert.AreEqual(65536, partUploadResponse.ContentLength);
+                    Assert.AreEqual(3, partUploadResponse.PartNumber);
+                    Assert.AreEqual(sha1Array[2], partUploadResponse.ContentSha1);
+                }
+
+                FinishLargeFileResponse finishLargeFileResponse =
+                    client.FinishLargeFile(
+                            startLargeFileResponse.FileId,
+                            sha1Array)
+                        .Result;
+
+                Assert.AreEqual(accountInfo.BucketId, finishLargeFileResponse.BucketId);
+                Assert.AreEqual(10551296, finishLargeFileResponse.ContentLength);
+            }
+        }
+
+        private static void FillByteArray(byte[] data)
+        {
+            for (int i = 0; i < data.Length; i++)
+            {
+                data[i] = (byte)(i % 16);
+            }
         }
     }
 }
