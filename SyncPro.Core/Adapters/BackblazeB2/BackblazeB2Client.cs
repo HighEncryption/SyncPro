@@ -451,11 +451,11 @@
 
                     HttpRequestMessage newRequest = await request.Clone().ConfigureAwait(false);
 
-                    request.Headers.Remove("Authorization");
-                    request.Headers.Add(
+                    newRequest.Headers.Remove("Authorization");
+                    newRequest.Headers.Add(
                         "Authorization",
                         this.connectionInfo.AuthorizationToken.GetDecrytped());
-                    LogRequest(request, client.BaseAddress);
+                    LogRequest(newRequest, client.BaseAddress);
 
                     // Dispose of the previous response before creating the new one
                     response.Dispose();
