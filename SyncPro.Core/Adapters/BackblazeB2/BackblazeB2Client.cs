@@ -7,6 +7,7 @@
     using System.Net;
     using System.Net.Http;
     using System.Net.Http.Headers;
+    using System.Runtime.Serialization;
     using System.Security;
     using System.Text;
     using System.Threading.Tasks;
@@ -193,7 +194,7 @@
                 request.Headers.Add(Constants.Headers.FileName, fileName);
                 request.Headers.Add(Constants.Headers.ContentSha1, sha1Hash);
 
-                request.Content = new StreamContent(stream);
+                request.Content = new DelayedDisposeStreamContent(stream);
 
                 // Set the content type to 'auto' where B2 will determine the content type
                 request.Content.Headers.ContentType = new MediaTypeHeaderValue("b2/x-auto");
@@ -399,7 +400,7 @@
                 request.Headers.Add(Constants.Headers.PartNumber, partNumber.ToString());
                 request.Headers.Add(Constants.Headers.ContentSha1, sha1Hash);
 
-                request.Content = new StreamContent(stream);
+                request.Content = new DelayedDisposeStreamContent(stream);
 
                 HttpResponseMessage responseMessage =
                     await this.SendRequestAsync(request).ConfigureAwait(false);
@@ -418,7 +419,14 @@
         private async Task<HttpResponseMessage> SendRequestAsync(
             HttpRequestMessage request)
         {
-            return await this.SendRequestAsync(request, this.httpClient).ConfigureAwait(false);
+            try
+            {
+                return await this.SendRequestAsync(request, this.httpClient).ConfigureAwait(false);
+            }
+            finally
+            {
+                request.DisposeCustomContent();
+            }
         }
 
         private async Task<HttpResponseMessage> SendRequestAsync(
@@ -454,11 +462,10 @@
 
                     response = await client.SendAsync(newRequest).ConfigureAwait(false);
                     LogResponse(response);
-
                 }
             }
 
-            // Any failures (including those from re-issuing after a refresh) will ne handled here
+            // Any failures (including those from re-issuing after a request) will be handled here
             if (!response.IsSuccessStatusCode)
             {
                 // Attempt to read the error information
@@ -538,7 +545,7 @@
                 "Authorization",
                 this.connectionInfo.AuthorizationToken.GetDecrytped());
 
-            request.Content = new StringContent(
+            request.Content = new DelayedDisposeStringContent(
                 content,
                 Encoding.UTF8,
                 "application/json");
@@ -844,5 +851,61 @@
 
         [JsonProperty("bucketId")]
         public string BucketId { get; set; }
+    }
+
+    public interface IDelayedDisposeContent
+    {
+        void DelayedDispose();
+    }
+
+    public class DelayedDisposeStringContent : StringContent, IDelayedDisposeContent
+    {
+        public DelayedDisposeStringContent(string content)
+            : base(content)
+        {
+        }
+
+        public DelayedDisposeStringContent(string content, Encoding encoding)
+            : base(content, encoding)
+        {
+        }
+
+        public DelayedDisposeStringContent(string content, Encoding encoding, string mediaType)
+            : base(content, encoding, mediaType)
+        {
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            // Do not dispose of resources normally
+        }
+
+        public void DelayedDispose()
+        {
+            base.Dispose(true);
+        }
+    }
+
+    public class DelayedDisposeStreamContent : StreamContent, IDelayedDisposeContent
+    {
+        public DelayedDisposeStreamContent(Stream content)
+            : base(content)
+        {
+        }
+
+        public DelayedDisposeStreamContent(Stream content, int bufferSize)
+            : base(content, bufferSize)
+        {
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            // Do not dispose of resources normally
+        }
+
+        public void DelayedDispose()
+        {
+            base.Dispose(true);
+        }
     }
 }

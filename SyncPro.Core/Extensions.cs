@@ -11,6 +11,8 @@
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
 
+    using SyncPro.Adapters.BackblazeB2;
+
     public static class DictionaryExtensions
     {
         public static TValue GetValueOrDefault<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, TKey key)
@@ -147,22 +149,26 @@
         {
             HttpRequestMessage newRequest = new HttpRequestMessage(request.Method, request.RequestUri);
 
-            // Copy the request's content (via a MemoryStream) into the cloned object
+            // Copy the request's content (via a MemoryStream) into the cloned object. Note that the MemoryStream
+            // is not disposed here because it needs to be assigned to the new request (and will be disposed of 
+            // after the request has been sent.
             if (request.Content != null)
             {
-                using (MemoryStream memoryStream = new MemoryStream())
-                {
-                    await request.Content.CopyToAsync(memoryStream).ConfigureAwait(false);
-                    memoryStream.Position = 0;
-                    newRequest.Content = new StreamContent(memoryStream);
+                MemoryStream memoryStream = new MemoryStream();
 
-                    // Copy the content headers
-                    if (request.Content.Headers != null)
+                // Copy the content from the original request. Note that the HttpClient normally disposes of the
+                // content stream upon sending. The DelayedDispose*Content classes prevent the immediate diposing
+                // of the underlying stream, allowing it to be re-read here.
+                await request.Content.CopyToAsync(memoryStream).ConfigureAwait(false);
+                memoryStream.Position = 0;
+                newRequest.Content = new StreamContent(memoryStream);
+
+                // Copy the content headers
+                if (request.Content.Headers != null)
+                {
+                    foreach (KeyValuePair<string, IEnumerable<string>> header in request.Content.Headers)
                     {
-                        foreach (KeyValuePair<string, IEnumerable<string>> header in request.Content.Headers)
-                        {
-                            newRequest.Content.Headers.Add(header.Key, header.Value);
-                        }
+                        newRequest.Content.Headers.Add(header.Key, header.Value);
                     }
                 }
             }
@@ -180,6 +186,20 @@
             }
 
             return newRequest;
+        }
+
+        public static void DisposeCustomContent(this HttpRequestMessage request)
+        {
+            try
+            {
+                IDelayedDisposeContent delayedDisposeContent = request.Content as IDelayedDisposeContent;
+                delayedDisposeContent?.DelayedDispose();
+            }
+            catch (ObjectDisposedException)
+            {
+                // Suppress object disposed exception for cases where the request or the request's content 
+                // has already been disposed.
+            }
         }
     }
 
