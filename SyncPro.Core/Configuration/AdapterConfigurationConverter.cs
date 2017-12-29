@@ -6,9 +6,7 @@ namespace SyncPro.Configuration
     using Newtonsoft.Json.Linq;
     using Newtonsoft.Json.Serialization;
 
-    using SyncPro.Adapters.BackblazeB2;
-    using SyncPro.Adapters.MicrosoftOneDrive;
-    using SyncPro.Adapters.WindowsFileSystem;
+    using SyncPro.Adapters;
 
     public class ConcreteClassConverter : DefaultContractResolver
     {
@@ -41,28 +39,40 @@ namespace SyncPro.Configuration
             JObject jObject = JObject.Load(reader);
             Guid typeId = Guid.Parse(jObject["AdapterTypeId"].Value<string>());
 
-            if (typeId == OneDriveAdapter.TargetTypeId)
+            //if (typeId == OneDriveAdapter.TargetTypeId)
+            //{
+            //    return JsonConvert.DeserializeObject<OneDriveAdapterConfiguration>(
+            //        jObject.ToString(), 
+            //        SerializerSettings);
+            //}
+
+            //if (typeId == WindowsFileSystemAdapter.TargetTypeId)
+            //{
+            //    return JsonConvert.DeserializeObject<WindowsFileSystemAdapterConfiguration>(
+            //        jObject.ToString(), 
+            //        SerializerSettings);
+            //}
+
+            //if (typeId == BackblazeB2Adapter.TargetTypeId)
+            //{
+            //    return JsonConvert.DeserializeObject<BackblazeB2AdapterConfiguration>(
+            //        jObject.ToString(), 
+            //        SerializerSettings);
+            //}
+
+            AdapterRegistration registration = AdapterRegistry.GetRegistrationByTypeId(typeId);
+
+            if (registration == null)
             {
-                return JsonConvert.DeserializeObject<OneDriveAdapterConfiguration>(
-                    jObject.ToString(), 
-                    SerializerSettings);
+                throw new Exception("No adapter registration found with TypeId " + typeId);
             }
 
-            if (typeId == WindowsFileSystemAdapter.TargetTypeId)
-            {
-                return JsonConvert.DeserializeObject<WindowsFileSystemAdapterConfiguration>(
-                    jObject.ToString(), 
-                    SerializerSettings);
-            }
+            return JsonConvert.DeserializeObject(
+                jObject.ToString(),
+                registration.AdapterConfigurationType,
+                SerializerSettings);
 
-            if (typeId == BackblazeB2Adapter.TargetTypeId)
-            {
-                return JsonConvert.DeserializeObject<BackblazeB2AdapterConfiguration>(
-                    jObject.ToString(), 
-                    SerializerSettings);
-            }
-
-            throw new NotImplementedException("Cannot read adapter configuration for type ID " + typeId);
+            //throw new NotImplementedException("Cannot read adapter configuration for type ID " + typeId);
         }
 
         public override bool CanWrite => false;

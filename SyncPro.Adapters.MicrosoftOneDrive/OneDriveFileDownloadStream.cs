@@ -28,7 +28,7 @@ namespace SyncPro.Adapters.MicrosoftOneDrive
 
         private bool isFinalBuffer;
 
-        internal OneDriveFileDownloadStream(OneDriveClient client, Uri downloadUri)
+        public OneDriveFileDownloadStream(OneDriveClient client, Uri downloadUri)
         {
             this.client = client;
             this.downloadUri = downloadUri;

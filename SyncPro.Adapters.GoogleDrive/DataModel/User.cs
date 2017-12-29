@@ -2,8 +2,6 @@
 {
     using Newtonsoft.Json;
 
-    using SyncPro.Adapters.MicrosoftOneDrive.DataModel;
-
     public class User
     {
         [JsonProperty("id", DefaultValueHandling = DefaultValueHandling.Ignore)]

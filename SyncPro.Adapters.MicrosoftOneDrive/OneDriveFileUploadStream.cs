@@ -55,12 +55,12 @@ namespace SyncPro.Adapters.MicrosoftOneDrive
         // The upload session containing the upload Url where the data is sent along with metadata about the upload
         internal OneDriveUploadSession UploadSession { get; }
 
-        internal OneDriveFileUploadStream(OneDriveClient client, OneDriveUploadSession uploadSession)
+        public OneDriveFileUploadStream(OneDriveClient client, OneDriveUploadSession uploadSession)
             : this(client, uploadSession, DefaultFragmentSize)
         {
         }
 
-        internal OneDriveFileUploadStream(OneDriveClient client, OneDriveUploadSession uploadSession, int fragmentSize)
+        public OneDriveFileUploadStream(OneDriveClient client, OneDriveUploadSession uploadSession, int fragmentSize)
         {
             Pre.ThrowIfArgumentNull(client, nameof(client));
             Pre.ThrowIfArgumentNull(uploadSession, nameof(uploadSession));

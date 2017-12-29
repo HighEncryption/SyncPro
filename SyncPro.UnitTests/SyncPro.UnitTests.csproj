@@ -88,6 +88,22 @@
       <Project>{a6727cd7-8703-432c-95a8-36666aff583b}</Project>
       <Name>OneDriveTokenHelper</Name>
     </ProjectReference>
+    <ProjectReference Include="..\SyncPro.Adapters.BackblazeB2\SyncPro.Adapters.BackblazeB2.csproj">
+      <Project>{1c8e36de-25a1-4c36-a811-57df246e134a}</Project>
+      <Name>SyncPro.Adapters.BackblazeB2</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SyncPro.Adapters.GoogleDrive\SyncPro.Adapters.GoogleDrive.csproj">
+      <Project>{cb8d31b8-f673-446f-b2b1-2050d89e4b74}</Project>
+      <Name>SyncPro.Adapters.GoogleDrive</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SyncPro.Adapters.MicrosoftOneDrive\SyncPro.Adapters.MicrosoftOneDrive.csproj">
+      <Project>{dd9793a5-ea69-4a43-9907-48f6b58cb151}</Project>
+      <Name>SyncPro.Adapters.MicrosoftOneDrive</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SyncPro.Adapters.WindowsFileSystem\SyncPro.Adapters.WindowsFileSystem.csproj">
+      <Project>{3475a78f-4aeb-4070-bbbb-4a8efec03e64}</Project>
+      <Name>SyncPro.Adapters.WindowsFileSystem</Name>
+    </ProjectReference>
     <ProjectReference Include="..\SyncPro.Core\SyncPro.Core.csproj">
       <Project>{de859cdc-6879-4c28-ab26-354806276e04}</Project>
       <Name>SyncPro.Core</Name>

@@ -10,7 +10,7 @@
 
         internal Item Item { get; set; }
 
-        internal GoogleDriveAdapterItem(Item item, IAdapterItem parent, AdapterBase adapter)
+        public GoogleDriveAdapterItem(Item item, IAdapterItem parent, AdapterBase adapter)
             : base(
                   item.Name, 
                   parent, 

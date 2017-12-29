@@ -5,13 +5,12 @@
     using System.IO;
     using System.Linq;
     using System.Net.Http;
+    using System.Text;
     using System.Threading.Tasks;
     using System.Web;
 
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
-
-    using SyncPro.Adapters.BackblazeB2;
 
     public static class DictionaryExtensions
     {
@@ -214,6 +213,62 @@
                     throw new Exception("Failed failed", t.Exception);
                 }
             });
+        }
+    }
+
+    public interface IDelayedDisposeContent
+    {
+        void DelayedDispose();
+    }
+
+    public class DelayedDisposeStringContent : StringContent, IDelayedDisposeContent
+    {
+        public DelayedDisposeStringContent(string content)
+            : base(content)
+        {
+        }
+
+        public DelayedDisposeStringContent(string content, Encoding encoding)
+            : base(content, encoding)
+        {
+        }
+
+        public DelayedDisposeStringContent(string content, Encoding encoding, string mediaType)
+            : base(content, encoding, mediaType)
+        {
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            // Do not dispose of resources normally
+        }
+
+        public void DelayedDispose()
+        {
+            base.Dispose(true);
+        }
+    }
+
+    public class DelayedDisposeStreamContent : StreamContent, IDelayedDisposeContent
+    {
+        public DelayedDisposeStreamContent(Stream content)
+            : base(content)
+        {
+        }
+
+        public DelayedDisposeStreamContent(Stream content, int bufferSize)
+            : base(content, bufferSize)
+        {
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            // Do not dispose of resources normally
+        }
+
+        public void DelayedDispose()
+        {
+            base.Dispose(true);
         }
     }
 }

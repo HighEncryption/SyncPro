@@ -7,7 +7,6 @@
     using System.Net;
     using System.Net.Http;
     using System.Net.Http.Headers;
-    using System.Runtime.Serialization;
     using System.Security;
     using System.Text;
     using System.Threading.Tasks;
@@ -853,59 +852,4 @@
         public string BucketId { get; set; }
     }
 
-    public interface IDelayedDisposeContent
-    {
-        void DelayedDispose();
-    }
-
-    public class DelayedDisposeStringContent : StringContent, IDelayedDisposeContent
-    {
-        public DelayedDisposeStringContent(string content)
-            : base(content)
-        {
-        }
-
-        public DelayedDisposeStringContent(string content, Encoding encoding)
-            : base(content, encoding)
-        {
-        }
-
-        public DelayedDisposeStringContent(string content, Encoding encoding, string mediaType)
-            : base(content, encoding, mediaType)
-        {
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            // Do not dispose of resources normally
-        }
-
-        public void DelayedDispose()
-        {
-            base.Dispose(true);
-        }
-    }
-
-    public class DelayedDisposeStreamContent : StreamContent, IDelayedDisposeContent
-    {
-        public DelayedDisposeStreamContent(Stream content)
-            : base(content)
-        {
-        }
-
-        public DelayedDisposeStreamContent(Stream content, int bufferSize)
-            : base(content, bufferSize)
-        {
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            // Do not dispose of resources normally
-        }
-
-        public void DelayedDispose()
-        {
-            base.Dispose(true);
-        }
-    }
 }

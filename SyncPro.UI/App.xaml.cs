@@ -13,6 +13,11 @@
 
     using Hardcodet.Wpf.TaskbarNotification;
 
+    using SyncPro.Adapters;
+    using SyncPro.Adapters.BackblazeB2;
+    using SyncPro.Adapters.GoogleDrive;
+    using SyncPro.Adapters.MicrosoftOneDrive;
+    using SyncPro.Adapters.WindowsFileSystem;
     using SyncPro.Runtime;
     using SyncPro.Tracing;
     using SyncPro.UI.Framework.MVVM;
@@ -57,6 +62,26 @@
         {
             bool testMode = Keyboard.IsKeyDown(Key.LeftShift);
             Global.Initialize(testMode);
+
+            AdapterRegistry.RegisterAdapter(
+                BackblazeB2Adapter.TargetTypeId,
+                typeof(BackblazeB2Adapter),
+                typeof(BackblazeB2AdapterConfiguration));
+
+            AdapterRegistry.RegisterAdapter(
+                GoogleDriveAdapter.TargetTypeId,
+                typeof(GoogleDriveAdapter),
+                typeof(GoogleDriveAdapterConfiguration));
+
+            AdapterRegistry.RegisterAdapter(
+                OneDriveAdapter.TargetTypeId,
+                typeof(OneDriveAdapter),
+                typeof(OneDriveAdapterConfiguration));
+
+            AdapterRegistry.RegisterAdapter(
+                WindowsFileSystemAdapter.TargetTypeId,
+                typeof(WindowsFileSystemAdapter),
+                typeof(WindowsFileSystemAdapterConfiguration));
 
             // Enable property validation logging if trying to debug validation problems
             // LoggerExtensions.LogPropertyValidation = true;

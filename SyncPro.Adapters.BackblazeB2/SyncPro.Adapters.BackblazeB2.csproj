@@ -4,17 +4,15 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{FC0A577A-2461-4F0A-8674-E177DF5E284B}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <ProjectGuid>{1C8E36DE-25A1-4C36-A811-57DF246E134A}</ProjectGuid>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SyncPro.Cmd</RootNamespace>
-    <AssemblyName>SyncPro</AssemblyName>
+    <RootNamespace>SyncPro.Adapters.BackblazeB2</RootNamespace>
+    <AssemblyName>SyncPro.Adapters.BackblazeB2</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -22,59 +20,57 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <CodeAnalysisRuleSet>SyncPro.Cmd.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet>SyncPro.Adapters.BackblazeB2.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <CodeAnalysisRuleSet>SyncPro.Cmd.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet>SyncPro.Adapters.BackblazeB2.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
-      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
-      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.SqlServer.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Program.cs" />
+    <Compile Include="BackblazeB2Adapter.cs" />
+    <Compile Include="BackblazeB2AdapterConfiguration.cs" />
+    <Compile Include="BackblazeB2AdapterItem.cs" />
+    <Compile Include="BackblazeB2Client.cs" />
+    <Compile Include="BackblazeB2HttpException.cs" />
+    <Compile Include="BackblazeB2InitializationFault.cs" />
+    <Compile Include="BackblazeB2LargeUploadStream.cs" />
+    <Compile Include="BackblazeB2UploadStream.cs" />
+    <Compile Include="BufferedUploadStream.cs" />
+    <Compile Include="Constants.cs" />
+    <Compile Include="DataModel\BackblazeB2BucketItem.cs" />
+    <Compile Include="DataModel\BackblazeB2FileUploadResponse.cs" />
+    <Compile Include="DataModel\Bucket.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UploadCancelledException.cs" />
+    <Compile Include="UploadException.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
-    <None Include="packages.config" />
-    <None Include="SyncPro.Cmd.ruleset" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\SyncPro.Adapters.MicrosoftOneDrive\SyncPro.Adapters.MicrosoftOneDrive.csproj">
-      <Project>{dd9793a5-ea69-4a43-9907-48f6b58cb151}</Project>
-      <Name>SyncPro.Adapters.MicrosoftOneDrive</Name>
-    </ProjectReference>
     <ProjectReference Include="..\SyncPro.Core\SyncPro.Core.csproj">
       <Project>{de859cdc-6879-4c28-ab26-354806276e04}</Project>
       <Name>SyncPro.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\SyncPro.Tracing\SyncPro.Tracing.csproj">
+      <Project>{ce6a7780-bc06-4818-b15f-8dad91032a71}</Project>
+      <Name>SyncPro.Tracing</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+    <None Include="SyncPro.Adapters.BackblazeB2.ruleset" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

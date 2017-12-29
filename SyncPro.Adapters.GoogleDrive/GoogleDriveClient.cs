@@ -13,7 +13,6 @@
     using Newtonsoft.Json.Linq;
 
     using SyncPro.Adapters.GoogleDrive.DataModel;
-    using SyncPro.Adapters.MicrosoftOneDrive;
     using SyncPro.OAuth;
     using SyncPro.Tracing;
 
@@ -171,7 +170,7 @@
                 if (!response.IsSuccessStatusCode)
                 {
                     // TODO: Replace with the correct exception type (non-onedrive)
-                    var exception = new OneDriveHttpException("Failed to refresh token.", response.StatusCode);
+                    var exception = new Exception("Failed to refresh token. " + response.StatusCode);
                     exception.Data["HttpAuthenticationHeader"] = response.Headers.WwwAuthenticate;
 
                     throw exception;
@@ -326,7 +325,7 @@
             if (!response.IsSuccessStatusCode)
             {
                 // TODO: Replace with correct exception
-                throw new OneDriveHttpException(response.ReasonPhrase, response.StatusCode);
+                throw new Exception(response.ReasonPhrase + " " + response.StatusCode);
             }
 
             return response;

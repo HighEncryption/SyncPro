@@ -147,12 +147,12 @@
 
         //private string relativePath;
 
-        internal string GetRelativePath(SyncDatabase database, string pathSeparator)
+        public string GetRelativePath(SyncDatabase database, string pathSeparator)
         {
             return PathUtility.Join(pathSeparator, this.GetRelativePathStack(database));
         }
 
-        internal IList<string> GetRelativePathStack(SyncDatabase database)
+        public IList<string> GetRelativePathStack(SyncDatabase database)
         {
             return this.relativePathStack ?? (this.relativePathStack = this.GetRelativePathStackInternal(database));
         }

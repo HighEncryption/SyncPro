@@ -79,6 +79,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\SyncPro.Adapters.MicrosoftOneDrive\SyncPro.Adapters.MicrosoftOneDrive.csproj">
+      <Project>{dd9793a5-ea69-4a43-9907-48f6b58cb151}</Project>
+      <Name>SyncPro.Adapters.MicrosoftOneDrive</Name>
+    </ProjectReference>
     <ProjectReference Include="..\SyncPro.Core\SyncPro.Core.csproj">
       <Project>{DE859CDC-6879-4C28-AB26-354806276E04}</Project>
       <Name>SyncPro.Core</Name>

@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:adapters="clr-namespace:SyncPro.UI.ViewModels.Adapters"
-             xmlns:microsoftOneDrive="clr-namespace:SyncPro.Adapters.MicrosoftOneDrive;assembly=SyncPro.Core"
+             xmlns:microsoftOneDrive="clr-namespace:SyncPro.Adapters.MicrosoftOneDrive;assembly=SyncPro.Adapters.MicrosoftOneDrive"
              xmlns:controls="clr-namespace:SyncPro.UI.Controls"
              mc:Ignorable="d" 
              d:DataContext="{d:DesignInstance adapters:SyncAdapterViewModel}">

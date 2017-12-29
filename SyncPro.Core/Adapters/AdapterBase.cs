@@ -7,10 +7,6 @@ namespace SyncPro.Adapters
     using System.Linq;
     using System.Threading.Tasks;
 
-    using SyncPro.Adapters.BackblazeB2;
-    using SyncPro.Adapters.GoogleDrive;
-    using SyncPro.Adapters.MicrosoftOneDrive;
-    using SyncPro.Adapters.WindowsFileSystem;
     using SyncPro.Configuration;
     using SyncPro.Data;
     using SyncPro.Runtime;
@@ -200,48 +196,110 @@ namespace SyncPro.Adapters
     {
         public static AdapterBase CreateFromConfig(AdapterConfiguration config, SyncRelationship relationship)
         {
-            if (config.AdapterTypeId == WindowsFileSystemAdapter.TargetTypeId)
+            //if (config.AdapterTypeId == WindowsFileSystemAdapter.TargetTypeId)
+            //{
+            //    return new WindowsFileSystemAdapter(
+            //        relationship, 
+            //        (WindowsFileSystemAdapterConfiguration)config);
+            //}
+
+            //if (config.AdapterTypeId == OneDriveAdapter.TargetTypeId)
+            //{
+            //    return new OneDriveAdapter(
+            //        relationship, 
+            //        (OneDriveAdapterConfiguration)config);
+            //}
+
+            AdapterRegistration registration = AdapterRegistry.GetRegistrationByTypeId(config.AdapterTypeId);
+
+            if (registration == null)
             {
-                return new WindowsFileSystemAdapter(
-                    relationship, 
-                    (WindowsFileSystemAdapterConfiguration)config);
+                throw new Exception("No adapter registration found with TypeId " + config.AdapterTypeId);
             }
 
-            if (config.AdapterTypeId == OneDriveAdapter.TargetTypeId)
-            {
-                return new OneDriveAdapter(
-                    relationship, 
-                    (OneDriveAdapterConfiguration)config);
-            }
+            return (AdapterBase) Activator.CreateInstance(
+                registration.AdapterType,
+                relationship,
+                config);
 
-            if (config.AdapterTypeId == BackblazeB2Adapter.TargetTypeId)
-            {
-                return new BackblazeB2Adapter(
-                    relationship, 
-                    (BackblazeB2AdapterConfiguration)config);
-            }
+            //if (config.AdapterTypeId == BackblazeB2Adapter.TargetTypeId)
+            //{
+            //    return new BackblazeB2Adapter(
+            //        relationship, 
+            //        (BackblazeB2AdapterConfiguration)config);
+            //}
 
-            throw new NotImplementedException("Unknown adapter type " + config.AdapterTypeId);
+            //throw new NotImplementedException("Unknown adapter type " + config.AdapterTypeId);
         }
 
         public static Type GetTypeFromAdapterTypeId(Guid typeId)
         {
-            if (typeId == WindowsFileSystemAdapter.TargetTypeId)
-            {
-                return typeof(WindowsFileSystemAdapter);
-            }
+            //if (typeId == WindowsFileSystemAdapter.TargetTypeId)
+            //{
+            //    return typeof(WindowsFileSystemAdapter);
+            //}
 
-            if (typeId == OneDriveAdapter.TargetTypeId)
-            {
-                return typeof(OneDriveAdapter);
-            }
+            //if (typeId == OneDriveAdapter.TargetTypeId)
+            //{
+            //    return typeof(OneDriveAdapter);
+            //}
 
-            if (typeId == GoogleDriveAdapter.TargetTypeId)
-            {
-                return typeof(GoogleDriveAdapter);
-            }
+            //if (typeId == GoogleDriveAdapter.TargetTypeId)
+            //{
+            //    return typeof(GoogleDriveAdapter);
+            //}
 
-            return null;
+            AdapterRegistration registration = AdapterRegistry.GetRegistrationByTypeId(typeId);
+
+            return registration?.AdapterType;
         }
+    }
+
+    public static class AdapterRegistry
+    {
+        private static readonly List<AdapterRegistration> Registrations;
+
+        static AdapterRegistry()
+        {
+            Registrations = new List<AdapterRegistration>();
+        }
+
+        public static AdapterRegistration GetRegistrationByTypeId(Guid typeId)
+        {
+            return Registrations.FirstOrDefault(r => r.TypeId == typeId);
+        }
+
+        public static void RegisterAdapter(
+            Guid typeId,
+            Type adapterType,
+            Type adapterConfigurationType)
+        {
+            if (Registrations.Any(r => r.TypeId == typeId))
+            {
+                return;
+            }
+
+            Registrations.Add(
+                new AdapterRegistration(typeId, adapterType, adapterConfigurationType));
+        }
+    }
+
+    public class AdapterRegistration
+    {
+        internal AdapterRegistration(
+            Guid typeId,
+            Type adapterType,
+            Type adapterConfigurationType)
+        {
+            this.TypeId = typeId;
+            this.AdapterType = adapterType;
+            this.AdapterConfigurationType = adapterConfigurationType;
+        }
+
+        public Guid TypeId { get; }
+
+        public Type AdapterType { get; }
+
+        public Type AdapterConfigurationType { get; }
     }
 }
