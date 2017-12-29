@@ -154,7 +154,7 @@ namespace SyncPro.UnitTests
 
                 using (MemoryStream memoryStream = new MemoryStream(part1))
                 {
-                    BackblazeB2UploadPartResponse partUploadResponse =
+                    UploadPartResponse partUploadResponse =
                         client.UploadPart(
                                 getPartUploadResponse.UploadUrl,
                                 getPartUploadResponse.AuthorizationToken,
@@ -171,7 +171,7 @@ namespace SyncPro.UnitTests
 
                 using (MemoryStream memoryStream = new MemoryStream(part2))
                 {
-                    BackblazeB2UploadPartResponse partUploadResponse =
+                    UploadPartResponse partUploadResponse =
                         client.UploadPart(
                                 getPartUploadResponse.UploadUrl,
                                 getPartUploadResponse.AuthorizationToken,
@@ -188,7 +188,7 @@ namespace SyncPro.UnitTests
 
                 using (MemoryStream memoryStream = new MemoryStream(part3))
                 {
-                    BackblazeB2UploadPartResponse partUploadResponse =
+                    UploadPartResponse partUploadResponse =
                         client.UploadPart(
                                 getPartUploadResponse.UploadUrl,
                                 getPartUploadResponse.AuthorizationToken,

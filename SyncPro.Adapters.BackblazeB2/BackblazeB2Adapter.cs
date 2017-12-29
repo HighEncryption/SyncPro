@@ -115,7 +115,7 @@
                 .ConfigureAwait(false);
         }
 
-        public async Task<BackblazeB2UploadPartResponse> UploadPart(
+        public async Task<UploadPartResponse> UploadPart(
             BackblazeB2UploadSession session,
             int partNumber,
             string sha1Hash,
@@ -173,7 +173,8 @@
             {
                 this.TypedConfiguration.ConnectionInfo = e.ConnectionInfo;
                 this.AccountId = e.AccountId;
-                this.SaveConfiguration();
+
+                this.Relationship.SaveAsync().Wait();
             };
 
             // Call the initization method to build the connection info if needed.

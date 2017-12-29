@@ -48,15 +48,27 @@
     <Compile Include="BackblazeB2HttpException.cs" />
     <Compile Include="BackblazeB2InitializationFault.cs" />
     <Compile Include="BackblazeB2LargeUploadStream.cs" />
+    <Compile Include="BackblazeB2UploadSession.cs" />
     <Compile Include="BackblazeB2UploadStream.cs" />
+    <Compile Include="BackblazeConnectionInfo.cs" />
+    <Compile Include="BackblazeErrorResponse.cs" />
     <Compile Include="BufferedUploadStream.cs" />
+    <Compile Include="DataModel\CancelLargeFileResponse.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="DataModel\BackblazeB2BucketItem.cs" />
     <Compile Include="DataModel\BackblazeB2FileUploadResponse.cs" />
     <Compile Include="DataModel\Bucket.cs" />
+    <Compile Include="DataModel\FinishLargeFileResponse.cs" />
+    <Compile Include="DataModel\GetUploadPartUrlResponse.cs" />
+    <Compile Include="DataModel\GetUploadUrlResponse.cs" />
+    <Compile Include="DataModel\ListLargeUnfinishedFilesResponse.cs" />
+    <Compile Include="ListBucketsResponse.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="DataModel\StartLargeFileResponse.cs" />
+    <Compile Include="DataModel\UnfinishedFile.cs" />
     <Compile Include="UploadCancelledException.cs" />
     <Compile Include="UploadException.cs" />
+    <Compile Include="DataModel\UploadPartResponse.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SyncPro.Core\SyncPro.Core.csproj">

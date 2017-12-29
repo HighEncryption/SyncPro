@@ -55,6 +55,8 @@
     /// </summary>
     public class SyncRelationship : NotifyPropertyChangedSlim
     {
+        private readonly SemaphoreSlim saveLock = new SemaphoreSlim(1, 1);
+
         /// <summary>
         /// The configuration settings for this relationship
         /// </summary>
@@ -108,109 +110,118 @@
                 throw new Exception("Cannot create relationship database with fewer than 2 adapters");
             }
 
-            if (!Directory.Exists(this.RelationshipRootPath))
+            await this.saveLock.WaitAsync();
+
+            try
             {
-                Directory.CreateDirectory(this.RelationshipRootPath);
-            }
-
-            // Set properties in the configuration based on values in the model
-            this.Configuration.Description = this.Description;
-            this.Configuration.Name = this.Name;
-            this.Configuration.Scope = this.SyncScope;
-            this.Configuration.SyncAttributes = this.SyncAttributes;
-
-            this.Configuration.ThrottlingConfiguration.IsEnabled = this.IsThrottlingEnabled;
-            this.Configuration.ThrottlingConfiguration.Value = this.ThrottlingValue;
-            this.Configuration.ThrottlingConfiguration.ScaleFactor = this.ThrottlingScaleFactor;
-
-            this.Configuration.TriggerConfiguration.TriggerType = this.TriggerType;
-            this.Configuration.TriggerConfiguration.HourlyIntervalValue = this.TriggerHourlyInterval;
-            this.Configuration.TriggerConfiguration.HourlyMinutesPastSyncTime = this.TriggerHourlyMinutesPastSyncTime;
-            this.Configuration.TriggerConfiguration.ScheduleInterval = this.TriggerScheduleInterval;
-
-            // If the relaionship contains adapters that arent in the configuration, add them
-            foreach (AdapterConfiguration adapterConfig in this.Adapters.Select(a => a.Configuration))
-            {
-                if (!this.Configuration.Adapters.Contains(adapterConfig))
+                if (!Directory.Exists(this.RelationshipRootPath))
                 {
-                    this.Configuration.Adapters.Add(adapterConfig);
+                    Directory.CreateDirectory(this.RelationshipRootPath);
                 }
-            }
 
-            // Assign IDs to the adapters. Start my determining the highest ID currently in use, then assigning
-            // incremented IDs from there.
-            int highestId = this.Adapters.Select(a => a.Configuration).Max(c => c.Id);
-            foreach (AdapterBase adapter in this.Adapters.Where(a => !a.Configuration.IsCreated))
-            {
-                // The adapter config hasn't been created, so set the Id
-                highestId++;
-                adapter.Configuration.Id = highestId;
-            }
+                // Set properties in the configuration based on values in the model
+                this.Configuration.Description = this.Description;
+                this.Configuration.Name = this.Name;
+                this.Configuration.Scope = this.SyncScope;
+                this.Configuration.SyncAttributes = this.SyncAttributes;
 
-            // Now that the adapters have IDs, set the IDs in the relationship's configuration. This is only 
-            // needed when the SourceAdapter and DestinationAdapter properties have been set (when the 
-            // relationship is being created for the first time).
-            if (this.SourceAdapter != null && this.DestinationAdapter != null)
-            {
-                this.Configuration.SourceAdapterId = this.SourceAdapter.Configuration.Id;
-                this.Configuration.DestinationAdapterId = this.DestinationAdapter.Configuration.Id;
-            }
+                this.Configuration.ThrottlingConfiguration.IsEnabled = this.IsThrottlingEnabled;
+                this.Configuration.ThrottlingConfiguration.Value = this.ThrottlingValue;
+                this.Configuration.ThrottlingConfiguration.ScaleFactor = this.ThrottlingScaleFactor;
 
-            // Set the IsOriginator property according to Scope configured for the relationship. If the scope
-            // is set to bidirectional, both adapters are originators (and can produce changes). Otherwise, 
-            // only the source adapter is an originator.
-            this.Configuration.Adapters.First(a => a.Id == this.Configuration.SourceAdapterId).IsOriginator = true;
-            this.Configuration.Adapters.First(a => a.Id == this.Configuration.DestinationAdapterId).IsOriginator = 
-                this.Configuration.Scope == SyncScopeType.Bidirectional;
+                this.Configuration.TriggerConfiguration.TriggerType = this.TriggerType;
+                this.Configuration.TriggerConfiguration.HourlyIntervalValue = this.TriggerHourlyInterval;
+                this.Configuration.TriggerConfiguration.HourlyMinutesPastSyncTime = this.TriggerHourlyMinutesPastSyncTime;
+                this.Configuration.TriggerConfiguration.ScheduleInterval = this.TriggerScheduleInterval;
 
-            SyncDatabase db = await this.GetDatabaseAsync().ConfigureAwait(false);
-            using (db)
-            {
+                // If the relaionship contains adapters that arent in the configuration, add them
+                foreach (AdapterConfiguration adapterConfig in this.Adapters.Select(a => a.Configuration))
+                {
+                    if (!this.Configuration.Adapters.Contains(adapterConfig))
+                    {
+                        this.Configuration.Adapters.Add(adapterConfig);
+                    }
+                }
+
+                // Assign IDs to the adapters. Start my determining the highest ID currently in use, then assigning
+                // incremented IDs from there.
+                int highestId = this.Adapters.Select(a => a.Configuration).Max(c => c.Id);
                 foreach (AdapterBase adapter in this.Adapters.Where(a => !a.Configuration.IsCreated))
                 {
-                    // Originating adapters that have not been created need to have the root entry created
-                    if (adapter.Configuration.IsOriginator)
-                    {
-                        // Create the root sync entry using the adapter
-                        SyncEntry rootSyncEntry = await adapter.CreateRootEntry().ConfigureAwait(false);
-
-                        // Add the sync entry and adapter entries to the db.
-                        db.Entries.Add(rootSyncEntry);
-                        db.AdapterEntries.AddRange(rootSyncEntry.AdapterEntries);
-
-                        // Save the current changes to the DB. This will set the ID for the root sync entry, which
-                        // we will want to persist in the config for this adapter.
-                        await db.SaveChangesAsync().ConfigureAwait(false);
-
-                        adapter.Configuration.RootIndexEntryId = rootSyncEntry.Id;
-                    }
-
-                    adapter.Configuration.IsCreated = true;
+                    // The adapter config hasn't been created, so set the Id
+                    highestId++;
+                    adapter.Configuration.Id = highestId;
                 }
-            }
 
-            // Call each adapter to save it's own configuration. This allows different adapter types of save their 
-            // own configuration as needed.
-            foreach (AdapterBase adapterBase in this.Adapters)
-            {
-                adapterBase.SaveConfiguration();
-            }
-
-            // Set the creation time of the adapter
-            if (this.Configuration.InitiallyCreatedUtc == DateTime.MinValue)
-            {
-                this.Configuration.InitiallyCreatedUtc = DateTime.UtcNow;
-            }
-
-            // Finally save the configuration for the relationship itself
-            this.Configuration.Save(this.RelationshipRootPath);
-
-            Logger.RelationshipSaved(
-                new Dictionary<string, object>()
+                // Now that the adapters have IDs, set the IDs in the relationship's configuration. This is only 
+                // needed when the SourceAdapter and DestinationAdapter properties have been set (when the 
+                // relationship is being created for the first time).
+                if (this.SourceAdapter != null && this.DestinationAdapter != null)
                 {
-                    { "RelationshipId", this.Configuration.RelationshipId },
-                    { "Name", this.Configuration.Name },
-                });
+                    this.Configuration.SourceAdapterId = this.SourceAdapter.Configuration.Id;
+                    this.Configuration.DestinationAdapterId = this.DestinationAdapter.Configuration.Id;
+                }
+
+                // Set the IsOriginator property according to Scope configured for the relationship. If the scope
+                // is set to bidirectional, both adapters are originators (and can produce changes). Otherwise, 
+                // only the source adapter is an originator.
+                this.Configuration.Adapters.First(a => a.Id == this.Configuration.SourceAdapterId).IsOriginator = true;
+                this.Configuration.Adapters.First(a => a.Id == this.Configuration.DestinationAdapterId).IsOriginator =
+                    this.Configuration.Scope == SyncScopeType.Bidirectional;
+
+                SyncDatabase db = await this.GetDatabaseAsync().ConfigureAwait(false);
+                using (db)
+                {
+                    foreach (AdapterBase adapter in this.Adapters.Where(a => !a.Configuration.IsCreated))
+                    {
+                        // Originating adapters that have not been created need to have the root entry created
+                        if (adapter.Configuration.IsOriginator)
+                        {
+                            // Create the root sync entry using the adapter
+                            SyncEntry rootSyncEntry = await adapter.CreateRootEntry().ConfigureAwait(false);
+
+                            // Add the sync entry and adapter entries to the db.
+                            db.Entries.Add(rootSyncEntry);
+                            db.AdapterEntries.AddRange(rootSyncEntry.AdapterEntries);
+
+                            // Save the current changes to the DB. This will set the ID for the root sync entry, which
+                            // we will want to persist in the config for this adapter.
+                            await db.SaveChangesAsync().ConfigureAwait(false);
+
+                            adapter.Configuration.RootIndexEntryId = rootSyncEntry.Id;
+                        }
+
+                        adapter.Configuration.IsCreated = true;
+                    }
+                }
+
+                // Call each adapter to save it's own configuration. This allows different adapter types of save their 
+                // own configuration as needed.
+                foreach (AdapterBase adapterBase in this.Adapters)
+                {
+                    adapterBase.SaveConfiguration();
+                }
+
+                // Set the creation time of the adapter
+                if (this.Configuration.InitiallyCreatedUtc == DateTime.MinValue)
+                {
+                    this.Configuration.InitiallyCreatedUtc = DateTime.UtcNow;
+                }
+
+                // Finally save the configuration for the relationship itself
+                this.Configuration.Save(this.RelationshipRootPath);
+
+                Logger.RelationshipSaved(
+                    new Dictionary<string, object>()
+                    {
+                        { "RelationshipId", this.Configuration.RelationshipId },
+                        { "Name", this.Configuration.Name },
+                    });
+            }
+            finally
+            {
+                this.saveLock.Release();
+            }
         }
 
         public static SyncRelationship Create()

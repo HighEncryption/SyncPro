@@ -11,19 +11,11 @@
     using System.Text;
     using System.Threading.Tasks;
 
-    using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
 
     using SyncPro.Adapters.BackblazeB2.DataModel;
-    using SyncPro.Data;
     using SyncPro.Tracing;
     using SyncPro.Utility;
-
-    internal class ListBucketsResponse
-    {
-        [JsonProperty("buckets")]
-        public Bucket[] Buckets { get; set; }
-    }
 
     public class BackblazeB2Client : IDisposable
     {
@@ -374,7 +366,7 @@
             return response;
         }
 
-        public async Task<BackblazeB2UploadPartResponse> UploadPart(
+        public async Task<UploadPartResponse> UploadPart(
             string uploadUrl,
             SecureString authorizationToken,
             int partNumber,
@@ -382,7 +374,7 @@
             long size,
             Stream stream)
         {
-            BackblazeB2UploadPartResponse uploadResponse;
+            UploadPartResponse uploadResponse;
 
             HttpRequestMessage request = new HttpRequestMessage(
                 HttpMethod.Post,
@@ -407,7 +399,7 @@
                 using (responseMessage)
                 {
                     uploadResponse =
-                        await responseMessage.Content.TryReadAsJsonAsync<BackblazeB2UploadPartResponse>();
+                        await responseMessage.Content.TryReadAsJsonAsync<UploadPartResponse>();
                 }
             }
 
@@ -514,6 +506,7 @@
                     DownloadUrl = responseObject.Value<string>("downloadUrl"),
                     RecommendedPartSize = responseObject.Value<int>("recommendedPartSize"),
                     AbsoluteMinimumPartSize = responseObject.Value<int>("absoluteMinimumPartSize"),
+                    WhenAcquired = DateTime.UtcNow,
                 };
 
                 this.ConnectionInfoChanged?.Invoke(
@@ -659,197 +652,10 @@
         }
     }
 
-    public class BackblazeErrorResponse
-    {
-        [JsonProperty("status")]
-        public int Status { get; set; }
-
-        [JsonProperty("code")]
-        public string Code { get; set; }
-
-        [JsonProperty("message")]
-        public string Message { get; set; }
-    }
-
-    public class BackblazeConnectionInfo : IDisposable
-    {
-        [JsonConverter(typeof(SecureStringToProtectedDataConverter))]
-        public SecureString AuthorizationToken { get; set; }
-
-        public string ApiUrl { get; set; }
-
-        public string DownloadUrl { get; set; }
-
-        public int RecommendedPartSize { get; set; }
-
-        public int AbsoluteMinimumPartSize { get; set; }
-
-        public void Dispose()
-        {
-            this.AuthorizationToken?.Dispose();
-        }
-    }
-
     public class ConnectionInfoChangedEventArgs : EventArgs
     {
         public string AccountId { get; set; }
 
         public BackblazeConnectionInfo ConnectionInfo { get; set; }
     }
-
-    public class BackblazeB2UploadSession
-    {
-        public BackblazeB2UploadSession(SyncEntry entry)
-        {
-            this.Entry = entry;
-
-            this.PartHashes = new Dictionary<int, string>();
-
-            // Per the spec, part numbers start at 1 (not 0)
-            // See: https://www.backblaze.com/b2/docs/b2_upload_part.html
-            this.CurrentPartNumber = 1;
-        }
-
-        public SyncEntry Entry { get; set; }
-
-        public BackblazeB2FileUploadResponse UploadResponse { get; set; }
-
-        public StartLargeFileResponse StartLargeFileResponse { get; set; }
-
-        public GetUploadPartUrlResponse GetUploadPartUrlResponse { get; set; }
-
-        internal int CurrentPartNumber { get; set; }
-
-        internal Dictionary<int, string> PartHashes { get; }
-
-        internal long BytesUploaded { get; set; }
-    }
-
-    public class GetUploadUrlResponse
-    {
-        [JsonProperty("bucketId")]
-        public string BucketId { get; set; }
-
-        [JsonProperty("uploadUrl")]
-        public string UploadUrl { get; set; }
-
-        [JsonProperty("authorizationToken")]
-        public string AuthorizationToken { get; set; }
-    }
-
-    public class StartLargeFileResponse
-    {
-        [JsonProperty("fileId")]
-        public string FileId { get; set; }
-
-        [JsonProperty("fileName")]
-        public string FileName { get; set; }
-
-        [JsonProperty("accountId")]
-        public string AccountId { get; set; }
-
-        [JsonProperty("bucketId")]
-        public string BucketId { get; set; }
-
-        [JsonProperty("contentType")]
-        public string ContentType { get; set; }
-
-        [JsonProperty("uploadTimestamp")]
-        public long UploadTimestamp { get; set; }
-    }
-
-    public class GetUploadPartUrlResponse
-    {
-        [JsonProperty("fileId")]
-        public string FileId { get; set; }
-
-        [JsonProperty("uploadUrl")]
-        public string UploadUrl { get; set; }
-
-        [JsonProperty("authorizationToken")]
-        [JsonConverter(typeof(SecureStringConverter))]
-        public SecureString AuthorizationToken { get; set; }
-    }
-
-    public class BackblazeB2UploadPartResponse
-    {
-        [JsonProperty("fileId")]
-        public string FileId { get; set; }
-
-        [JsonProperty("partNumber")]
-        public string PartNumber { get; set; }
-
-        [JsonProperty("contentLength")]
-        public string ContentLength { get; set; }
-
-        [JsonProperty("contentSha1")]
-        public string ContentSha1 { get; set; }
-    }
-
-    public class FinishLargeFileResponse
-    {
-        [JsonProperty("fileId")]
-        public string FileId { get; set; }
-
-        [JsonProperty("fileName")]
-        public string FileName { get; set; }
-
-        [JsonProperty("accountId")]
-        public string AccountId { get; set; }
-
-        [JsonProperty("bucketId")]
-        public string BucketId { get; set; }
-
-        [JsonProperty("contentLength")]
-        public long ContentLength { get; set; }
-
-        [JsonProperty("contentType")]
-        public string ContentType { get; set; }
-
-        [JsonProperty("uploadTimestamp")]
-        public long UploadTimestamp { get; set; }
-    }
-
-    public class ListLargeUnfinishedFilesResponse
-    {
-        [JsonProperty("files")]
-        public UnfinishedFile[] Files { get; set; }
-    }
-
-    public class UnfinishedFile
-    {
-        [JsonProperty("fileId")]
-        public string FileId { get; set; }
-
-        [JsonProperty("fileName")]
-        public string FileName { get; set; }
-
-        [JsonProperty("accountId")]
-        public string AccountId { get; set; }
-
-        [JsonProperty("bucketId")]
-        public string BucketId { get; set; }
-
-        [JsonProperty("contentType")]
-        public string ContentType { get; set; }
-
-        [JsonProperty("uploadTimestamp")]
-        public long UploadTimestamp { get; set; }
-    }
-
-    public class CancelLargeFileResponse
-    {
-        [JsonProperty("fileId")]
-        public string FileId { get; set; }
-
-        [JsonProperty("fileName")]
-        public string FileName { get; set; }
-
-        [JsonProperty("accountId")]
-        public string AccountId { get; set; }
-
-        [JsonProperty("bucketId")]
-        public string BucketId { get; set; }
-    }
-
 }
