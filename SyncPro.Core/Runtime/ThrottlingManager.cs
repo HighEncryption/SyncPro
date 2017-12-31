@@ -112,13 +112,4 @@ namespace SyncPro.Runtime
             }
         }
     }
-
-    public static class ThreadExtensions
-    {
-        public static void Sleep(TimeSpan timeSpan, CancellationToken cancellationToken)
-        {
-            
-        }
-    }
-
 }

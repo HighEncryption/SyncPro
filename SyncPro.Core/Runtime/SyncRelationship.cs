@@ -100,6 +100,9 @@
             this.ThrottlingValue = configuration.ThrottlingConfiguration.Value;
             this.ThrottlingScaleFactor = configuration.ThrottlingConfiguration.ScaleFactor;
 
+            this.EncryptionIsEnabled = configuration.EncryptionConfiguration.IsEnabled;
+            this.EncryptionCertificateThumbprint = configuration.EncryptionConfiguration.CertificateThumbprint;
+
             this.State = SyncRelationshipState.NotInitialized;
         }
 
@@ -133,6 +136,9 @@
                 this.Configuration.TriggerConfiguration.HourlyIntervalValue = this.TriggerHourlyInterval;
                 this.Configuration.TriggerConfiguration.HourlyMinutesPastSyncTime = this.TriggerHourlyMinutesPastSyncTime;
                 this.Configuration.TriggerConfiguration.ScheduleInterval = this.TriggerScheduleInterval;
+
+                this.Configuration.EncryptionConfiguration.IsEnabled = this.EncryptionIsEnabled;
+                this.Configuration.EncryptionConfiguration.CertificateThumbprint = this.EncryptionCertificateThumbprint;
 
                 // If the relaionship contains adapters that arent in the configuration, add them
                 foreach (AdapterConfiguration adapterConfig in this.Adapters.Select(a => a.Configuration))
@@ -396,6 +402,28 @@
         {
             get { return this.triggerScheduleInterval; }
             set { this.SetProperty(ref this.triggerScheduleInterval, value); }
+        }
+
+        #endregion
+
+        #region Encryption Properties
+
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private bool encryptionIsEnabled;
+
+        public bool EncryptionIsEnabled
+        {
+            get { return this.encryptionIsEnabled; }
+            set { this.SetProperty(ref this.encryptionIsEnabled, value); }
+        }
+
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private string encryptionCertificateThumbprint;
+
+        public string EncryptionCertificateThumbprint
+        {
+            get { return this.encryptionCertificateThumbprint; }
+            set { this.SetProperty(ref this.encryptionCertificateThumbprint, value); }
         }
 
         #endregion

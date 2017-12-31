@@ -79,21 +79,38 @@
         public DateTime EntryLastUpdatedDateTimeUtc { get; set; }
 
         /// <summary>
-        /// The SHA1 hash of the file contents
+        /// The SHA1 hash of the source file contents
         /// </summary>
         [MaxLength(20)]
-        public byte[] Sha1Hash { get; set; }
+        public byte[] SourceSha1Hash { get; set; }
 
         /// <summary>
-        /// The MD5 hash of the file contents
+        /// The SHA1 hash of the destination file contents. Only set when the destination differs from the source.
+        /// </summary>
+        [MaxLength(20)]
+        public byte[] DestinationSha1Hash { get; set; }
+
+        /// <summary>
+        /// The MD5 hash of the source file contents
         /// </summary>
         [MaxLength(16)]
-        public byte[] Md5Hash { get; set; }
+        public byte[] SourceMd5Hash { get; set; }
 
         /// <summary>
-        /// The size of the file (bytes)
+        /// The MD5 hash of the destination file contents. Only set when the destination differs from the source.
         /// </summary>
-        public long Size { get; set; }
+        [MaxLength(16)]
+        public byte[] DestinationMd5Hash { get; set; }
+
+        /// <summary>
+        /// The size of the source source file (bytes)
+        /// </summary>
+        public long SourceSize { get; set; }
+
+        /// <summary>
+        /// The size of the destination file (bytes)
+        /// </summary>
+        public long DestinationSize { get; set; }
 
         public SyncEntryState State { get; set; }
 

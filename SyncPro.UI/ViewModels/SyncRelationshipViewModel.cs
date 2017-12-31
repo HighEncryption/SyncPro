@@ -556,7 +556,7 @@
                     if (syncEntry.Type == SyncEntryType.File)
                     {
                         fileCount++;
-                        byteCount += syncEntry.Size;
+                        byteCount += syncEntry.SourceSize;
                     }
                     else if (syncEntry.Type == SyncEntryType.Directory)
                     {

@@ -7,6 +7,9 @@
     using System.IO;
     using System.Linq;
 
+    /// <summary>
+    /// Represents the database containing the persisted information about the files being synchronized.
+    /// </summary>
     public class SyncDatabase : DbContext
     {
         public DbSet<SyncEntry> Entries { get; set; }
@@ -46,6 +49,12 @@
             return Path.Combine(Global.AppDataRoot, relationshipId.ToString("N"), "database.mdf");
         }
 
+        /// <summary>
+        /// Update an existing <see cref="SyncEntry"/> in the database with the properties values of the 
+        /// given <see cref="SyncEntry"/>
+        /// </summary>
+        /// <param name="syncEntry">The <see cref="SyncEntry"/> to copy from</param>
+        /// <returns>The updated <see cref="SyncEntry"/></returns>
         public SyncEntry UpdateSyncEntry(SyncEntry syncEntry)
         {
             SyncEntry entry = this.Entries.Include(e => e.AdapterEntries).First(e => e.Id == syncEntry.Id);
@@ -54,8 +63,12 @@
             entry.CreationDateTimeUtc = syncEntry.CreationDateTimeUtc;
             entry.ModifiedDateTimeUtc = syncEntry.ModifiedDateTimeUtc;
             entry.EntryLastUpdatedDateTimeUtc = syncEntry.EntryLastUpdatedDateTimeUtc;
-            entry.Sha1Hash = syncEntry.Sha1Hash;
-            entry.Size = syncEntry.Size;
+            entry.SourceSha1Hash = syncEntry.SourceSha1Hash;
+            entry.DestinationSha1Hash = syncEntry.DestinationSha1Hash;
+            entry.SourceMd5Hash = syncEntry.SourceMd5Hash;
+            entry.DestinationMd5Hash = syncEntry.DestinationMd5Hash;
+            entry.SourceSize = syncEntry.SourceSize;
+            entry.DestinationSize = syncEntry.DestinationSize;
             entry.State = syncEntry.State;
 
             return entry;

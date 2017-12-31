@@ -101,11 +101,11 @@
             if (item.File != null)
             {
                 entry.Type = SyncEntryType.File;
-                entry.Size = item.Size;
+                entry.SourceSize = item.Size;
 
                 if (item.File.Hashes != null && !string.IsNullOrWhiteSpace(item.File.Hashes.Sha1Hash))
                 {
-                    entry.Sha1Hash = HexToBytes(item.File.Hashes.Sha1Hash);
+                    entry.SourceSha1Hash = HexToBytes(item.File.Hashes.Sha1Hash);
                 }
             }
 
@@ -333,7 +333,7 @@
             {
                 fileType = SyncEntryType.File;
 
-                if (item.Item.Size != childEntry.Size)
+                if (item.Item.Size != childEntry.SourceSize)
                 {
                     // Before reporting the size of the item as changed, check the SHA1 hash. If the hash is unchanged, then the 
                     // file is the same as it was before. This is due to a bug in OneDrive where the reported size includes
@@ -341,7 +341,7 @@
                     if (item.Item.File.Hashes != null)
                     {
                         byte[] sha1Hash = HexToBytes(item.Item.File.Hashes.Sha1Hash);
-                        if (!sha1Hash.SequenceEqual(childEntry.Sha1Hash))
+                        if (!sha1Hash.SequenceEqual(childEntry.SourceSha1Hash))
                         {
                             result.ChangeFlags |= SyncEntryChangedFlags.FileSize;
                             result.ChangeFlags |= SyncEntryChangedFlags.Sha1Hash;

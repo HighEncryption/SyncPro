@@ -232,4 +232,33 @@
                 .VerifyDatabaseHashes();
         }
     }
+
+    [TestClass]
+    public class EncryptionTests
+    {
+        public TestContext TestContext { get; set; }
+
+        public void TestCleanup()
+        {
+            Logger.Info("Test completed");
+        }
+
+        [TestMethod]
+        public void EncrptionTest1()
+        {
+            var wrapper = TestWrapperFactory
+                .CreateLocalToLocal(this.TestContext)
+                .SaveRelationship()
+                .CreateSimpleSourceStructure();
+
+            wrapper.Relationship.EncryptionIsEnabled = true;
+            wrapper.Relationship.EncryptionCertificateThumbprint = "420fe8033179cfb0ef21862d24bf6a1ec7df6c6d";
+
+            wrapper.CreateSyncRun()
+                .RunToCompletion()
+                .VerifySyncSuccess()
+                .VerifyResultContainsAllFiles()
+                .VerifyDatabaseHashes();
+        }
+    }
 }

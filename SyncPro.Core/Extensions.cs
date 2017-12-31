@@ -216,6 +216,37 @@
         }
     }
 
+    public static class StreamExtensions
+    {
+        public static short ReadInt16(this Stream stream)
+        {
+            byte[] bytes = new byte[2];
+            stream.Read(bytes, 0, 2);
+            return BitConverter.ToInt16(bytes, 0);
+        }
+
+        public static int ReadInt32(this Stream stream)
+        {
+            byte[] bytes = new byte[4];
+            stream.Read(bytes, 0, 4);
+            return BitConverter.ToInt32(bytes, 0);
+        }
+
+        public static long ReadInt64(this Stream stream)
+        {
+            byte[] bytes = new byte[8];
+            stream.Read(bytes, 0, 8);
+            return BitConverter.ToInt64(bytes, 0);
+        }
+
+        public static byte[] ReadByteArray(this Stream stream, int length, int startIndex)
+        {
+            byte[] bytes = new byte[length];
+            stream.Read(bytes, startIndex, length);
+            return bytes;
+        }
+    }
+
     public interface IDelayedDisposeContent
     {
         void DelayedDispose();

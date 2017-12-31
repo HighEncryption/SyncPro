@@ -40,6 +40,7 @@
         {
             public struct Union
             {
+#pragma warning disable 0649
                 [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
                 public byte[] BirthVolumeId;
 
@@ -48,9 +49,10 @@
 
                 [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
                 public byte[] DomainId;
+#pragma warning restore 0649
             }
 
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
+                [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
             public byte[] ObjectId;
 
             public Union BirthInfo;

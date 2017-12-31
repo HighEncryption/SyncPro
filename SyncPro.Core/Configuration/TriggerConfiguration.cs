@@ -10,4 +10,11 @@ namespace SyncPro.Configuration
 
         public int HourlyMinutesPastSyncTime { get; set; }
     }
+
+    public class EncryptionConfiguration
+    {
+        public bool IsEnabled { get; set; }
+
+        public string CertificateThumbprint { get; set; }
+    }
 }

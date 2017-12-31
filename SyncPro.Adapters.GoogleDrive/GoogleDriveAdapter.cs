@@ -177,8 +177,8 @@
             else
             {
                 entry.Type = SyncEntryType.File;
-                entry.Size = item.Size;
-                entry.Md5Hash = HexToBytes(item.Md5Checksum);
+                entry.SourceSize = item.Size;
+                entry.SourceMd5Hash = HexToBytes(item.Md5Checksum);
             }
 
 

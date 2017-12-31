@@ -50,7 +50,7 @@ namespace SyncPro.UI.Navigation.ViewModels
 
             this.Name = syncEntry.Name;
             this.LastModified = syncEntry.EntryLastUpdatedDateTimeUtc;
-            this.Size = Convert.ToUInt64(syncEntry.Size);
+            this.Size = Convert.ToUInt64(syncEntry.SourceSize);
             this.IsDirectory = syncEntry.Type == SyncEntryType.Directory;
             this.SelectItemCommand = new DelegatedCommand(o => this.SelectItem());
 

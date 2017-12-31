@@ -98,7 +98,7 @@ namespace SyncPro.Runtime
                             break;
                         case SyncEntryType.File:
                             this.analyzeResult.UnchangedFileCount++;
-                            this.analyzeResult.UnchangedFileBytes += syncEntry.Size;
+                            this.analyzeResult.UnchangedFileBytes += syncEntry.SourceSize;
                             break;
                         default:
                             throw new ArgumentOutOfRangeException();
@@ -400,10 +400,10 @@ namespace SyncPro.Runtime
                 logicalChild.UpdateInfo.ModifiedDateTimeUtcNew = changeAdapterItem.ModifiedTimeUtc;
                 logicalChild.UpdateInfo.PathNew = logicalChild.UpdateInfo.RelativePath;
 
-                // Some providers and return information is that normally isn't known until the item 
+                // Some providers can return information that normally isn't known until the item 
                 // is copied. Copy the values to the UpdateInfo object.
-                logicalChild.UpdateInfo.SizeNew = changeAdapterItem.Size;
-                logicalChild.UpdateInfo.Sha1HashNew = changeAdapterItem.Sha1Hash;
+                logicalChild.UpdateInfo.SourceSizeNew = changeAdapterItem.Size;
+                logicalChild.UpdateInfo.SourceSha1HashNew = changeAdapterItem.Sha1Hash;
 
                 // Raise change notification so that the UI can be updated in "real time" rather than waiting for the analyze process to finish.
                 this.RaiseChangeDetected(adapter.Configuration.Id, logicalChild.UpdateInfo);
@@ -601,9 +601,9 @@ namespace SyncPro.Runtime
                             logicalChild.UpdateInfo.PathNew = logicalChild.UpdateInfo.RelativePath;
                         }
 
-                        if (logicalChild.UpdateInfo.SizeOld != adapterChild.Size)
+                        if (logicalChild.UpdateInfo.SourceSizeOld != adapterChild.Size)
                         {
-                            logicalChild.UpdateInfo.SizeNew = adapterChild.Size;
+                            logicalChild.UpdateInfo.SourceSizeNew = adapterChild.Size;
                         }
 
                         // Set the NotSynchronized flag so that we know this has not yet been committed to the database.

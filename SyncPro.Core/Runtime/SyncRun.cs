@@ -6,6 +6,7 @@
     using System.IO;
     using System.Linq;
     using System.Security.Cryptography;
+    using System.Security.Cryptography.X509Certificates;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -59,6 +60,8 @@
         private CancellationTokenSource cancellationTokenSource;
 
         private Stopwatch syncProgressUpdateStopwatch;
+
+        private X509Certificate2 encryptionCertificate;
 
         /// <summary>
         /// The unique Id of this sync run (unique within the relationship)
@@ -170,7 +173,7 @@
         public SyncRun(SyncRelationship relationship)
         {
             this.relationship = relationship;
-        }
+        } // 420fe8033179cfb0ef21862d24bf6a1ec7df6c6d
 
         public void Start(SyncTriggerType triggerType)
         {
@@ -332,6 +335,19 @@
                     { "AnalyzeResultId", this.AnalyzeResult.Id },
                 });
 
+            if (this.relationship.EncryptionIsEnabled)
+            {
+                X509Store store = new X509Store(StoreName.My, StoreLocation.CurrentUser);
+                store.Open(OpenFlags.ReadOnly);
+
+                var cert = store.Certificates.Find(
+                    X509FindType.FindByThumbprint, 
+                    this.relationship.EncryptionCertificateThumbprint, 
+                    false);
+
+                this.encryptionCertificate = cert[0];
+            }
+
             // Get the list of EntryUpdateInfo object for each change that needs to be synchronzied. Be sure that we are
             // gathering the results from each adapter, which is needed in bidirectional sync.
             List<EntryUpdateInfo> updateList = this.AnalyzeResult.AdapterResults.SelectMany(r => r.Value.EntryResults).ToList();
@@ -344,7 +360,7 @@
 
             this.BytesTotal = updateList
                 .Where(item => item.HasSyncEntryFlag(SyncEntryChangedFlags.IsNewOrUpdated))
-                .Aggregate((long)0, (current, info) => current + info.Entry.Size);
+                .Aggregate((long)0, (current, info) => current + info.Entry.SourceSize);
             this.bytesCompleted = 0;
 
             this.syncProgressUpdateStopwatch = new Stopwatch();
@@ -865,26 +881,68 @@
             Stream fromStream = null;
             Stream toStream = null;
 
+            EncryptionManager encryptionManager = null;
+
             try
             {
+                long writeStreamLength = updateInfo.Entry.SourceSize;
+
+                if (this.relationship.EncryptionIsEnabled)
+                {
+                    short padding;
+                    writeStreamLength = EncryptionManager.CalculateEncryptedFileSize(
+                        updateInfo.Entry.SourceSize,
+                        out padding);
+                }
+
                 fromStream = fromAdapter.GetReadStreamForEntry(updateInfo.Entry);
-                toStream = toAdapter.GetWriteStreamForEntry(updateInfo.Entry, updateInfo.Entry.Size);
+                toStream = toAdapter.GetWriteStreamForEntry(updateInfo.Entry, writeStreamLength);
+
+                if (this.relationship.EncryptionIsEnabled)
+                {
+                    encryptionManager = new EncryptionManager(
+                        this.encryptionCertificate,
+                        EncryptionMode.Encrypt,
+                        toStream,
+                        updateInfo.Entry.SourceSize);
+
+                    encryptionManager.Initialize();
+                }
 
                 TransferResult result = await this.TransferDataWithHashAsync(
                         fromStream,
                         toStream,
                         updateInfo,
-                        throttlingManager)
+                        throttlingManager,
+                        encryptionManager)
                     .ConfigureAwait(false);
 
                 // Add the transfer information back to the update info (so that it can be persisted later)
-                updateInfo.SizeNew = result.BytesTransferred;
-                updateInfo.Sha1HashNew = result.Sha1Hash;
-                updateInfo.Md5HashNew = result.Md5Hash;
+                updateInfo.SourceSizeNew = result.BytesRead;
+                updateInfo.DestinationSizeNew = result.BytesWritten;
+
+                updateInfo.SourceSha1HashNew = result.Sha1Hash;
+                updateInfo.SourceMd5HashNew = result.Md5Hash;
+
+                if (encryptionManager != null)
+                {
+                    updateInfo.DestinationSha1HashNew = result.TransformedSha1Hash;
+                    updateInfo.DestinationMd5HashNew = result.TransformedMd5Hash;
+                }
+
+                //updateInfo.SizeNew = result.BytesTransferred;
+                //updateInfo.Sha1HashNew = result.Sha1Hash;
+                //updateInfo.Md5HashNew = result.Md5Hash;
 
                 // Add the hash information to the entry that was copied
-                updateInfo.Entry.Sha1Hash = result.Sha1Hash;
-                updateInfo.Entry.Md5Hash = result.Md5Hash;
+                updateInfo.Entry.SourceSha1Hash = result.Sha1Hash;
+                updateInfo.Entry.DestinationSha1Hash = result.TransformedSha1Hash ?? result.Sha1Hash;
+                updateInfo.Entry.SourceMd5Hash = result.Md5Hash;
+                updateInfo.Entry.DestinationMd5Hash = result.TransformedMd5Hash ?? result.Md5Hash;
+
+                //updateInfo.Entry.Sha1Hash = result.Sha1Hash;
+                //updateInfo.Entry.Md5Hash = result.Md5Hash;
+
             }
             finally
             {
@@ -901,9 +959,14 @@
 
         private class TransferResult
         {
-            public long BytesTransferred { get; set; }
+            public long BytesRead { get; set; }
+            public long BytesWritten { get; set; }
+
             public byte[] Sha1Hash { get; set; }
             public byte[] Md5Hash { get; set; }
+
+            public byte[] TransformedSha1Hash { get; set; }
+            public byte[] TransformedMd5Hash { get; set; }
         }
 
         /// <summary>
@@ -915,12 +978,14 @@
         /// <param name="destinationStream">The stream that the data is written to</param>
         /// <param name="updateInfo">Metadata about the item being copied</param>
         /// <param name="throttlingManager">The throttling manager (to handling throttling, if required)</param>
+        /// <param name="encryptionManager">The encryption manager (only used when encrypting/decrypting)</param>
         /// <returns>(async) The result of the transfer</returns>
         private async Task<TransferResult> TransferDataWithHashAsync(
             Stream sourceStream, 
             Stream destinationStream, 
             EntryUpdateInfo updateInfo,
-            ThrottlingManager throttlingManager)
+            ThrottlingManager throttlingManager,
+            EncryptionManager encryptionManager)
         {
             SHA1Cng sha1 = null;
             MD5Cng md5 = null;
@@ -936,6 +1001,7 @@
                 byte[] buffer = new byte[transferBufferSize];
                 int read;
                 long readTotal = 0;
+                long writtenTotal = 0;
 
                 while (true)
                 {
@@ -973,14 +1039,22 @@
 
                     // Pass the data through the required hashing algorithms. These are hash transforms, so 
                     // there is no output buffer to provide (suppress warnings from ReSharper).
-
                     // ReSharper disable AssignNullToNotNullAttribute
                     sha1.TransformBlock(buffer, 0, read, null, 0);
                     md5.TransformBlock(buffer, 0, read, null, 0);
                     // ReSharper restore AssignNullToNotNullAttribute
 
                     // Write the data to the destination adapter
-                    destinationStream.Write(buffer, 0, read);
+                    if (encryptionManager != null)
+                    {
+                        writtenTotal +=
+                            encryptionManager.Write(buffer, 0, read);
+                    }
+                    else
+                    {
+                        destinationStream.Write(buffer, 0, read);
+                        writtenTotal += buffer.Length;
+                    }
 
                     // Increment the total number of bytes written to the desination adapter
                     this.bytesCompleted += read;
@@ -996,12 +1070,38 @@
                 sha1.TransformFinalBlock(buffer, 0, read);
                 md5.TransformFinalBlock(buffer, 0, read);
 
-                return new TransferResult
+                encryptionManager?.WriteFinalBlock(buffer, 0, read);
+
+                TransferResult result = new TransferResult
                 {
-                    BytesTransferred = readTotal,
-                    Sha1Hash = sha1.Hash,
-                    Md5Hash = md5.Hash
+                    BytesRead = readTotal,
+                    BytesWritten = writtenTotal
                 };
+
+                if (encryptionManager != null)
+                {
+                    if (encryptionManager.Mode == EncryptionMode.Encrypt)
+                    {
+                        result.Sha1Hash = sha1.Hash;
+                        result.Md5Hash = md5.Hash;
+                        result.TransformedSha1Hash = encryptionManager.Sha1Hash;
+                        result.TransformedMd5Hash = encryptionManager.Md5Hash;
+                    }
+                    else
+                    {
+                        result.TransformedSha1Hash = sha1.Hash;
+                        result.TransformedMd5Hash = md5.Hash;
+                        result.Sha1Hash = encryptionManager.Sha1Hash; // The SHA1 hash of the data written by the encryption manager
+                        result.Md5Hash = encryptionManager.Md5Hash;
+                    }
+                }
+                else
+                {
+                    result.Sha1Hash = sha1.Hash;
+                    result.Md5Hash = md5.Hash;
+                }
+
+                return result;
             }
             finally
             {
@@ -1023,66 +1123,6 @@
             };
 
             return run;
-        }
-    }
-
-    internal class EntryProcessingSorter : IComparer<EntryUpdateInfo>
-    {
-        public int Compare(EntryUpdateInfo x, EntryUpdateInfo y)
-        {
-            if (x == null && y == null)
-            {
-                return 0;
-            }
-
-            if (x == null)
-            {
-                return -1;
-            }
-
-            if (y == null)
-            {
-                return 1;
-            }
-
-            // Deleted items come after non-deleted items
-            if (x.HasSyncEntryFlag(SyncEntryChangedFlags.Deleted) &&
-                !y.HasSyncEntryFlag(SyncEntryChangedFlags.Deleted))
-            {
-                return 1;
-            }
-
-            // Save as above with reversed order
-            if (!x.HasSyncEntryFlag(SyncEntryChangedFlags.Deleted) &&
-                y.HasSyncEntryFlag(SyncEntryChangedFlags.Deleted))
-            {
-                return -1;
-            }
-
-            // NewDirectory items come before non-NewDirectory items
-            if (x.HasSyncEntryFlag(SyncEntryChangedFlags.NewDirectory) &&
-                !y.HasSyncEntryFlag(SyncEntryChangedFlags.NewDirectory))
-            {
-                return -1;
-            }
-
-            // Save as above with reversed order
-            if (!x.HasSyncEntryFlag(SyncEntryChangedFlags.NewDirectory) &&
-                y.HasSyncEntryFlag(SyncEntryChangedFlags.NewDirectory))
-            {
-                return 1;
-            }
-
-            // Sort the delete list in reverse alpha order. This *should* put deletes of 
-            // children ahead of parents.
-            if (x.HasSyncEntryFlag(SyncEntryChangedFlags.Deleted) &&
-                y.HasSyncEntryFlag(SyncEntryChangedFlags.Deleted))
-            {
-                return StringComparer.Ordinal.Compare(y.RelativePath, x.RelativePath);
-            }
-
-            // All other cases, sort by name
-            return StringComparer.Ordinal.Compare(x.RelativePath, y.RelativePath);
         }
     }
 }
