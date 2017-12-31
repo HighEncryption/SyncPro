@@ -900,8 +900,13 @@
 
                 if (this.relationship.EncryptionIsEnabled)
                 {
+                    // Create a copy of the certificate from the original cert's handle. A unique copy is required
+                    // because the encryption manager will dispose of the RSA CSP derived from the cert, and will 
+                    // cause an ObjectDisposedException on the next file encryption
+                    X509Certificate2 certificate = new X509Certificate2(this.encryptionCertificate.Handle);
+
                     encryptionManager = new EncryptionManager(
-                        this.encryptionCertificate,
+                        certificate,
                         EncryptionMode.Encrypt,
                         toStream,
                         updateInfo.Entry.SourceSize);
@@ -930,19 +935,11 @@
                     updateInfo.DestinationMd5HashNew = result.TransformedMd5Hash;
                 }
 
-                //updateInfo.SizeNew = result.BytesTransferred;
-                //updateInfo.Sha1HashNew = result.Sha1Hash;
-                //updateInfo.Md5HashNew = result.Md5Hash;
-
                 // Add the hash information to the entry that was copied
                 updateInfo.Entry.SourceSha1Hash = result.Sha1Hash;
                 updateInfo.Entry.DestinationSha1Hash = result.TransformedSha1Hash ?? result.Sha1Hash;
                 updateInfo.Entry.SourceMd5Hash = result.Md5Hash;
                 updateInfo.Entry.DestinationMd5Hash = result.TransformedMd5Hash ?? result.Md5Hash;
-
-                //updateInfo.Entry.Sha1Hash = result.Sha1Hash;
-                //updateInfo.Entry.Md5Hash = result.Md5Hash;
-
             }
             finally
             {
@@ -951,6 +948,8 @@
                 // finally block (so that it is called even when the transfer throws an exception) and before 
                 // disposing of the streams.
                 toAdapter.FinalizeItemWrite(toStream, updateInfo);
+
+                encryptionManager?.Dispose();
 
                 fromStream?.Close();
                 toStream?.Close();
@@ -1028,27 +1027,48 @@
                     }
 
                     // Read data from the source adapter
-                    if ((read = sourceStream.Read(buffer, 0, buffer.Length)) <= 0)
-                    {
-                        // Read the end of the stream
-                        break;
-                    }
+                    read = sourceStream.Read(buffer, 0, buffer.Length);
 
                     // Increment the total number of bytes read from the source adapter
                     readTotal += read;
 
-                    // Pass the data through the required hashing algorithms. These are hash transforms, so 
-                    // there is no output buffer to provide (suppress warnings from ReSharper).
-                    // ReSharper disable AssignNullToNotNullAttribute
-                    sha1.TransformBlock(buffer, 0, read, null, 0);
-                    md5.TransformBlock(buffer, 0, read, null, 0);
-                    // ReSharper restore AssignNullToNotNullAttribute
+                    if (read <= buffer.Length)
+                    {
+                        // Compute the last part of the SHA1 and MD5 hashes (this finished the algorithm's work).
+                        sha1.TransformFinalBlock(buffer, 0, read);
+                        md5.TransformFinalBlock(buffer, 0, read);
+
+                        if (encryptionManager != null)
+                        {
+                            writtenTotal += encryptionManager.TransformFinalBlock(buffer, 0, read);
+                        }
+                        else
+                        {
+                            destinationStream.Write(buffer, 0, read);
+                            writtenTotal += buffer.Length;
+                        }
+
+                        // Increment the total number of bytes written to the desination adapter
+                        this.bytesCompleted += read;
+
+                        if (this.syncProgressUpdateStopwatch.ElapsedMilliseconds > 100)
+                        {
+                            this.RaiseSyncProgressChanged(updateInfo);
+                            this.syncProgressUpdateStopwatch.Restart();
+                        }
+
+                        // Read the end of the stream
+                        break;
+                    }
+
+                    // Pass the data through the required hashing algorithms.
+                    sha1.TransformBlock(buffer, 0, read, buffer, 0);
+                    md5.TransformBlock(buffer, 0, read, buffer, 0);
 
                     // Write the data to the destination adapter
                     if (encryptionManager != null)
                     {
-                        writtenTotal +=
-                            encryptionManager.Write(buffer, 0, read);
+                        writtenTotal += encryptionManager.TransformBlock(buffer, 0, read);
                     }
                     else
                     {
@@ -1065,12 +1085,6 @@
                         this.syncProgressUpdateStopwatch.Restart();
                     }
                 }
-
-                // Compute the last part of the SHA1 and MD5 hashes (this finished the algorithm's work).
-                sha1.TransformFinalBlock(buffer, 0, read);
-                md5.TransformFinalBlock(buffer, 0, read);
-
-                encryptionManager?.WriteFinalBlock(buffer, 0, read);
 
                 TransferResult result = new TransferResult
                 {

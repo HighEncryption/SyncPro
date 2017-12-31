@@ -1,6 +1,7 @@
 namespace SyncPro.Runtime
 {
     using System;
+    using System.Data.Entity.Infrastructure;
     using System.IO;
     using System.Security.Cryptography;
     using System.Security.Cryptography.X509Certificates;
@@ -43,7 +44,7 @@ namespace SyncPro.Runtime
 
         private readonly Stream outputStream;
 
-        private bool firstBlockWritten;
+        private bool firstBlockTransformed;
 
         private RSACryptoServiceProvider rsa;
         private AesCryptoServiceProvider aes;
@@ -101,14 +102,7 @@ namespace SyncPro.Runtime
             }
         }
 
-        //public void SetOutputStream(Stream output)
-        //{
-        //    Pre.ThrowIfArgumentNull(output, nameof(output));
-
-        //    this.outputStream = output;
-        //}
-
-        public int Write(byte[] buffer, int offset, int count)
+        public int TransformBlock(byte[] buffer, int offset, int count)
         {
             using (MemoryStream bufferedOutputStream = new MemoryStream())
             {
@@ -118,7 +112,7 @@ namespace SyncPro.Runtime
                 }
                 else
                 {
-                    this.WriteDecrypted(bufferedOutputStream, buffer, offset, count);
+                    this.ReadEncrypted(bufferedOutputStream, buffer, offset, count);
                 }
 
                 byte[] transformedBuffer = bufferedOutputStream.ToArray();
@@ -130,10 +124,33 @@ namespace SyncPro.Runtime
             }
         }
 
-        public void WriteFinalBlock(byte[] inputBuffer, int offset, int count)
+        public int TransformFinalBlock(byte[] inputBuffer, int offset, int count)
         {
+            byte[] outputBuffer = new byte[0];
+            int outputOffset = 0;
+
+            if (!this.firstBlockTransformed)
+            {
+                if (this.Mode == EncryptionMode.Encrypt)
+                {
+                    using (MemoryStream bufferedOutputStream = new MemoryStream())
+                    {
+                        this.WriteFirstEncryptedBlock(bufferedOutputStream);
+                        outputBuffer = bufferedOutputStream.ToArray();
+                        outputOffset = outputBuffer.Length;
+                    }
+                }
+                else
+                {
+                    this.ReadFirstEncryptedBlock(inputBuffer, ref offset, ref count);
+                }
+            }
+
             // Encrypt/decrypt the final block
-            byte[] outputBuffer = this.cryptoTransform.TransformFinalBlock(inputBuffer, offset, count);
+            byte[] finalBlock = this.cryptoTransform.TransformFinalBlock(inputBuffer, offset, count);
+
+            Array.Resize(ref outputBuffer, outputBuffer.Length + finalBlock.Length);
+            Buffer.BlockCopy(finalBlock, 0, outputBuffer, outputOffset, finalBlock.Length);
 
             // Compute the hashes for the final encrypted/decrypted block
             this.sha1.TransformFinalBlock(outputBuffer, 0, outputBuffer.Length);
@@ -148,136 +165,56 @@ namespace SyncPro.Runtime
             }
 
             this.outputStream.Write(outputBuffer, 0, outputBuffer.Length);
+
+            return outputBuffer.Length;
         }
 
-        private void WriteEncrypted(MemoryStream bufferedOutputStream, byte[] inputBuffer, int offset, int count)
+        private void WriteFirstEncryptedBlock(MemoryStream bufferedOutputStream)
         {
-            if (!this.firstBlockWritten)
-            {
-                // Create the encryptor that will be used to transform the data. This will use the key and IV 
-                // that were generated when the aes object was created, and will only be used for this stream.
-                this.cryptoTransform = this.aes.CreateEncryptor();
+            // Create the encryptor that will be used to transform the data. This will use the key and IV 
+            // that were generated when the aes object was created, and will only be used for this stream.
+            this.cryptoTransform = this.aes.CreateEncryptor();
 
-                this.WriteEncryptionHeader(bufferedOutputStream);
+            this.WriteEncryptedHeader(bufferedOutputStream);
 
-                this.firstBlockWritten = true;
-            }
-
-            // Allocate a buffer with size of the data to be read from the input buffer
-            byte[] outputBuffer = new byte[count];
-
-            // Tranform (encrypt) the input data
-            this.cryptoTransform.TransformBlock(inputBuffer, offset, count, outputBuffer, 0);
-
-            // Write the transformed data to the output stream
-            bufferedOutputStream.Write(outputBuffer, 0, outputBuffer.Length);
-            #region dead
-            /*
-            if (this.Mode == EncryptionMode.Encrypt)
-                {
-
-                    if (!isFinalBlock)
-                    {
-                        bytesWritten = transform.TransformBlock(
-                            transferBuffer, 0, transferBufferSize, outputBuffer, 0);
-                    }
-                }
-                else
-                {
-                        long originalFileLength;
-                        short padding;
-
-                        this.ReadEncryptionHeader(
-                            bufferedOutputStream,
-                            out originalFileLength,
-                            out padding);
-                }
-
-                this.firstBlockWritten = true;
-            }
-            */
-            #endregion
-
-            #region dead
-            /*
-            using (MemoryStream bufferedOutputStream = new MemoryStream())
-            {
-                if (!this.transformInitialized)
-                {
-                    if (this.Mode == EncryptionMode.Encrypt)
-                    {
-                        bufferedOutputStream.Write(BitConverter.GetBytes(this.keyEncrypted.Length), 0, 4);
-                        bufferedOutputStream.Write(this.keyEncrypted, 0, this.keyEncrypted.Length);
-
-                        bufferedOutputStream.Write(BitConverter.GetBytes(this.iv.Length), 0, 4);
-                        bufferedOutputStream.Write(this.iv, 0, this.iv.Length);
-
-                        //this.cryptoStream = new CryptoStream(bufferedOutputStream, this.cryptoTransform, CryptoStreamMode.Write);
-                    }
-                    else
-                    {
-                        // Create a temporary stream for reading the input buffer. This will make it easier to read the values
-                        // from the buffer.
-                        using (MemoryStream inputStream = new MemoryStream(buffer, offset, count - offset))
-                        {
-                            int keyExchangeLength = inputStream.ReadInt32();
-                            this.keyEncrypted = inputStream.ReadByteArray(keyExchangeLength, 0);
-
-                            int ivLength = inputStream.ReadInt32();
-                            this.iv = inputStream.ReadByteArray(ivLength, 0);
-
-                            byte[] keyDecryptor = this.rsa.Decrypt(this.keyEncrypted, false);
-
-                            this.cryptoTransform = this.aes.CreateDecryptor(keyDecryptor, this.iv);
-                            //this.cryptoStream = new CryptoStream(bufferedOutputStream, this.cryptoTransform, CryptoStreamMode.Write);
-
-                            offset = (int) inputStream.Position;
-                        }
-                    }
-
-                    this.transformInitialized = true;
-                }
-
-                this.cryptoTransform.tr
-                //this.cryptoStream.Write(buffer, offset, count);
-
-                var outputBuffer = bufferedOutputStream.ToArray();
-
-                this.sha1.TransformBlock(outputBuffer, 0, outputBuffer.Length, null, 0);
-            }
-            */
-            #endregion
+            this.firstBlockTransformed = true;
         }
 
-        private void WriteDecrypted(MemoryStream bufferedOutputStream, byte[] inputBuffer, int offset, int count)
+        private void ReadFirstEncryptedBlock(byte[] inputBuffer, ref int offset, ref int count)
         {
-            if (!this.firstBlockWritten)
+            // Create a temporary stream for reading the input buffer. This will make it easier to read the
+            // input buffer and preserve the read position in the buffer.
+            using (MemoryStream inputBufferStream = new MemoryStream(inputBuffer, offset, count))
             {
                 byte[] key;
                 byte[] iv;
                 long originalFileLength;
                 short padding;
 
-                // Create a temporary stream for reading the input buffer
-                using (MemoryStream inputBufferStream = new MemoryStream(inputBuffer, offset, count))
-                {
-                    this.ReadEncryptionHeader(
-                        inputBufferStream,
-                        out key,
-                        out iv,
-                        out originalFileLength,
-                        out padding);
+                this.ReadEncryptedHeader(
+                    inputBufferStream,
+                    out key,
+                    out iv,
+                    out originalFileLength,
+                    out padding);
 
-                    // Create the decrypter used to decrypt the file
-                    this.cryptoTransform = this.aes.CreateDecryptor(key, iv);
+                // Create the decrypter used to decrypt the file
+                this.cryptoTransform = this.aes.CreateDecryptor(key, iv);
 
-                    // Update the count and offset based on the size read for the header since these will
-                    // be used below to decrypt the buffer.
-                    count -= (int)inputBufferStream.Position - offset;
-                    offset = (int)inputBufferStream.Position;
-                }
+                // Update the count and offset based on the size read for the header since these will
+                // be used below to decrypt the buffer.
+                count -= (int)inputBufferStream.Position - offset;
+                offset = (int)inputBufferStream.Position;
+            }
 
-                this.firstBlockWritten = true;
+            this.firstBlockTransformed = true;
+        }
+
+        private void WriteEncrypted(MemoryStream bufferedOutputStream, byte[] inputBuffer, int offset, int count)
+        {
+            if (!this.firstBlockTransformed)
+            {
+                this.WriteFirstEncryptedBlock(bufferedOutputStream);
             }
 
             // Allocate a buffer with size of the data to be read from the input buffer
@@ -290,7 +227,24 @@ namespace SyncPro.Runtime
             bufferedOutputStream.Write(outputBuffer, 0, outputBuffer.Length);
         }
 
-        private void ReadEncryptionHeader(
+        private void ReadEncrypted(MemoryStream bufferedOutputStream, byte[] inputBuffer, int offset, int count)
+        {
+            if (!this.firstBlockTransformed)
+            {
+                this.ReadFirstEncryptedBlock(inputBuffer, ref offset, ref count);
+            }
+
+            // Allocate a buffer with size of the data to be read from the input buffer
+            byte[] outputBuffer = new byte[count];
+
+            // Tranform (encrypt) the input data
+            this.cryptoTransform.TransformBlock(inputBuffer, offset, count, outputBuffer, 0);
+
+            // Write the transformed data to the output stream
+            bufferedOutputStream.Write(outputBuffer, 0, outputBuffer.Length);
+        }
+
+        private void ReadEncryptedHeader(
             MemoryStream inputStream,
             out byte[] key,
             out byte[] iv,
@@ -330,7 +284,7 @@ namespace SyncPro.Runtime
             padding = inputStream.ReadInt16();
         }
 
-        private void WriteEncryptionHeader(MemoryStream bufferedOutputStream)
+        private void WriteEncryptedHeader(MemoryStream bufferedOutputStream)
         {
             // Create the key formatter that will be used to encrypt the key before it is written to the 
             // output stream.
@@ -373,9 +327,6 @@ namespace SyncPro.Runtime
 
         public void Dispose()
         {
-            //this.cryptoStream?.FlushFinalBlock();
-            //this.cryptoStream?.Close();
-
             this.cryptoTransform?.Dispose();
 
             this.aes?.Dispose();
