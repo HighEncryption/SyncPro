@@ -1,7 +1,6 @@
 namespace SyncPro.Runtime
 {
     using System;
-    using System.Data.Entity.Infrastructure;
     using System.IO;
     using System.Security.Cryptography;
     using System.Security.Cryptography.X509Certificates;
@@ -23,18 +22,6 @@ namespace SyncPro.Runtime
         /// The default size (in bits) of the RSA encryption block size
         /// </summary>
         public const int DefaultCspBlockSize = 128;
-
-        /// <summary>
-        /// The size of the space allocated (in bytes) for the encrypted key stored at the beginning of the 
-        /// encrypted file
-        /// </summary>
-        public const int DefaultEncryptedKeyStorageSize = 512;
-
-        /// <summary>
-        /// The size of the space allocated (in bytes) of the initialization vector (IV) stored at the beginning of 
-        /// the encrypted file
-        /// </summary>
-        public const int DefaultIVStorageSize = 16;
 
         private readonly X509Certificate2 encryptionCertificate;
         private readonly long sourceFileSize;
@@ -72,9 +59,11 @@ namespace SyncPro.Runtime
 
             this.sha1 = new SHA1Cng();
             this.md5 = new MD5Cng();
+
+            this.Initialize();
         }
 
-        public void Initialize()
+        private void Initialize()
         {
             // Create the CSP. By default, this will generate a new Key and IV, so we need to ensure that we 
             // initialize for each file that is being encrypted. Each file should have a unique key and IV.
@@ -120,6 +109,8 @@ namespace SyncPro.Runtime
                 this.sha1.TransformBlock(transformedBuffer, 0, transformedBuffer.Length, null, 0);
                 this.md5.TransformBlock(transformedBuffer, 0, transformedBuffer.Length, null, 0);
 
+                this.outputStream.Write(transformedBuffer, 0, transformedBuffer.Length);
+
                 return transformedBuffer.Length;
             }
         }
@@ -128,6 +119,7 @@ namespace SyncPro.Runtime
         {
             byte[] outputBuffer = new byte[0];
             int outputOffset = 0;
+            short padding;
 
             if (!this.firstBlockTransformed)
             {
@@ -146,6 +138,12 @@ namespace SyncPro.Runtime
                 }
             }
 
+            if (this.Mode == EncryptionMode.Decrypt)
+            {
+                CalculateDecryptedFileSize(this.sourceFileSize, out padding);
+                count -= padding;
+            }
+
             // Encrypt/decrypt the final block
             byte[] finalBlock = this.cryptoTransform.TransformFinalBlock(inputBuffer, offset, count);
 
@@ -156,12 +154,14 @@ namespace SyncPro.Runtime
             this.sha1.TransformFinalBlock(outputBuffer, 0, outputBuffer.Length);
             this.md5.TransformFinalBlock(outputBuffer, 0, outputBuffer.Length);
 
-            short padding;
-            CalculateEncryptedFileSize(this.sourceFileSize, out padding);
-
-            if (padding > 0)
+            if (this.Mode == EncryptionMode.Encrypt)
             {
-                Array.Resize(ref outputBuffer, outputBuffer.Length + padding);
+                CalculateEncryptedFileSize(this.sourceFileSize, out padding);
+
+                if (padding > 0)
+                {
+                    Array.Resize(ref outputBuffer, outputBuffer.Length + padding);
+                }
             }
 
             this.outputStream.Write(outputBuffer, 0, outputBuffer.Length);
@@ -175,7 +175,31 @@ namespace SyncPro.Runtime
             // that were generated when the aes object was created, and will only be used for this stream.
             this.cryptoTransform = this.aes.CreateEncryptor();
 
-            this.WriteEncryptedHeader(bufferedOutputStream);
+            RSAPKCS1KeyExchangeFormatter keyFormatter = new RSAPKCS1KeyExchangeFormatter(this.rsa);
+            byte[] keyEncrypted = keyFormatter.CreateKeyExchange(this.aes.Key, this.aes.GetType());
+
+            EncryptedFileHeader header = new EncryptedFileHeader
+            {
+                EncryptedKey = keyEncrypted,
+                IV = this.aes.IV
+            };
+
+            short padding;
+
+            if (this.Mode == EncryptionMode.Encrypt)
+            {
+                header.OriginalFileLength = this.sourceFileSize;
+                header.EncryptedFileLength = CalculateEncryptedFileSize(this.sourceFileSize, out padding);
+                header.PaddingLength = padding;
+            }
+            else
+            {
+                header.EncryptedFileLength = this.sourceFileSize;
+                header.OriginalFileLength = CalculateDecryptedFileSize(this.sourceFileSize, out padding);
+                header.PaddingLength = padding;
+            }
+
+            header.WriteToStream(bufferedOutputStream);
 
             this.firstBlockTransformed = true;
         }
@@ -186,20 +210,13 @@ namespace SyncPro.Runtime
             // input buffer and preserve the read position in the buffer.
             using (MemoryStream inputBufferStream = new MemoryStream(inputBuffer, offset, count))
             {
-                byte[] key;
-                byte[] iv;
-                long originalFileLength;
-                short padding;
+                EncryptedFileHeader header = EncryptedFileHeader.ReadFromStream(inputBufferStream);
 
-                this.ReadEncryptedHeader(
-                    inputBufferStream,
-                    out key,
-                    out iv,
-                    out originalFileLength,
-                    out padding);
+                // Decrypt the key. 
+                byte[] key = this.rsa.Decrypt(header.EncryptedKey, false);
 
                 // Create the decrypter used to decrypt the file
-                this.cryptoTransform = this.aes.CreateDecryptor(key, iv);
+                this.cryptoTransform = this.aes.CreateDecryptor(key, header.IV);
 
                 // Update the count and offset based on the size read for the header since these will
                 // be used below to decrypt the buffer.
@@ -238,91 +255,10 @@ namespace SyncPro.Runtime
             byte[] outputBuffer = new byte[count];
 
             // Tranform (encrypt) the input data
-            this.cryptoTransform.TransformBlock(inputBuffer, offset, count, outputBuffer, 0);
+            int transformCount = this.cryptoTransform.TransformBlock(inputBuffer, offset, count, outputBuffer, 0);
 
             // Write the transformed data to the output stream
-            bufferedOutputStream.Write(outputBuffer, 0, outputBuffer.Length);
-        }
-
-        private void ReadEncryptedHeader(
-            MemoryStream inputStream,
-            out byte[] key,
-            out byte[] iv,
-            out long originalFileLength,
-            out short padding)
-        {
-            int encryptedKeyLength = inputStream.ReadInt32();
-
-            // Ensure the key is not longer than the buffer that is supposed to contain it
-            Pre.Assert(
-                encryptedKeyLength <= DefaultEncryptedKeyStorageSize,
-                "encryptedKeyLength <= DefaultEncryptedKeyStorageSize");
-
-            // Read the encrypted key
-            byte[] keyEncrypted= new byte[DefaultEncryptedKeyStorageSize];
-            inputStream.Read(keyEncrypted, 0, DefaultEncryptedKeyStorageSize);
-
-            // Resize the buffer to be the correct length of the key
-            Array.Resize(ref keyEncrypted, encryptedKeyLength);
-
-            // Decrypt the key. 
-            key = this.rsa.Decrypt(keyEncrypted, false);
-
-            // Read the initialization vector length
-            int ivLength = inputStream.ReadInt32();
-
-            Pre.Assert(
-                ivLength == DefaultIVStorageSize,
-                "ivLength == DefaultIVStorageSize");
-
-            // Read the initialization vector
-            iv = new byte[ivLength];
-            inputStream.Read(iv, 0, ivLength);
-
-            // Read the original file size and padding
-            originalFileLength = inputStream.ReadInt64();
-            padding = inputStream.ReadInt16();
-        }
-
-        private void WriteEncryptedHeader(MemoryStream bufferedOutputStream)
-        {
-            // Create the key formatter that will be used to encrypt the key before it is written to the 
-            // output stream.
-            RSAPKCS1KeyExchangeFormatter keyFormatter = new RSAPKCS1KeyExchangeFormatter(this.rsa);
-            byte[] keyEncrypted = keyFormatter.CreateKeyExchange(this.aes.Key, this.aes.GetType());
-
-            // Ensure that the encrypted key will find into the header
-            Pre.Assert(
-                keyEncrypted.Length <= DefaultEncryptedKeyStorageSize,
-                "keyEncrypted.Length <= DefaultEncryptedKeyStorageSize");
-
-            // Create the full-length buffer where the key will be stored. This is the complete byte array
-            // that will be written to to file header. It is declared separately to ensure that the length
-            // of the array is correct.
-            byte[] keyEncryptedBuffer = new byte[DefaultEncryptedKeyStorageSize];
-
-            // Copy the encrypted key into the header buffer
-            Buffer.BlockCopy(keyEncrypted, 0, keyEncryptedBuffer, 0, keyEncrypted.Length);
-
-            // Write the encrypted key length and key into the temporary buffer
-            bufferedOutputStream.Write(BitConverter.GetBytes(keyEncrypted.Length), 0, 4);
-            bufferedOutputStream.Write(keyEncrypted, 0, keyEncrypted.Length);
-
-            // Ensure that the initialization vector is of the correct length.
-            Pre.Assert(
-                this.aes.IV.Length == DefaultIVStorageSize,
-                "this.aes.IV.Length == DefaultIVStorageSize");
-
-            // Write the initialization vector and length to the temporary buffer
-            bufferedOutputStream.Write(BitConverter.GetBytes(this.aes.IV.Length), 0, 4);
-            bufferedOutputStream.Write(this.aes.IV, 0, this.aes.IV.Length);
-
-            short padding;
-            CalculateEncryptedFileSize(this.sourceFileSize, out padding);
-
-            // Write the original file size and padding
-            bufferedOutputStream.Write(BitConverter.GetBytes(this.sourceFileSize), 0, 8);
-            bufferedOutputStream.Write(BitConverter.GetBytes(padding), 0, 2);
+            bufferedOutputStream.Write(outputBuffer, 0, transformCount);
         }
 
         public void Dispose()
@@ -351,40 +287,12 @@ namespace SyncPro.Runtime
             // However, this case we need to include the padding (Plaintext MOD Blocksize) so that we can 
             // determine the unencrypted file's size. Also, we want to include the original file's size as a 
             // check against the result when decrypting. 
-
-            // The encrypted file format is as follows:
-            // +-----------------------------------------+   --
-            // |      encryptionKey.Length (4 bytes)     |    |
-            // +-----------------------------------------+    |
-            // |        encryptionKey (512 bytes)        |    |
-            // +-----------------------------------------+    |
-            // |  initializationVector.Length (4 bytes)  |    |
-            // +-----------------------------------------+    |  (Header)
-            // |     initializationVector (16 bytes)     |    |
-            // +-----------------------------------------+    |
-            // |      originalFile.Length (8 bytes)      |    |
-            // +-----------------------------------------+    |
-            // |         padding.Length (2 bytes)        |    |
-            // +-----------------------------------------+   --
-            // |             encryptedData               |
-            // +-----------------------------------------+
-            // |                padding                  |
-            // +-----------------------------------------+
-
+            //
             const int BlockSizeInBytes = DefaultCspBlockSize / 8;
-
-            // Calculate the header 
-            const int HeaderSize =
-                sizeof(int) +
-                DefaultEncryptedKeyStorageSize +
-                sizeof(int) +
-                DefaultIVStorageSize +
-                sizeof(long) +
-                sizeof(short);
 
             padding = (short)(unencryptedSize % BlockSizeInBytes);
 
-            return HeaderSize + unencryptedSize + BlockSizeInBytes;
+            return EncryptedFileHeader.Size + unencryptedSize + BlockSizeInBytes;
         }
 
         /// <summary>
@@ -397,18 +305,11 @@ namespace SyncPro.Runtime
         {
             const int BlockSizeInBytes = DefaultCspBlockSize / 8;
 
-            // Calculate the header 
-            const int HeaderSize =
-                sizeof(int) +
-                DefaultEncryptedKeyStorageSize +
-                sizeof(int) +
-                DefaultIVStorageSize +
-                sizeof(long) +
-                sizeof(short);
+            // The encrypted data always has a length according to the following formula:
+            //   encryptedSize = plainTextSize + blockSize - (plainText % blocksize)
+            padding = (short)((encryptedSize - EncryptedFileHeader.Size) % BlockSizeInBytes);
 
-            padding = (short)(encryptedSize % BlockSizeInBytes);
-
-            return encryptedSize - (HeaderSize + BlockSizeInBytes);
+            return encryptedSize - (EncryptedFileHeader.Size + BlockSizeInBytes);
         }
     }
 }

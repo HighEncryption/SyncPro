@@ -239,11 +239,26 @@
             return BitConverter.ToInt64(bytes, 0);
         }
 
-        public static byte[] ReadByteArray(this Stream stream, int length, int startIndex)
+        public static byte[] ReadByteArray(this Stream stream, int length)
         {
             byte[] bytes = new byte[length];
-            stream.Read(bytes, startIndex, length);
+            stream.Read(bytes, 0, length);
             return bytes;
+        }
+
+        public static void WriteInt16(this Stream stream, short value)
+        {
+            stream.Write(BitConverter.GetBytes(value), 0, sizeof(short));
+        }
+
+        public static void WriteInt32(this Stream stream, int value)
+        {
+            stream.Write(BitConverter.GetBytes(value), 0, sizeof(int));
+        }
+
+        public static void WriteInt64(this Stream stream, long value)
+        {
+            stream.Write(BitConverter.GetBytes(value), 0, sizeof(long));
         }
     }
 

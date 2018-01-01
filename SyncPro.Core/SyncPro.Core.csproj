@@ -69,6 +69,7 @@
   <ItemGroup>
     <Compile Include="Adapters\AdapterFaultInformation.cs" />
     <Compile Include="Adapters\AdapterItem.cs" />
+    <Compile Include="Runtime\EncryptedFileHeader.cs" />
     <Compile Include="Runtime\EncryptionManager.cs" />
     <Compile Include="Runtime\EntryProcessingSorter.cs" />
     <Compile Include="Utility\SecureStringConverter.cs" />

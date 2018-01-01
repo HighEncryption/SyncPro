@@ -910,8 +910,6 @@
                         EncryptionMode.Encrypt,
                         toStream,
                         updateInfo.Entry.SourceSize);
-
-                    encryptionManager.Initialize();
                 }
 
                 TransferResult result = await this.TransferDataWithHashAsync(
