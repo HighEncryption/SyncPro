@@ -195,7 +195,7 @@ namespace SyncPro.UnitTests
                     inputBuffer.Length);
 
                 int written = 0;
-                int blockSize = 1024;
+                int blockSize = 2048;
                 byte[] buf = new byte[blockSize];
 
                 while (true)
@@ -242,7 +242,7 @@ namespace SyncPro.UnitTests
                     encryptedData.Length);
 
                 int written = 0;
-                int blockSize = 1024;
+                int blockSize = 2048;
                 byte[] buf = new byte[blockSize];
 
                 while (true)
@@ -308,7 +308,7 @@ namespace SyncPro.UnitTests
                     inputBuffer.Length);
 
                 int written = 0;
-                int blockSize = 1024;
+                int blockSize = 2048;
                 byte[] buf = new byte[blockSize];
 
                 while (true)
@@ -355,7 +355,7 @@ namespace SyncPro.UnitTests
                     encryptedData.Length);
 
                 int written = 0;
-                int blockSize = 1024;
+                int blockSize = 2048;
                 byte[] buf = new byte[blockSize];
 
                 while (true)
@@ -397,7 +397,7 @@ namespace SyncPro.UnitTests
         [TestMethod]
         public void EncryptAndDecryptFileExactBlockBoundary()
         {
-            byte[] inputBuffer = CreateInputBuffer(1024 - EncryptedFileHeader.Size);
+            byte[] inputBuffer = CreateInputBuffer(EncryptedFileHeader.HeaderSize);
 
             short padding;
             long expectedEncryptedSize =
@@ -421,7 +421,7 @@ namespace SyncPro.UnitTests
                     inputBuffer.Length);
 
                 int written = 0;
-                int blockSize = 1024;
+                int blockSize = 2048;
                 byte[] buf = new byte[blockSize];
 
                 while (true)
@@ -468,7 +468,7 @@ namespace SyncPro.UnitTests
                     encryptedData.Length);
 
                 int written = 0;
-                int blockSize = 1024;
+                int blockSize = 2048;
                 byte[] buf = new byte[blockSize];
 
                 while (true)
@@ -519,8 +519,8 @@ namespace SyncPro.UnitTests
             short padding;
             var encryptedSize = EncryptionManager.CalculateEncryptedFileSize(1, out padding);
 
-            // Header size is 560 bytes. Expect to see header + blocksize + padding
-            int expectedEncryptedSize = EncryptedFileHeader.Size + 16 + padding;
+            // Header size is 1k bytes. Expect to see header + blocksize + padding
+            int expectedEncryptedSize = EncryptedFileHeader.HeaderSize + 16 + padding;
             Assert.AreEqual(expectedEncryptedSize, encryptedSize);
             Assert.AreEqual(1, padding);
         }
@@ -531,7 +531,7 @@ namespace SyncPro.UnitTests
             /*
              *  Test with 1 byte input
              */
-            int encryptedFileSize = 560 + 16 + 1;
+            int encryptedFileSize = EncryptedFileHeader.HeaderSize + 16 + 1;
             short padding;
             var decryptedSize = EncryptionManager.CalculateDecryptedFileSize(encryptedFileSize, out padding);
 
@@ -548,8 +548,8 @@ namespace SyncPro.UnitTests
             short padding;
             var encryptedSize = EncryptionManager.CalculateEncryptedFileSize(1024, out padding);
 
-            // Header size is 546 bytes. Expect to see header + plaintext
-            Assert.AreEqual(560 + 1024 + 16, encryptedSize);
+            // Header size is 1k bytes. Expect to see header + plaintext
+            Assert.AreEqual(EncryptedFileHeader.HeaderSize + 1024 + 16, encryptedSize);
             Assert.AreEqual(0, padding);
         }
 

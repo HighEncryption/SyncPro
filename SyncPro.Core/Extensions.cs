@@ -262,6 +262,16 @@
         }
     }
 
+    public static class BufferUtil
+    {
+        public static byte[] CopyBytes(byte[] buffer, int offset, int count)
+        {
+            byte[] buf = new byte[count];
+            Buffer.BlockCopy(buffer, offset, buf, 0, count);
+            return buf;
+        }
+    }
+
     public interface IDelayedDisposeContent
     {
         void DelayedDispose();

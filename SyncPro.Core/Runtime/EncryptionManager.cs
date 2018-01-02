@@ -5,6 +5,8 @@ namespace SyncPro.Runtime
     using System.Security.Cryptography;
     using System.Security.Cryptography.X509Certificates;
 
+    using SyncPro.Adapters;
+
     public enum EncryptionMode
     {
         Encrypt,
@@ -93,6 +95,8 @@ namespace SyncPro.Runtime
 
         public int TransformBlock(byte[] buffer, int offset, int count)
         {
+            Pre.Assert(count >= EncryptedFileHeader.HeaderSize + 16);
+
             using (MemoryStream bufferedOutputStream = new MemoryStream())
             {
                 if (this.Mode == EncryptionMode.Encrypt)
@@ -181,7 +185,8 @@ namespace SyncPro.Runtime
             EncryptedFileHeader header = new EncryptedFileHeader
             {
                 EncryptedKey = keyEncrypted,
-                IV = this.aes.IV
+                IV = this.aes.IV,
+                CertificateThumbprint = AdapterBase.HexToBytes(this.encryptionCertificate.Thumbprint)
             };
 
             short padding;
@@ -292,7 +297,7 @@ namespace SyncPro.Runtime
 
             padding = (short)(unencryptedSize % BlockSizeInBytes);
 
-            return EncryptedFileHeader.Size + unencryptedSize + BlockSizeInBytes;
+            return EncryptedFileHeader.HeaderSize + unencryptedSize + BlockSizeInBytes;
         }
 
         /// <summary>
@@ -307,9 +312,9 @@ namespace SyncPro.Runtime
 
             // The encrypted data always has a length according to the following formula:
             //   encryptedSize = plainTextSize + blockSize - (plainText % blocksize)
-            padding = (short)((encryptedSize - EncryptedFileHeader.Size) % BlockSizeInBytes);
+            padding = (short)((encryptedSize - EncryptedFileHeader.HeaderSize) % BlockSizeInBytes);
 
-            return encryptedSize - (EncryptedFileHeader.Size + BlockSizeInBytes);
+            return encryptedSize - (EncryptedFileHeader.HeaderSize + BlockSizeInBytes);
         }
     }
 }
