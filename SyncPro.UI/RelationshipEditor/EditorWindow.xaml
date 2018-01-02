@@ -35,8 +35,8 @@
                 <DataTemplate DataType="{x:Type relationshipEditor:SyncDestinationPageViewModel}">
                     <sections:SyncDestinationSection DataContext="{Binding}" />
                 </DataTemplate>
-                <DataTemplate DataType="{x:Type relationshipEditor:SyncFilteringPageViewModel}">
-                    <sections:SyncFilterSection DataContext="{Binding}" />
+                <DataTemplate DataType="{x:Type relationshipEditor:SyncOptionsPageViewModel}">
+                    <sections:SyncOptionsSection DataContext="{Binding}" />
                 </DataTemplate>
                 <DataTemplate DataType="{x:Type relationshipEditor:SyncPerformancePageViewModel}">
                     <sections:SyncPerformanceSection DataContext="{Binding}" />

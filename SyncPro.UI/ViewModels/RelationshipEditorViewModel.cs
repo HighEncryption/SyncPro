@@ -38,7 +38,7 @@
         public SyncDestinationPageViewModel SyncDestinationPageViewModel { get; }
 
         [ChildElementValidationRule]
-        public SyncFilteringPageViewModel SyncFilteringPageViewModel { get; }
+        public SyncOptionsPageViewModel SyncOptionsPageViewModel { get; }
 
         [ChildElementValidationRule]
         public SyncPerformancePageViewModel SyncPerformancePageViewModel { get; }
@@ -108,8 +108,8 @@
             this.SyncDestinationPageViewModel = new SyncDestinationPageViewModel(this);
             this.WizardPages.Add(this.SyncDestinationPageViewModel);
 
-            this.SyncFilteringPageViewModel = new SyncFilteringPageViewModel(this);
-            this.WizardPages.Add(this.SyncFilteringPageViewModel);
+            this.SyncOptionsPageViewModel = new SyncOptionsPageViewModel(this);
+            this.WizardPages.Add(this.SyncOptionsPageViewModel);
 
             this.SyncPerformancePageViewModel = new SyncPerformancePageViewModel(this);
             this.WizardPages.Add(this.SyncPerformancePageViewModel);

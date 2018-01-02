@@ -1,0 +1,105 @@
+﻿<UserControl x:Class="SyncPro.UI.RelationshipEditor.Sections.SyncOptionsSection"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:relationshipEditor="clr-namespace:SyncPro.UI.RelationshipEditor"
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="600" 
+             d:DataContext="{d:DesignInstance relationshipEditor:SyncOptionsPageViewModel}">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/RelationshipEditor/StyleResources.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <Style TargetType="TextBlock" BasedOn="{StaticResource ItemHeaderStyleCore}" x:Key="RadioButtonItemTextStyle">
+                <Setter Property="HorizontalAlignment" Value="Left" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <StackPanel Margin="0,8,0,0">
+        <Grid HorizontalAlignment="Left">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" MinWidth="140" />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Column="0" Grid.Row="0" 
+                       Style="{StaticResource ItemHeaderStyle}" 
+                       Text="How To Synchronize" 
+                       VerticalAlignment="Top" />
+            <StackPanel Grid.Column="1" Grid.Row="0" 
+                        Orientation="Horizontal">
+                <RadioButton VerticalContentAlignment="Center"
+                             IsChecked="{Binding Path=SelectedScopeType, Converter={StaticResource EnumToBoolean}, ConverterParameter=SourceToDestination}">
+                    <TextBlock Style="{StaticResource RadioButtonItemTextStyle}"
+                               Text="Source To Destination" />
+                </RadioButton>
+                <RadioButton VerticalContentAlignment="Center" 
+                             Margin="16,0,0,0"
+                             IsChecked="{Binding Path=SelectedScopeType, Converter={StaticResource EnumToBoolean}, ConverterParameter=Bidirectional}">
+                    <TextBlock Style="{StaticResource RadioButtonItemTextStyle}" 
+                               Text="Bidirectional" />
+                </RadioButton>
+            </StackPanel>
+
+            <TextBlock Grid.Column="1" Grid.Row="1" 
+                       Style="{StaticResource ItemTextBlockStyle}" 
+                       TextWrapping="Wrap"
+                       Margin="0,6,0,20" 
+                       MaxWidth="450" MinHeight="48"
+                       Text="{Binding Path=SyncScopeExplaination}" />
+
+            <TextBlock Grid.Column="0" Grid.Row="2" 
+                       Style="{StaticResource ItemHeaderStyle}" 
+                       Text="Exclude Folders" 
+                       VerticalAlignment="Top" />
+            <StackPanel Grid.Column="1" Grid.Row="2" 
+                        Orientation="Vertical" 
+                        Margin="0,4,0,20"
+                        VerticalAlignment="Center">
+                <TextBlock Text="Select folders and items that will be included or excluded when synchronizing files."
+                           TextWrapping="Wrap"/>
+
+                <Button Margin="0,8"
+                        Style="{StaticResource ItemButtonStyle}">
+                    <TextBlock Text="Select Include/Exclude Items" />
+                </Button>
+                
+                <TextBlock FontStyle="Oblique"
+                           Text="No folders or files are excluded"></TextBlock>
+            </StackPanel>
+
+            <TextBlock Grid.Column="0" Grid.Row="4" 
+                       Style="{StaticResource ItemHeaderStyle}" 
+                       Text="File Encryption" 
+                       VerticalAlignment="Top" />
+            <StackPanel Grid.Column="1" Grid.Row="4" Margin="0,4"
+                        Orientation="Vertical" 
+                        VerticalAlignment="Center">
+                <TextBlock Text="Files can be encrypted before copying to the destination to protect their contents."
+                           TextWrapping="Wrap"/>
+
+                <Button Margin="0,8"
+                        Style="{StaticResource ItemButtonStyle}"
+                        Command="{Binding Path=ShowEncryptionSettingsDialogCommand}" >
+                    <TextBlock Text="Encryption Settings" />
+                </Button>
+
+                <TextBlock FontStyle="Oblique"
+                           Text="{Binding Path=EncryptedSettingsStatus}" />
+            </StackPanel>
+        </Grid>
+    </StackPanel>
+</UserControl>
