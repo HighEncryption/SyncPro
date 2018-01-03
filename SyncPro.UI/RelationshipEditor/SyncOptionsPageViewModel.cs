@@ -3,6 +3,7 @@ namespace SyncPro.UI.RelationshipEditor
     using System.Diagnostics;
     using System.Windows.Input;
 
+    using SyncPro.Configuration;
     using SyncPro.UI.Controls;
     using SyncPro.UI.Framework.MVVM;
     using SyncPro.UI.ViewModels;
@@ -28,7 +29,12 @@ namespace SyncPro.UI.RelationshipEditor
 
         private void ShowEncryptionSettingsDialog(object obj)
         {
-            EncryptionSettingsDialogViewModel dialogViewModel = new EncryptionSettingsDialogViewModel();
+            EncryptionSettingsDialogViewModel dialogViewModel = new EncryptionSettingsDialogViewModel
+            {
+                IsCreateMode = this.EditorViewModel.IsCreateMode,
+                IsEncryptionEnabled = this.EditorViewModel.Relationship.EncryptionMode != EncryptionMode.None,
+                CreateNewCertificate = this.EditorViewModel.Relationship.EncryptionCreateCertificate
+            };
 
             EncryptionSettingsDialog dialog = new EncryptionSettingsDialog
             {
@@ -47,20 +53,44 @@ namespace SyncPro.UI.RelationshipEditor
 
         private void SetEncryptedSettingsStatus()
         {
+            if (this.EditorViewModel.IsEditMode)
+            {
+                switch (this.EditorViewModel.Relationship.EncryptionMode)
+                {
+                    case EncryptionMode.None:
+                        this.EncryptedSettingsStatus = "Encryption is disabled";
+                        this.EncryptedSettingsStatusImportant = false;
+                        break;
+                    case EncryptionMode.Encrypt:
+                        this.EncryptedSettingsStatus = "File encryption is enabled";
+                        this.EncryptedSettingsStatusImportant = true;
+                        break;
+                    case EncryptionMode.Decrypt:
+                        this.EncryptedSettingsStatus = "File decryption is enabled";
+                        this.EncryptedSettingsStatusImportant = true;
+                        break;
+                }
+
+                return;
+            }
+
             if (this.IsEncryptionEnabled)
             {
                 if (this.CreateNewEncryptionCertificate)
                 {
                     this.EncryptedSettingsStatus = "File encryption will be enabled using a new certificate.";
+                    this.EncryptedSettingsStatusImportant = true;
                 }
                 else
                 {
                     this.EncryptedSettingsStatus = "File encryption will be enabled using an existing certificate.";
+                    this.EncryptedSettingsStatusImportant = true;
                 }
             }
             else
             {
                 this.EncryptedSettingsStatus = "Files will not be encrypted before copying.";
+                this.EncryptedSettingsStatusImportant = false;
             }
         }
 
@@ -73,12 +103,23 @@ namespace SyncPro.UI.RelationshipEditor
                 this.SelectedScopeType = this.EditorViewModel.Relationship.Scope;
             }
 
+            this.IsEncryptionEnabled = 
+                this.EditorViewModel.Relationship.EncryptionMode != EncryptionMode.None;
+
             this.SetEncryptedSettingsStatus();
         }
 
         public override void SaveContext()
         {
             this.EditorViewModel.Relationship.Scope = this.SelectedScopeType;
+
+            if (this.EditorViewModel.IsCreateMode)
+            {
+                this.EditorViewModel.Relationship.EncryptionMode =
+                    this.IsEncryptionEnabled ? EncryptionMode.Encrypt : EncryptionMode.None;
+                this.EditorViewModel.Relationship.EncryptionCreateCertificate =
+                    this.CreateNewEncryptionCertificate;
+            }
         }
 
         public override string NavTitle => "Options";
@@ -141,6 +182,15 @@ namespace SyncPro.UI.RelationshipEditor
         {
             get { return this.encryptedSettingsStatus; }
             set { this.SetProperty(ref this.encryptedSettingsStatus, value); }
+        }
+
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private bool encryptedSettingsStatusImportant;
+
+        public bool EncryptedSettingsStatusImportant
+        {
+            get { return this.encryptedSettingsStatusImportant; }
+            set { this.SetProperty(ref this.encryptedSettingsStatusImportant, value); }
         }
     }
 }

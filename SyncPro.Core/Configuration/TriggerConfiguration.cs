@@ -11,9 +11,16 @@ namespace SyncPro.Configuration
         public int HourlyMinutesPastSyncTime { get; set; }
     }
 
+    public enum EncryptionMode
+    {
+        None = 0,
+        Encrypt = 1,
+        Decrypt = 2
+    }
+
     public class EncryptionConfiguration
     {
-        public bool IsEnabled { get; set; }
+        public EncryptionMode Mode { get; set; }
 
         public string CertificateThumbprint { get; set; }
     }

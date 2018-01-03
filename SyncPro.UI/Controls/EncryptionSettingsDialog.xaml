@@ -44,7 +44,8 @@
                        Text="Files can be encrypted/decrypted when synchronized. Select the way that encryption should be performed below. Encryption cannot be enabled or disabled once a relationship is created." />
         </StackPanel>
 
-        <Grid Grid.Row="1" VerticalAlignment="Stretch" Margin="24,0">
+        <Grid Grid.Row="1" VerticalAlignment="Stretch" Margin="24,0"
+              IsEnabled="{Binding Path=IsCreateMode}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="8" />

@@ -98,7 +98,18 @@
                 </Button>
 
                 <TextBlock FontStyle="Oblique"
-                           Text="{Binding Path=EncryptedSettingsStatus}" />
+                           Text="{Binding Path=EncryptedSettingsStatus}">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Path=EncryptedSettingsStatusImportant}" Value="true">
+                                    <Setter Property="Foreground" Value="{StaticResource Common.Focus.Border}" />
+                                    <Setter Property="FontWeight" Value="Bold" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
             </StackPanel>
         </Grid>
     </StackPanel>

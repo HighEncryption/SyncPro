@@ -5,10 +5,12 @@
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
+    using System.Security.Cryptography.X509Certificates;
     using System.Threading;
     using System.Threading.Tasks;
 
     using SyncPro.Adapters;
+    using SyncPro.Certificates;
     using SyncPro.Configuration;
     using SyncPro.Data;
     using SyncPro.Tracing;
@@ -100,7 +102,7 @@
             this.ThrottlingValue = configuration.ThrottlingConfiguration.Value;
             this.ThrottlingScaleFactor = configuration.ThrottlingConfiguration.ScaleFactor;
 
-            this.EncryptionIsEnabled = configuration.EncryptionConfiguration.IsEnabled;
+            this.EncryptionMode = configuration.EncryptionConfiguration.Mode;
             this.EncryptionCertificateThumbprint = configuration.EncryptionConfiguration.CertificateThumbprint;
 
             this.State = SyncRelationshipState.NotInitialized;
@@ -137,8 +139,8 @@
                 this.Configuration.TriggerConfiguration.HourlyMinutesPastSyncTime = this.TriggerHourlyMinutesPastSyncTime;
                 this.Configuration.TriggerConfiguration.ScheduleInterval = this.TriggerScheduleInterval;
 
-                this.Configuration.EncryptionConfiguration.IsEnabled = this.EncryptionIsEnabled;
-                this.Configuration.EncryptionConfiguration.CertificateThumbprint = this.EncryptionCertificateThumbprint;
+                // Set the encryption mode for adapters that may need it. Other encryption configuration is set below.
+                this.Configuration.EncryptionConfiguration.Mode = this.EncryptionMode;
 
                 // If the relaionship contains adapters that arent in the configuration, add them
                 foreach (AdapterConfiguration adapterConfig in this.Adapters.Select(a => a.Configuration))
@@ -208,9 +210,20 @@
                     adapterBase.SaveConfiguration();
                 }
 
-                // Set the creation time of the adapter
+                // Check if we are creating this relationship for the first time
                 if (this.Configuration.InitiallyCreatedUtc == DateTime.MinValue)
                 {
+                    // Create the encryption certificate if needed
+                    if (this.EncryptionMode == EncryptionMode.Encrypt && this.EncryptionCreateCertificate)
+                    {
+                        string subjectName = "SyncProEncryption " + this.Configuration.RelationshipId.ToString("D").ToLowerInvariant();
+
+                        X509Certificate2 encryptionCert = CertificateHelper.CreateSelfSignedCertificate(subjectName);
+
+                        this.EncryptionCertificateThumbprint = encryptionCert.Thumbprint;
+                        this.Configuration.EncryptionConfiguration.CertificateThumbprint = encryptionCert.Thumbprint;
+                    }
+
                     this.Configuration.InitiallyCreatedUtc = DateTime.UtcNow;
                 }
 
@@ -409,13 +422,19 @@
         #region Encryption Properties
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private bool encryptionIsEnabled;
+        private EncryptionMode encryptionMode;
 
-        public bool EncryptionIsEnabled
+        public EncryptionMode EncryptionMode
         {
-            get { return this.encryptionIsEnabled; }
-            set { this.SetProperty(ref this.encryptionIsEnabled, value); }
+            get { return this.encryptionMode; }
+            set { this.SetProperty(ref this.encryptionMode, value); }
         }
+
+        /// <summary>
+        /// Indicates whether the certificate should be created when the relationship is saved
+        /// for the first time.
+        /// </summary>
+        public bool EncryptionCreateCertificate { get; set; }
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private string encryptionCertificateThumbprint;

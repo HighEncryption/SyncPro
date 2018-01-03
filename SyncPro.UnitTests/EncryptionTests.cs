@@ -8,6 +8,7 @@ namespace SyncPro.UnitTests
 
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+    using SyncPro.Configuration;
     using SyncPro.Runtime;
 
     [TestClass]
@@ -42,7 +43,7 @@ namespace SyncPro.UnitTests
                 .SaveRelationship()
                 .CreateSimpleSourceStructure();
 
-            wrapper.Relationship.EncryptionIsEnabled = true;
+            wrapper.Relationship.EncryptionMode = EncryptionMode.Encrypt;
             wrapper.Relationship.EncryptionCertificateThumbprint = "420fe8033179cfb0ef21862d24bf6a1ec7df6c6d";
 
             wrapper.CreateSyncRun()

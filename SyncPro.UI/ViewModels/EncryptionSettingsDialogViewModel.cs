@@ -8,13 +8,6 @@
     using SyncPro.UI.Framework;
     using SyncPro.UI.Framework.MVVM;
 
-    public enum EncryptionType
-    {
-        None,
-        Encrypt,
-        Decrypt
-    }
-
     public class EncryptionSettingsDialogViewModel : ViewModelBase, IRequestClose
     {
         public ICommand OKCommand { get; }
@@ -35,6 +28,15 @@
                 o => this.LoadExistingCertificate);
 
             this.CreateNewCertificate = true;
+        }
+
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private bool isCreateMode;
+
+        public bool IsCreateMode
+        {
+            get { return this.isCreateMode; }
+            set { this.SetProperty(ref this.isCreateMode, value); }
         }
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]

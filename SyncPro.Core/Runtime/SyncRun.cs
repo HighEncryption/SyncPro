@@ -11,6 +11,7 @@
     using System.Threading.Tasks;
 
     using SyncPro.Adapters;
+    using SyncPro.Configuration;
     using SyncPro.Data;
     using SyncPro.Tracing;
 
@@ -335,7 +336,7 @@
                     { "AnalyzeResultId", this.AnalyzeResult.Id },
                 });
 
-            if (this.relationship.EncryptionIsEnabled)
+            if (this.relationship.EncryptionMode != Configuration.EncryptionMode.None)
             {
                 X509Store store = new X509Store(StoreName.My, StoreLocation.CurrentUser);
                 store.Open(OpenFlags.ReadOnly);
@@ -887,10 +888,17 @@
             {
                 long writeStreamLength = updateInfo.Entry.SourceSize;
 
-                if (this.relationship.EncryptionIsEnabled)
+                if (this.relationship.EncryptionMode == EncryptionMode.Encrypt)
                 {
                     short padding;
                     writeStreamLength = EncryptionManager.CalculateEncryptedFileSize(
+                        updateInfo.Entry.SourceSize,
+                        out padding);
+                }
+                else if (this.relationship.EncryptionMode == EncryptionMode.Decrypt)
+                {
+                    short padding;
+                    writeStreamLength = EncryptionManager.CalculateDecryptedFileSize(
                         updateInfo.Entry.SourceSize,
                         out padding);
                 }
@@ -898,7 +906,7 @@
                 fromStream = fromAdapter.GetReadStreamForEntry(updateInfo.Entry);
                 toStream = toAdapter.GetWriteStreamForEntry(updateInfo.Entry, writeStreamLength);
 
-                if (this.relationship.EncryptionIsEnabled)
+                if (this.relationship.EncryptionMode != EncryptionMode.None)
                 {
                     // Create a copy of the certificate from the original cert's handle. A unique copy is required
                     // because the encryption manager will dispose of the RSA CSP derived from the cert, and will 

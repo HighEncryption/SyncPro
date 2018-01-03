@@ -6,12 +6,7 @@ namespace SyncPro.Runtime
     using System.Security.Cryptography.X509Certificates;
 
     using SyncPro.Adapters;
-
-    public enum EncryptionMode
-    {
-        Encrypt,
-        Decrypt
-    }
+    using SyncPro.Configuration;
 
     public class EncryptionManager : IDisposable
     {
@@ -53,6 +48,8 @@ namespace SyncPro.Runtime
         {
             Pre.ThrowIfArgumentNull(encryptionCertificate, nameof(encryptionCertificate));
             Pre.ThrowIfArgumentNull(outputStream, nameof(outputStream));
+
+            Pre.ThrowIfTrue(mode == EncryptionMode.None, "Encryption mode cannot be None");
 
             this.encryptionCertificate = encryptionCertificate;
             this.Mode = mode;
