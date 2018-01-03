@@ -108,8 +108,8 @@
         {
             return await this.backblazeClient.UploadFile(
                 entry.GetRelativePath(null, "/"),
-                BitConverter.ToString(entry.Sha1Hash).Replace("-", ""),
-                entry.Size,
+                BitConverter.ToString(entry.DestinationSha1Hash).Replace("-", ""),
+                entry.DestinationSize,
                 this.TypedConfiguration.BucketId,
                 contentStream)
                 .ConfigureAwait(false);
@@ -214,13 +214,13 @@
 
             if (uploadStream.Session.StartLargeFileResponse != null)
             {
-                if (uploadStream.Session.BytesUploaded != uploadStream.Session.Entry.Size)
+                if (uploadStream.Session.BytesUploaded != uploadStream.Session.Entry.DestinationSize)
                 {
                     // TODO: Cancel the upload?
                     throw new Exception(
                         string.Format(
                             "File size if {0}, but uploaded {1}", 
-                            uploadStream.Session.Entry.Size,
+                            uploadStream.Session.Entry.DestinationSize,
                             uploadStream.Session.BytesUploaded));
                 }
 

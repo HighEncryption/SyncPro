@@ -10,6 +10,7 @@
     using System.Windows.Input;
 
     using SyncPro.Adapters;
+    using SyncPro.Configuration;
     using SyncPro.Data;
     using SyncPro.Runtime;
     using SyncPro.Tracing;
@@ -97,6 +98,20 @@
         {
             get { return this.BaseModel.ThrottlingScaleFactor; }
             set { this.BaseModel.ThrottlingScaleFactor = value; }
+        }
+
+        [BaseModelProperty(NotifyOnPropertyChange = true)]
+        public EncryptionMode EncryptionMode
+        {
+            get { return this.BaseModel.EncryptionMode; }
+            set { this.BaseModel.EncryptionMode = value; }
+        }
+
+        [BaseModelProperty(NotifyOnPropertyChange = true)]
+        public bool EncryptionCreateCertificate
+        {
+            get { return this.BaseModel.EncryptionCreateCertificate; }
+            set { this.BaseModel.EncryptionCreateCertificate = value; }
         }
 
         #endregion
@@ -556,7 +571,7 @@
                     if (syncEntry.Type == SyncEntryType.File)
                     {
                         fileCount++;
-                        byteCount += syncEntry.Size;
+                        byteCount += syncEntry.SourceSize;
                     }
                     else if (syncEntry.Type == SyncEntryType.Directory)
                     {

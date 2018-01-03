@@ -52,6 +52,9 @@
     <SolidColorBrush x:Key="RadioButton.Pressed.Border" Color="#FF3C77DD"/>
     <SolidColorBrush x:Key="RadioButton.Pressed.Glyph" Color="#FF212121"/>
 
+    <SolidColorBrush x:Key="RadioButton.Disabled.Background" Color="#FFE6E6E6" />
+    <SolidColorBrush x:Key="RadioButton.Disabled.Border" Color="#FFBCBCBC" />
+    <SolidColorBrush x:Key="RadioButton.Disabled.Glyph" Color="#a0a0a0" />
     <Thickness x:Key="Common.Static.Padding">2,4</Thickness>
     <Thickness x:Key="Common.Static.BorderThickness">2</Thickness>
 

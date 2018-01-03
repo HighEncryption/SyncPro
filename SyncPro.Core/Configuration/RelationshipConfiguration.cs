@@ -15,6 +15,7 @@
             this.Adapters = new List<AdapterConfiguration>();
             this.TriggerConfiguration = new TriggerConfiguration();
             this.ThrottlingConfiguration = new ThrottlingConfiguration();
+            this.EncryptionConfiguration = new EncryptionConfiguration();
         }
 
         // A global ID for this relationship
@@ -57,6 +58,8 @@
         public bool SyncAttributes { get; set; }
 
         public ThrottlingConfiguration ThrottlingConfiguration { get; set; }
+
+        public EncryptionConfiguration EncryptionConfiguration { get; set; }
 
         public static RelationshipConfiguration Load(string path, string configFileName = DefaultFileName)
         {

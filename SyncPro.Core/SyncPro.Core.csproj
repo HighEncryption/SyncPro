@@ -69,6 +69,10 @@
   <ItemGroup>
     <Compile Include="Adapters\AdapterFaultInformation.cs" />
     <Compile Include="Adapters\AdapterItem.cs" />
+    <Compile Include="NativeMethods.cs" />
+    <Compile Include="Runtime\EncryptedFileHeader.cs" />
+    <Compile Include="Runtime\EncryptionManager.cs" />
+    <Compile Include="Runtime\EntryProcessingSorter.cs" />
     <Compile Include="Utility\SecureStringConverter.cs" />
     <Compile Include="Utility\SecureStringToProtectedDataConverter.cs" />
     <Compile Include="Adapters\IChangeTracking.cs" />
@@ -117,6 +121,10 @@
     <None Include="SyncPro.ruleset" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\SyncPro.Certificates\SyncPro.Certificates.csproj">
+      <Project>{11febc64-ee05-4095-bd49-9fc7fabcc1df}</Project>
+      <Name>SyncPro.Certificates</Name>
+    </ProjectReference>
     <ProjectReference Include="..\SyncPro.Tracing\SyncPro.Tracing.csproj">
       <Project>{CE6A7780-BC06-4818-B15F-8DAD91032A71}</Project>
       <Name>SyncPro.Tracing</Name>

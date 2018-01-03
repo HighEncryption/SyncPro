@@ -67,32 +67,61 @@
         /// <summary>
         /// The previous size in bytes of the entry (if changed)
         /// </summary>
-        public long SizeOld { get; set; }
+        public long SourceSizeOld { get; set; }
 
         /// <summary>
         /// The size of the entry (in bytes) at the time when it was synced.
         /// </summary>
-        public long SizeNew { get; set; }
+        public long SourceSizeNew { get; set; }
+        /// <summary>
+        /// The previous size in bytes of the entry (if changed)
+        /// </summary>
+        public long DestinationSizeOld { get; set; }
+
+        /// <summary>
+        /// The size of the entry (in bytes) at the time when it was synced.
+        /// </summary>
+        public long DestinationSizeNew { get; set; }
 
         /// <summary>
         /// The previous SHA1 Hash of the file content (if changed)
         /// </summary>
-        public byte[] Sha1HashOld { get; set; }
+        public byte[] SourceSha1HashOld { get; set; }
 
         /// <summary>
         /// The SHA1 Hash of the file content at the time when it was synced.
         /// </summary>
-        public byte[] Sha1HashNew { get; set; }
+        public byte[] SourceSha1HashNew { get; set; }
+
+        /// <summary>
+        /// The previous SHA1 Hash of the file content (if changed)
+        /// </summary>
+        public byte[] DestinationSha1HashOld { get; set; }
+
+        /// <summary>
+        /// The SHA1 Hash of the file content at the time when it was synced.
+        /// </summary>
+        public byte[] DestinationSha1HashNew { get; set; }
 
         /// <summary>
         /// The previous MD5 Hash of the file content (if changed)
         /// </summary>
-        public byte[] Md5HashOld { get; set; }
+        public byte[] SourceMd5HashOld { get; set; }
 
         /// <summary>
         /// The MD5 Hash of the file content at the time when it was synced.
         /// </summary>
-        public byte[] Md5HashNew { get; set; }
+        public byte[] SourceMd5HashNew { get; set; }
+
+        /// <summary>
+        /// The previous MD5 Hash of the file content (if changed)
+        /// </summary>
+        public byte[] DestinationMd5HashOld { get; set; }
+
+        /// <summary>
+        /// The MD5 Hash of the file content at the time when it was synced.
+        /// </summary>
+        public byte[] DestinationMd5HashNew { get; set; }
 
         /// <summary>
         /// The previous CreationTime of the entry (if changed)
@@ -160,9 +189,15 @@
 
         public void SetOldMetadataFromSyncEntry()
         {
-            this.SizeOld = this.Entry.Size;
-            this.Sha1HashOld = this.Entry.Sha1Hash;
-            this.Md5HashOld = this.Entry.Md5Hash;
+            this.SourceSizeOld = this.Entry.SourceSize;
+            this.DestinationSizeOld = this.Entry.DestinationSize;
+
+            this.SourceSha1HashOld = this.Entry.SourceSha1Hash;
+            this.DestinationSha1HashOld = this.Entry.DestinationSha1Hash;
+
+            this.SourceMd5HashOld = this.Entry.SourceMd5Hash;
+            this.DestinationMd5HashOld = this.Entry.DestinationMd5Hash;
+
             this.CreationDateTimeUtcOld = this.Entry.CreationDateTimeUtc;
             this.ModifiedDateTimeUtcOld = this.Entry.ModifiedDateTimeUtc;
             this.PathOld = this.Entry.UpdateInfo.RelativePath;
@@ -170,9 +205,15 @@
 
         public void SetNewMetadataFromSyncEntry()
         {
-            this.SizeNew = this.Entry.Size;
-            this.Sha1HashNew = this.Entry.Sha1Hash;
-            this.Md5HashNew = this.Entry.Md5Hash;
+            this.SourceSizeNew = this.Entry.SourceSize;
+            this.DestinationSizeNew = this.Entry.DestinationSize;
+
+            this.SourceSha1HashNew = this.Entry.SourceSha1Hash;
+            this.DestinationSha1HashNew = this.Entry.DestinationSha1Hash;
+
+            this.SourceMd5HashNew = this.Entry.SourceMd5Hash;
+            this.DestinationMd5HashNew = this.Entry.DestinationMd5Hash;
+
             this.CreationDateTimeUtcNew = this.Entry.CreationDateTimeUtc;
             this.ModifiedDateTimeUtcNew = this.Entry.ModifiedDateTimeUtc;
             this.PathNew = this.Entry.UpdateInfo.RelativePath;
@@ -187,14 +228,20 @@
                 Timestamp = DateTime.Now,
 
                 // Keep these in order according to SyncHistoryEntryData
-                SizeOld = this.SizeOld,
-                SizeNew = this.SizeNew,
+                SourceSizeOld = this.SourceSizeOld,
+                DestinationSizeOld = this.DestinationSizeOld,
+                SourceSizeNew = this.SourceSizeNew,
+                DestinationSizeNew = this.DestinationSizeNew,
 
-                Sha1HashOld = this.Sha1HashOld,
-                Sha1HashNew = this.Sha1HashNew,
+                SourceSha1HashOld = this.SourceSha1HashOld,
+                DestinationSha1HashOld = this.DestinationSha1HashOld,
+                SourceSha1HashNew = this.SourceSha1HashNew,
+                DestinationSha1HashNew = this.DestinationSha1HashNew,
 
-                Md5HashOld = this.Md5HashOld,
-                Md5HashNew = this.Md5HashNew,
+                SourceMd5HashOld = this.SourceMd5HashOld,
+                DestinationMd5HashOld = this.DestinationMd5HashOld,
+                SourceMd5HashNew = this.SourceMd5HashNew,
+                DestinationMd5HashNew = this.DestinationMd5HashNew,
 
                 CreationDateTimeUtcOld = this.CreationDateTimeUtcOld,
                 CreationDateTimeUtcNew = this.CreationDateTimeUtcNew,

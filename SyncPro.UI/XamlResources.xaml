@@ -494,6 +494,34 @@
                                           VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
                     </Grid>
                     <ControlTemplate.Triggers>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsChecked" Value="true" />
+                                <Condition Property="IsEnabled" Value="true" />
+                            </MultiTrigger.Conditions>
+
+                            <Setter Property="BorderBrush" TargetName="radioButtonBorder" Value="{StaticResource Common.Focus.Border}"/>
+                            <Setter Property="Fill" TargetName="optionMark" Value="{StaticResource Common.Focus.Border}"/>
+                            <Setter Property="Opacity" TargetName="optionMark" Value="1"/>
+                        </MultiTrigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsChecked" Value="true" />
+                                <Condition Property="IsEnabled" Value="false" />
+                            </MultiTrigger.Conditions>
+
+                            <!--<Setter Property="BorderBrush" TargetName="radioButtonBorder" Value="{StaticResource RadioButton.Disabled.Border}"/>-->
+                            <Setter Property="Fill" TargetName="optionMark" Value="{StaticResource RadioButton.Disabled.Glyph}"/>
+                            <Setter Property="Opacity" TargetName="optionMark" Value="1"/>
+                        </MultiTrigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsChecked" Value="false" />
+                                <Condition Property="IsEnabled" Value="true" />
+                            </MultiTrigger.Conditions>
+
+                            <Setter Property="BorderBrush" TargetName="radioButtonBorder" Value="{StaticResource Common.Focus.Border}"/>
+                        </MultiTrigger>
                         <!--<Trigger Property="HasContent" Value="true">
                             <Setter Property="FocusVisualStyle" Value="{StaticResource OptionMarkFocusVisual}"/>
                             <Setter Property="Padding" Value="4,-1,0,0"/>
@@ -513,12 +541,12 @@
                             <Setter Property="BorderBrush" TargetName="radioButtonBorder" Value="{StaticResource RadioButton.Pressed.Border}"/>
                             <Setter Property="Fill" TargetName="optionMark" Value="{StaticResource RadioButton.Pressed.Glyph}"/>
                         </Trigger>
-                        <Trigger Property="IsChecked" Value="true">
-                            <!--<Setter Property="Background" TargetName="radioButtonBorder" Value="{StaticResource RadioButton.Pressed.Background}"/>-->
+                        <!--<Trigger Property="IsChecked" Value="true">
+                            --><!--<Setter Property="Background" TargetName="radioButtonBorder" Value="{StaticResource RadioButton.Pressed.Background}"/>--><!--
                             <Setter Property="BorderBrush" TargetName="radioButtonBorder" Value="{StaticResource Common.Focus.Border}"/>
                             <Setter Property="Fill" TargetName="optionMark" Value="{StaticResource Common.Focus.Border}"/>
                             <Setter Property="Opacity" TargetName="optionMark" Value="1"/>
-                        </Trigger>
+                        </Trigger>-->
                         <Trigger Property="IsChecked" Value="{x:Null}">
                             <Setter Property="Opacity" TargetName="optionMark" Value="0.56"/>
                         </Trigger>

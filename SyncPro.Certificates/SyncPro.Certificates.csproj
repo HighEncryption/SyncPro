@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{CB8D31B8-F673-446F-B2B1-2050D89E4B74}</ProjectGuid>
+    <ProjectGuid>{11FEBC64-EE05-4095-BD49-9FC7FABCC1DF}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SyncPro.Adapters.GoogleDrive</RootNamespace>
-    <AssemblyName>SyncPro.Adapters.GoogleDrive</AssemblyName>
+    <RootNamespace>SyncPro.Certificates</RootNamespace>
+    <AssemblyName>SyncPro.Certificates</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -20,7 +20,6 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <CodeAnalysisRuleSet>SyncPro.Adapters.GoogleDrive.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -29,41 +28,31 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <CodeAnalysisRuleSet>SyncPro.Adapters.GoogleDrive.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Web" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Constants.cs" />
-    <Compile Include="DataModel\Item.cs" />
-    <Compile Include="DataModel\User.cs" />
-    <Compile Include="GoogleDriveAdapter.cs" />
-    <Compile Include="GoogleDriveAdapterItem.cs" />
-    <Compile Include="GoogleDriveClient.cs" />
-    <Compile Include="GoogleFileDownloadStream.cs" />
+    <Compile Include="CertificateHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SyncPro.Core\SyncPro.Core.csproj">
-      <Project>{de859cdc-6879-4c28-ab26-354806276e04}</Project>
-      <Name>SyncPro.Core</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SyncPro.Tracing\SyncPro.Tracing.csproj">
-      <Project>{ce6a7780-bc06-4818-b15f-8dad91032a71}</Project>
-      <Name>SyncPro.Tracing</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-    <None Include="SyncPro.Adapters.GoogleDrive.ruleset" />
+    <COMReference Include="CERTENROLLLib">
+      <Guid>{728AB348-217D-11DA-B2A4-000E7BBB2B09}</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -57,12 +57,18 @@
             this.SyncEntryId = info.SyncEntryId;
             this.Flags = info.Flags;
             this.Result = info.Result;
-            this.SizeOld = info.SizeOld;
-            this.SizeNew = info.SizeNew;
-            this.Sha1HashOld = this.GetHashString(info.Sha1HashOld);
-            this.Sha1HashNew = this.GetHashString(info.Sha1HashNew);
-            this.Md5HashOld = this.GetHashString(info.Md5HashOld);
-            this.Md5HashNew = this.GetHashString(info.Md5HashNew);
+            this.SourceSizeOld = info.SourceSizeOld;
+            this.DestinationSizeOld = info.DestinationSizeOld;
+            this.SourceSizeNew = info.SourceSizeNew;
+            this.DestinationSizeNew = info.DestinationSizeNew;
+            this.SourceSha1HashOld = this.GetHashString(info.SourceSha1HashOld);
+            this.DestinationSha1HashOld = this.GetHashString(info.DestinationSha1HashOld);
+            this.SourceSha1HashNew = this.GetHashString(info.SourceSha1HashNew);
+            this.DestinationSha1HashNew = this.GetHashString(info.DestinationSha1HashNew);
+            this.SourceMd5HashOld = this.GetHashString(info.SourceMd5HashOld);
+            this.DestinationMd5HashOld = this.GetHashString(info.DestinationMd5HashOld);
+            this.SourceMd5HashNew = this.GetHashString(info.SourceMd5HashNew);
+            this.DestinationMd5HashNew = this.GetHashString(info.DestinationMd5HashNew);
             this.CreationDateTimeUtcOld = info.CreationDateTimeUtcOld;
             this.CreationDateTimeUtcNew = info.CreationDateTimeUtcNew;
             this.ModifiedDateTimeUtcOld = info.ModifiedDateTimeUtcOld;
@@ -93,32 +99,38 @@
         /// </summary>
         public DateTime Timestamp { get; set; }
 
-        public long SizeOld { get; }
+        public long SourceSizeOld { get; }
+        public long DestinationSizeOld { get; }
 
         /// <summary>
         /// The size of the entry (in bytes) at the time when it was synced.
         /// </summary>
-        public long SizeNew { get; }
+        public long SourceSizeNew { get; }
+        public long DestinationSizeNew { get; }
 
         /// <summary>
         /// The previous SHA1 Hash of the file content (if changed)
         /// </summary>
-        public string Sha1HashOld { get; }
+        public string SourceSha1HashOld { get; }
+        public string DestinationSha1HashOld { get; }
 
         /// <summary>
         /// The SHA1 Hash of the file content at the time when it was synced.
         /// </summary>
-        public string Sha1HashNew { get; }
+        public string SourceSha1HashNew { get; }
+        public string DestinationSha1HashNew { get; }
 
         /// <summary>
         /// The previous MD5 Hash of the file content (if changed)
         /// </summary>
-        public string Md5HashOld { get; }
+        public string SourceMd5HashOld { get; }
+        public string DestinationMd5HashOld { get; }
 
         /// <summary>
         /// The MD5 Hash of the file content at the time when it was synced.
         /// </summary>
-        public string Md5HashNew { get; }
+        public string SourceMd5HashNew { get; }
+        public string DestinationMd5HashNew { get; }
 
         /// <summary>
         /// The previous CreationTime of the entry (if changed)

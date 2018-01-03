@@ -23,7 +23,7 @@ namespace SyncPro.Adapters.BackblazeB2
 
         public override void Flush()
         {
-            if (this.memoryStream.Length < this.Session.Entry.Size)
+            if (this.memoryStream.Length < this.Session.Entry.DestinationSize)
             {
                 return;
             }

@@ -216,6 +216,62 @@
         }
     }
 
+    public static class StreamExtensions
+    {
+        public static short ReadInt16(this Stream stream)
+        {
+            byte[] bytes = new byte[2];
+            stream.Read(bytes, 0, 2);
+            return BitConverter.ToInt16(bytes, 0);
+        }
+
+        public static int ReadInt32(this Stream stream)
+        {
+            byte[] bytes = new byte[4];
+            stream.Read(bytes, 0, 4);
+            return BitConverter.ToInt32(bytes, 0);
+        }
+
+        public static long ReadInt64(this Stream stream)
+        {
+            byte[] bytes = new byte[8];
+            stream.Read(bytes, 0, 8);
+            return BitConverter.ToInt64(bytes, 0);
+        }
+
+        public static byte[] ReadByteArray(this Stream stream, int length)
+        {
+            byte[] bytes = new byte[length];
+            stream.Read(bytes, 0, length);
+            return bytes;
+        }
+
+        public static void WriteInt16(this Stream stream, short value)
+        {
+            stream.Write(BitConverter.GetBytes(value), 0, sizeof(short));
+        }
+
+        public static void WriteInt32(this Stream stream, int value)
+        {
+            stream.Write(BitConverter.GetBytes(value), 0, sizeof(int));
+        }
+
+        public static void WriteInt64(this Stream stream, long value)
+        {
+            stream.Write(BitConverter.GetBytes(value), 0, sizeof(long));
+        }
+    }
+
+    public static class BufferUtil
+    {
+        public static byte[] CopyBytes(byte[] buffer, int offset, int count)
+        {
+            byte[] buf = new byte[count];
+            Buffer.BlockCopy(buffer, offset, buf, 0, count);
+            return buf;
+        }
+    }
+
     public interface IDelayedDisposeContent
     {
         void DelayedDispose();

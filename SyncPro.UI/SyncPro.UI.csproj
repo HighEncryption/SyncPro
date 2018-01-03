@@ -119,6 +119,9 @@
     <Compile Include="Controls\CreateBackblazeBucketDialog.xaml.cs">
       <DependentUpon>CreateBackblazeBucketDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\EncryptionSettingsDialog.xaml.cs">
+      <DependentUpon>EncryptionSettingsDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\NavigationTreeView.cs" />
     <Compile Include="Controls\NavigationTreeViewItem.cs" />
     <Compile Include="Controls\ValidationContainer.cs" />
@@ -203,6 +206,9 @@
     <Compile Include="RelationshipEditor\Sections\SyncNameSection.xaml.cs">
       <DependentUpon>SyncNameSection.xaml</DependentUpon>
     </Compile>
+    <Compile Include="RelationshipEditor\Sections\SyncOptionsSection.xaml.cs">
+      <DependentUpon>SyncOptionsSection.xaml</DependentUpon>
+    </Compile>
     <Compile Include="RelationshipEditor\Sections\SyncPerformanceSection.xaml.cs">
       <DependentUpon>SyncPerformanceSection.xaml</DependentUpon>
     </Compile>
@@ -216,6 +222,7 @@
     <Compile Include="RelationshipEditor\SyncDestinationPageViewModel.cs" />
     <Compile Include="RelationshipEditor\SyncFilteringPageViewModel.cs" />
     <Compile Include="RelationshipEditor\SyncNamePageViewModel.cs" />
+    <Compile Include="RelationshipEditor\SyncOptionsPageViewModel.cs" />
     <Compile Include="RelationshipEditor\SyncPerformancePageViewModel.cs" />
     <Compile Include="RelationshipEditor\SyncSourcePageViewModel.cs" />
     <Compile Include="RelationshipEditor\SyncTriggeringPageViewModel.cs" />
@@ -225,6 +232,7 @@
     <Compile Include="ViewModels\Adapters\GoogleDriveAdapterViewModel.cs" />
     <Compile Include="ViewModels\Adapters\OneDriveAdapterViewModel.cs" />
     <Compile Include="ViewModels\ChangeMetrics.cs" />
+    <Compile Include="ViewModels\EncryptionSettingsDialogViewModel.cs" />
     <Compile Include="ViewModels\EntryUpdateInfoViewModel.cs" />
     <Compile Include="ViewModels\Adapters\ISyncTargetViewModel.cs" />
     <Compile Include="ViewModels\Errors\OneDriveTokenExpiredErrorViewModel.cs" />
@@ -247,6 +255,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\CreateBackblazeBucketDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\EncryptionSettingsDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -350,6 +362,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="RelationshipEditor\Sections\SyncNameSection.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="RelationshipEditor\Sections\SyncOptionsSection.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -556,6 +572,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\ProviderLogos\backblaze_b2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Graphics\list_20.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
