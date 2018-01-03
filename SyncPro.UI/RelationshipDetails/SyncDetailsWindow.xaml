@@ -13,7 +13,7 @@
                          MinHeight="550" MinWidth="650"
                          Style="{DynamicResource ChromelessWindowStyle}"
                          Title="Sync History"
-                         Icon="/Resources/Graphics/SyncPro 1.0.ico" 
+                         Icon="/Resources/Graphics/SyncProIcon.ico" 
                          d:DataContext="{d:DesignInstance relationshipDetails:SyncDetailsWindowViewModel}">
     <mvvm:RequestCloseWindow.Resources>
         <ResourceDictionary>

@@ -96,7 +96,7 @@
                 // ReSharper disable once UseObjectOrCollectionInitializer
                 app.notifyIcon = new TaskbarIcon();
                 app.notifyIcon.IconSource =
-                    new BitmapImage(new Uri("pack://application:,,,/SyncPro.UI;component/Resources/Graphics/SyncPro 1.0.ico"));
+                    new BitmapImage(new Uri("pack://application:,,,/SyncPro.UI;component/Resources/Graphics/SyncProIcon.ico"));
                 app.notifyIcon.ContextMenu = (ContextMenu)app.FindResource("TaskbarIconMenu");
                 app.notifyIcon.DoubleClickCommand = app.ShowConfigureWindowCommand;
             }

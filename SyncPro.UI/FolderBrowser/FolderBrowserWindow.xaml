@@ -9,7 +9,7 @@
                          Height="500" Width="440"
                          Style="{DynamicResource ChromelessWindowStyle}"
                          Title="Browse For Folder"
-                         Icon="/Resources/Graphics/SyncPro 1.0.ico" 
+                         Icon="/Resources/Graphics/SyncProIcon.ico" 
                          d:DataContext="{d:DesignInstance folderBrowser:FolderBrowserViewModel}">
     <mvvm:RequestCloseWindow.Resources>
         <ResourceDictionary>

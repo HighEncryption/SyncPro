@@ -7,7 +7,7 @@
                          xmlns:viewModels="clr-namespace:SyncPro.UI.ViewModels"
                          mc:Ignorable="d" ResizeMode="NoResize"
                          Title="Encryption Settings" 
-                         Icon="/Resources/Graphics/SyncPro 1.0.ico"
+                         Icon="/Resources/Graphics/SyncProIcon.ico"
                          Height="460" Width="600" 
                          d:DataContext="{d:DesignInstance viewModels:EncryptionSettingsDialogViewModel}">
     <mvvm:RequestCloseWindow.Resources>

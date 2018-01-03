@@ -11,7 +11,7 @@
                          Height="600" Width="712"
                          ResizeMode="NoResize"
                          Title="Create Sync Relationship"
-                         Icon="/Resources/Graphics/SyncPro 1.0.ico"
+                         Icon="/Resources/Graphics/SyncProIcon.ico"
                          d:DataContext="{d:DesignInstance viewModels:RelationshipEditorViewModel}">
     <mvvm:RequestCloseWindow.Resources>
         <ResourceDictionary>
