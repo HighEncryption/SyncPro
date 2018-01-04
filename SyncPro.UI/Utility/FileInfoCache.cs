@@ -55,7 +55,7 @@
 
         public static FileInfo GetFolderInfo()
         {
-            return GetFolderIcon(IconSize.Small, FolderType.Closed);
+            return GetFolderIcon(FolderType.Closed);
         }
 
         private enum IconSize
@@ -135,7 +135,17 @@
             return fileInfo;
         }
 
-        private static FileInfo GetFolderIcon(IconSize size, FolderType folderType)
+        private static FileInfo GetFolderIcon(FolderType folderType)
+        {
+            var fileInfo = GetFolderIconInternal(IconSize.Small, folderType);
+            var fileInfo2 = GetFolderIconInternal(IconSize.Large, folderType);
+
+            fileInfo.LargeIcon = fileInfo2.LargeIcon;
+
+            return fileInfo;
+        }
+
+        private static FileInfo GetFolderIconInternal(IconSize size, FolderType folderType)
         {
             // Need to add size check, although errors generated at present!
             NativeMethods.Shell32.SHGFI flags = NativeMethods.Shell32.SHGFI.Icon |
@@ -155,30 +165,49 @@
                 flags |= NativeMethods.Shell32.SHGFI.LargeIcon;
             }
 
-            // Get the folder icon
-            NativeMethods.Shell32.SHFILEINFO shfi = new NativeMethods.Shell32.SHFILEINFO();
-            int ret = NativeMethods.Shell32.SHGetFileInfo(
-                "empty",
-                NativeMethods.Shell32.FILE_ATTRIBUTE_DIRECTORY,
-                ref shfi,
-                (uint) System.Runtime.InteropServices.Marshal.SizeOf(shfi),
-                flags);
+            NativeMethods.Shell32.SHFILEINFO shfi;
+            shfi.hIcon = IntPtr.Zero;
 
-            //return new FileInfo();
+            System.Drawing.Icon icon;
 
-            System.Drawing.Icon.FromHandle(shfi.hIcon); // Load the icon from an HICON handle
+            try
+            {
+                // Get the folder icon
+                shfi = new NativeMethods.Shell32.SHFILEINFO();
+                int ret = NativeMethods.Shell32.SHGetFileInfo(
+                    "empty",
+                    NativeMethods.Shell32.FILE_ATTRIBUTE_DIRECTORY,
+                    ref shfi,
+                    (uint)System.Runtime.InteropServices.Marshal.SizeOf(shfi),
+                    flags);
 
-            // Now clone the icon, so that it can be successfully stored in an ImageList
-            System.Drawing.Icon icon = (System.Drawing.Icon) System.Drawing.Icon.FromHandle(shfi.hIcon).Clone();
+                System.Drawing.Icon.FromHandle(shfi.hIcon); // Load the icon from an HICON handle
 
-            NativeMethods.User32.DestroyIcon(shfi.hIcon); // Cleanup
+                // Now clone the icon, so that it can be successfully stored in an ImageList
+                icon = (System.Drawing.Icon)System.Drawing.Icon.FromHandle(shfi.hIcon).Clone();
+            }
+            finally
+            {
+                if (shfi.hIcon != IntPtr.Zero)
+                {
+                    NativeMethods.User32.DestroyIcon(shfi.hIcon); // Cleanup
+                }
+            }
 
             FileInfo fileInfo = new FileInfo
             {
-                SmallIcon = icon.ToImageSource(),
                 DisplayName = shfi.szDisplayName,
                 TypeName = shfi.szTypeName
             };
+
+            if (size == IconSize.Small)
+            {
+                fileInfo.SmallIcon = icon.ToImageSource();
+            }
+            else
+            {
+                fileInfo.LargeIcon = icon.ToImageSource();
+            }
 
             return fileInfo;
         }

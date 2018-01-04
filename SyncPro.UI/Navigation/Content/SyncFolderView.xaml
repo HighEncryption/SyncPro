@@ -7,6 +7,7 @@
              xmlns:converters="clr-namespace:SyncPro.UI.Converters"
              xmlns:viewModels1="clr-namespace:SyncPro.UI.Navigation.ViewModels"
              xmlns:extensions="clr-namespace:SyncPro.UI.Extensions"
+             xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300" 
              d:DataContext="{d:DesignInstance viewModels1:SyncFoldersNodeViewModel}">
@@ -135,7 +136,7 @@
         
         <!-- ListView for the flatlisting of files and folders -->
         <ListView ItemsSource="{Binding Path=SyncEntries}" BorderThickness="0" HorizontalAlignment="Stretch"
-                  SelectedItem="{Binding Path=SelectedChildEntry}">
+                  SelectionChanged="SyncEntriesListViewSelectionChanged">
             <ListView.View>
                 <GridView ColumnHeaderContainerStyle="{StaticResource CustomHeaderStyle}" AllowsColumnReorder="False">
                     <GridViewColumn Width="12" HeaderContainerStyle="{StaticResource CustomHeaderStyle2}" CellTemplate="{StaticResource EmptyCellTemplate}" />
@@ -190,9 +191,19 @@
                 </Style>
             </Border.Style>
             <StackPanel>
-                <TextBlock Text="{Binding Path=SelectedChildEntry.Name}" FontSize="16" Margin="0,4,0,0" />
-                <TextBlock Text="{Binding Path=SelectedChildEntry.TypeName}" Margin="0" />
-                
+                <StackPanel Orientation="Horizontal">
+                    <Image HorizontalAlignment="Left"
+                           Source="{Binding Path=SelectedChildEntry.LargeIcon}"
+                           Width="32"
+                           Margin="0,0,4,0"/>
+
+                    <StackPanel Orientation="Vertical" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Path=SelectedChildEntry.Name}" FontSize="16" Margin="0,4,0,0" />
+                        <TextBlock Text="{Binding Path=SelectedChildEntry.TypeName}" Margin="0" />
+
+                    </StackPanel>
+                </StackPanel>
+
                 <Grid Margin="0,16,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
@@ -223,9 +234,11 @@
                     <TextBlock Grid.Column="2" Grid.Row="2" Margin="4,2,0,0" 
                                Text="{Binding Path=SelectedChildEntry.SyncEntry.EntryLastUpdatedDateTimeUtc}"/>
 
-                    <TextBlock Grid.Column="0" Grid.Row="3" Text="Size" Foreground="#7d7d7d" Margin="0,2,0,0" />
+                    <TextBlock Grid.Column="0" Grid.Row="3" Text="Size" Foreground="#7d7d7d" Margin="0,2,0,0"
+                               Visibility="{Binding Path=SelectedChildEntry.IsDirectory, Converter={StaticResource BooleanToVisibilityReversed}}" />
                     <TextBlock Grid.Column="2" Grid.Row="3" Margin="4,2,0,0" 
-                               Text="{Binding Path=SelectedChildEntry.SyncEntry.Size, Converter={StaticResource FileSize}}"/>
+                               Visibility="{Binding Path=SelectedChildEntry.IsDirectory, Converter={StaticResource BooleanToVisibilityReversed}}"
+                               Text="{Binding Path=SelectedChildEntry.SyncEntry.SourceSize, Converter={StaticResource FileSize}}"/>
 
                     <TextBlock Grid.Column="0" Grid.Row="4" Text="Sync Runs" Foreground="#7d7d7d" Margin="0,16,0,0" />
                     <ItemsControl Grid.Column="2" Grid.Row="4" Margin="4,16,0,0"
@@ -254,15 +267,19 @@
                         </ItemsControl.ItemsPanel>
                     </ItemsControl>
 
-                    <TextBlock Grid.Column="0" Grid.Row="5" Text="MD5 Hash" Foreground="#7d7d7d" Margin="0,16,0,0" />
+                    <TextBlock Grid.Column="0" Grid.Row="5" Text="MD5 Hash" Foreground="#7d7d7d" Margin="0,16,0,0"
+                               Visibility="{Binding Path=SelectedChildEntry.IsDirectory, Converter={StaticResource BooleanToVisibilityReversed}}" />
                     <TextBlock Grid.Column="2" Grid.Row="5" Margin="0,16,0,0" TextTrimming="CharacterEllipsis" Width="150"
-                               Text="{Binding Path=SelectedChildEntry.SyncEntry.Md5Hash, Converter={StaticResource ByteArrayToString}}"
-                               ToolTip="{Binding Path=SelectedChildEntry.SyncEntry.Md5Hash, Converter={StaticResource ByteArrayToString}}"/>
+                               Visibility="{Binding Path=SelectedChildEntry.IsDirectory, Converter={StaticResource BooleanToVisibilityReversed}}"
+                               Text="{Binding Path=SelectedChildEntry.SyncEntry.SourceMd5Hash, Converter={StaticResource ByteArrayToString}}"
+                               ToolTip="{Binding Path=SelectedChildEntry.SyncEntry.SourceMd5Hash, Converter={StaticResource ByteArrayToString}}"/>
 
-                    <TextBlock Grid.Column="0" Grid.Row="6" Text="SHA1 Hash" Foreground="#7d7d7d" Margin="0,2,0,0" />
+                    <TextBlock Grid.Column="0" Grid.Row="6" Text="SHA1 Hash" Foreground="#7d7d7d" Margin="0,2,0,0"
+                               Visibility="{Binding Path=SelectedChildEntry.IsDirectory, Converter={StaticResource BooleanToVisibilityReversed}}" />
                     <TextBlock Grid.Column="2" Grid.Row="6" Margin="0,2,0,0"  TextTrimming="CharacterEllipsis" Width="150"
-                               Text="{Binding Path=SelectedChildEntry.SyncEntry.Sha1Hash, Converter={StaticResource ByteArrayToString}}"
-                               ToolTip="{Binding Path=SelectedChildEntry.SyncEntry.Sha1Hash, Converter={StaticResource ByteArrayToString}}"/>
+                               Visibility="{Binding Path=SelectedChildEntry.IsDirectory, Converter={StaticResource BooleanToVisibilityReversed}}"
+                               Text="{Binding Path=SelectedChildEntry.SyncEntry.SourceSha1Hash, Converter={StaticResource ByteArrayToString}}"
+                               ToolTip="{Binding Path=SelectedChildEntry.SyncEntry.SourceSha1Hash, Converter={StaticResource ByteArrayToString}}"/>
                 </Grid>
             </StackPanel>
         </Border>

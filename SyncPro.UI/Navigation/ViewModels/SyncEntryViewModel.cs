@@ -58,6 +58,7 @@ namespace SyncPro.UI.Navigation.ViewModels
             {
                 var fileInfo = FileInfoCache.GetFolderInfo();
                 this.IconImageSource = fileInfo.SmallIcon;
+                this.LargeIcon = fileInfo.LargeIcon;
                 this.TypeName = "Folder";
                 return;
             }
@@ -122,11 +123,17 @@ namespace SyncPro.UI.Navigation.ViewModels
                 IQueryable<SyncHistoryData> matches = db.History.Where(
                     EntityFrameworkExtensions.BuildOrExpression<SyncHistoryData, int>(p => p.Id, idList));
 
-                foreach (SyncHistoryData historyData in matches)
+                App.DispatcherInvoke(() =>
                 {
-                    App.DispatcherInvoke(() => this.SyncRunReferences.Add(new SyncRunReferenceViewModel(
-                        historyData.Start.ToString("g"), historyData.Id)));
-                }
+                    foreach (SyncHistoryData historyData in matches)
+                    {
+                        if (this.SyncRunReferences.All(r => r.Id != historyData.Id))
+                        {
+                            this.SyncRunReferences.Add(
+                                new SyncRunReferenceViewModel(historyData.Start.ToString("g"), historyData.Id));
+                        }
+                    }
+                });
             }
         }
 
@@ -146,6 +153,23 @@ namespace SyncPro.UI.Navigation.ViewModels
         {
             get { return this.iconImageSource; }
             set { this.SetProperty(ref this.iconImageSource, value); }
+        }
+
+        private ImageSource largeIcon;
+
+        public ImageSource LargeIcon
+        {
+            get
+            {
+                if (this.largeIcon == null)
+                {
+                    FileInfo fileInfo = FileInfoCache.GetFileInfo(this.Name.ToLowerInvariant());
+                    this.largeIcon = fileInfo.LargeIcon;
+                }
+
+                return this.largeIcon;
+            }
+            set { this.SetProperty(ref this.largeIcon, value); }
         }
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -236,6 +260,5 @@ namespace SyncPro.UI.Navigation.ViewModels
 
             return Expression.Lambda<Func<TElement, bool>>(body, p);
         }
-
     }
 }

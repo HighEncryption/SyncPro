@@ -1,14 +1,16 @@
 namespace SyncPro.UI.Navigation.ViewModels
 {
+    using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Diagnostics;
     using System.Linq;
     using System.Threading.Tasks;
 
     using SyncPro.Data;
+    using SyncPro.UI.Navigation.MenuCommands;
     using SyncPro.UI.ViewModels;
 
-    public class FilesAndFoldersNodeViewModel : NavigationNodeViewModel
+    public class FilesAndFoldersNodeViewModel : NavigationNodeViewModel, IFolderNodeViewModel
     {
         private readonly SyncRelationshipViewModel syncRelationship;
 
@@ -34,12 +36,36 @@ namespace SyncPro.UI.Navigation.ViewModels
             set { this.SetProperty(ref this.selectedChildEntry, value); }
         }
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private IList<SyncEntryViewModel> selectedChildEntries;
+
+        public IList<SyncEntryViewModel> SelectedChildEntries
+        {
+            get { return this.selectedChildEntries; }
+            set
+            {
+                if (this.SetProperty(ref this.selectedChildEntries, value))
+                {
+                    if (value != null && value.Count == 1)
+                    {
+                        this.SelectedChildEntry = value.First();
+                    }
+                    else
+                    {
+                        this.SelectedChildEntry = null;
+                    }
+                }
+            }
+        }
+
         public FilesAndFoldersNodeViewModel(NavigationNodeViewModel parent, SyncRelationshipViewModel syncRelationship) 
             : base(parent, syncRelationship, LazyLoadPlaceholderNodeViewModel.Instance)
         {
             this.syncRelationship = syncRelationship;
             this.Name = "Files & Folders";
             this.IconImageSource = "/SyncPro.UI;component/Resources/Graphics/folder_open_16.png";
+
+            this.MenuCommands.Add(new RestoreItemMenuCommand(this));
         }
 
         protected override void LoadChildren()

@@ -347,8 +347,9 @@
                 <StackPanel Orientation="Horizontal">
                     <Image HorizontalAlignment="Left"
                            Source="{Binding Path=SelectedSyncEntry.LargeIcon}"
-                           Width="32" />
-                    
+                           Width="32"
+                           Margin="0,0,4,0"/>
+
                     <StackPanel Orientation="Vertical" VerticalAlignment="Center">
                         <TextBlock Text="{Binding Path=SelectedSyncEntry.Name}" FontSize="16" Margin="0,4,0,0" />
                         <TextBlock Text="{Binding Path=SelectedSyncEntry.TypeName}" Margin="0" />

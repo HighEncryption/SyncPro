@@ -1,8 +1,5 @@
 ﻿namespace SyncPro.UI.Navigation.ViewModels
 {
-    using System.Linq;
-
-    using SyncPro.Runtime;
     using SyncPro.UI.Navigation.MenuCommands;
 
     public class AnalyzeResultsNodeViewModel : NavigationNodeViewModel

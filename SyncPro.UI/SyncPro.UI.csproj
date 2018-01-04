@@ -67,6 +67,7 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.Web" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Windows.Interactivity, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
@@ -176,8 +177,10 @@
     <Compile Include="Navigation\MenuCommands\ChangeConfigurationMenuCommand.cs" />
     <Compile Include="Navigation\MenuCommands\ClosePanelMenuCommand.cs" />
     <Compile Include="Navigation\MenuCommands\NavigationItemMenuCommand.cs" />
+    <Compile Include="Navigation\MenuCommands\NewRelationshipMenuCommand.cs" />
     <Compile Include="Navigation\MenuCommands\ReanalyzeMenuCommand.cs" />
     <Compile Include="Navigation\MenuCommands\RemoveRelationshipMenuCommand.cs" />
+    <Compile Include="Navigation\MenuCommands\RestoreItemMenuCommand.cs" />
     <Compile Include="Navigation\MenuCommands\SynchronzieNowMenuCommand.cs" />
     <Compile Include="Navigation\MenuCommands\ViewSyncRunMenuCommand.cs" />
     <Compile Include="Navigation\NavigationNodeViewModel.cs" />
@@ -187,6 +190,7 @@
     <Compile Include="Navigation\ViewModels\CreateBackblazeBucketDialogViewModel.cs" />
     <Compile Include="Navigation\ViewModels\DashboardNodeViewModel.cs" />
     <Compile Include="Navigation\ViewModels\FilesAndFoldersNodeViewModel.cs" />
+    <Compile Include="Navigation\ViewModels\IFolderNodeViewModel.cs" />
     <Compile Include="Navigation\ViewModels\LazyLoadPlaceholderNodeViewModel.cs" />
     <Compile Include="Navigation\ViewModels\SearchResultsNodeViewModel.cs" />
     <Compile Include="Navigation\ViewModels\SyncEntryViewModel.cs" />
@@ -583,6 +587,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\Graphics\SyncProIcon_16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Graphics\install_16.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
