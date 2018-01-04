@@ -5,21 +5,21 @@
 
     using SyncPro.Runtime;
 
-    [Cmdlet(VerbsCommon.Get, "SyncProRun")]
-    public class GetSyncRun : PSCmdlet
+    [Cmdlet(VerbsCommon.Get, "SyncProJob")]
+    public class GetSyncJob : PSCmdlet
     {
         [Parameter]
         [Alias("Rid")]
         public Guid RelationshipId { get; set; }
 
         [Parameter]
-        public int SyncRunId { get; set; }
+        public int SyncJobId { get; set; }
 
         protected override void ProcessRecord()
         {
             SyncRelationship relationship = CmdletCommon.GetSyncRelationship(this.RelationshipId);
 
-            if (this.SyncRunId == 0 && relationship.ActiveSyncRun == null)
+            if (this.SyncJobId == 0 && relationship.ActiveSyncJob == null)
             {
                 
             }

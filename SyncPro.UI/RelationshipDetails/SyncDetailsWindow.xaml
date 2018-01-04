@@ -147,11 +147,11 @@
                 </DockPanel>
 
                 <StackPanel Margin="0,8,0,0" Visibility="{Binding Path=IsSyncActive, Converter={StaticResource BooleanToVisibilityCollapsed}}">
-                    <ProgressBar Height="8" Value="{Binding Path=ActiveSyncRun.ProgressValue}" Minimum="0" Maximum="1">
+                    <ProgressBar Height="8" Value="{Binding Path=ActiveSyncJob.ProgressValue}" Minimum="0" Maximum="1">
                         <ProgressBar.Style>
                             <Style TargetType="ProgressBar">
                                 <Style.Triggers>
-                                    <DataTrigger Binding="{Binding Path=ActiveSyncRun.Stage}" Value="{x:Static runtime:SyncRunStage.Analyze}">
+                                    <DataTrigger Binding="{Binding Path=ActiveSyncJob.Stage}" Value="{x:Static runtime:SyncJobStage.Analyze}">
                                         <Setter Property="IsIndeterminate" Value="True" />
                                     </DataTrigger>
                                 </Style.Triggers>
@@ -160,22 +160,22 @@
                     </ProgressBar>
                     <DockPanel LastChildFill="True" MinHeight="17">
                         <TextBlock DockPanel.Dock="Left" Width="200" 
-                                               Visibility="{Binding Path=ActiveSyncRun.ShowDiscreteProgress, Converter={StaticResource BooleanToVisibilityCollapsed}}">
-                                        <Run Text="{Binding Path=ActiveSyncRun.FilesCompleted}" FontSize="13" FontFamily="Segoe UI" FontWeight="Normal" />
+                                               Visibility="{Binding Path=ActiveSyncJob.ShowDiscreteProgress, Converter={StaticResource BooleanToVisibilityCollapsed}}">
+                                        <Run Text="{Binding Path=ActiveSyncJob.FilesCompleted}" FontSize="13" FontFamily="Segoe UI" FontWeight="Normal" />
                                         <Run Text="files /" />
-                                        <Run Text="{Binding Path=ActiveSyncRun.BytesCompleted, Converter={StaticResource LocalFileSizeConverter}}" FontSize="13"
+                                        <Run Text="{Binding Path=ActiveSyncJob.BytesCompleted, Converter={StaticResource LocalFileSizeConverter}}" FontSize="13"
                                              FontFamily="Segoe UI" FontWeight="Normal" />
                                         <Run Text="complete" />
                         </TextBlock>
                         <TextBlock DockPanel.Dock="Right" Width="200" TextAlignment="Right"
-                                               Visibility="{Binding Path=ActiveSyncRun.ShowDiscreteProgress, Converter={StaticResource BooleanToVisibilityCollapsed}}">
-                                        <Run Text="{Binding Path=ActiveSyncRun.FilesRemaining}" FontSize="13" FontFamily="Segoe UI" FontWeight="Normal" />
+                                               Visibility="{Binding Path=ActiveSyncJob.ShowDiscreteProgress, Converter={StaticResource BooleanToVisibilityCollapsed}}">
+                                        <Run Text="{Binding Path=ActiveSyncJob.FilesRemaining}" FontSize="13" FontFamily="Segoe UI" FontWeight="Normal" />
                                         <Run Text="files /" />
-                                        <Run Text="{Binding Path=ActiveSyncRun.BytesRemaining, Converter={StaticResource LocalFileSizeConverter}}" FontSize="13"
+                                        <Run Text="{Binding Path=ActiveSyncJob.BytesRemaining, Converter={StaticResource LocalFileSizeConverter}}" FontSize="13"
                                              FontFamily="Segoe UI" FontWeight="Normal" />
                                         <Run Text="remaining" />
                         </TextBlock>
-                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Bottom" Text="{Binding Path=ActiveSyncRun.SyncProgressCurrentText}" />
+                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Bottom" Text="{Binding Path=ActiveSyncJob.SyncProgressCurrentText}" />
                     </DockPanel>
                 </StackPanel>
             </StackPanel>
@@ -189,10 +189,10 @@
 
             <TextBlock Text="History" FontSize="16" FontWeight="SemiBold" />
 
-            <ListView Grid.Row="1" ItemsSource="{Binding Path=SyncRunHistory}" SelectionMode="Single">
+            <ListView Grid.Row="1" ItemsSource="{Binding Path=SyncJobHistory}" SelectionMode="Single">
                 <ListView.Resources>
                     <Style TargetType="{x:Type ListViewItem}">
-                        <Setter Property="extensions:MouseDoubleClick.Command" Value="{Binding Path=ViewSyncRunCommand}" />
+                        <Setter Property="extensions:MouseDoubleClick.Command" Value="{Binding Path=ViewSyncJobCommand}" />
                     </Style>
                 </ListView.Resources>
                 <ListView.View>
@@ -207,9 +207,9 @@
                 </ListView.View>
             </ListView>
 
-            <Canvas Grid.Row="1" Visibility="{Binding Path=SyncRunHistory, Converter={StaticResource CollectionToVisibiltyCollapsedReversed}}"
+            <Canvas Grid.Row="1" Visibility="{Binding Path=SyncJobHistory, Converter={StaticResource CollectionToVisibiltyCollapsedReversed}}"
                     VerticalAlignment="Center" HorizontalAlignment="Center">
-                <TextBlock Text="No sync runs" />
+                <TextBlock Text="No sync jobs" />
             </Canvas>
         </Grid>
     </Grid>

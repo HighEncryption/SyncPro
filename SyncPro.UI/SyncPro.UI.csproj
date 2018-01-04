@@ -138,7 +138,7 @@
     <Compile Include="Converters\StringToBooleanConverter.cs" />
     <Compile Include="Converters\SyncEntryChangedFlagsToForegroundConverter.cs" />
     <Compile Include="Converters\SyncEntryChangedFlagsToVisibilityConverter.cs" />
-    <Compile Include="Converters\SyncRunStageToVisiblityConverter.cs" />
+    <Compile Include="Converters\SyncJobStageToVisiblityConverter.cs" />
     <Compile Include="DesignTimeData\MainWindowViewModel.cs" />
     <Compile Include="DesignTimeData\SyncRelationshipViewModel.cs" />
     <Compile Include="Extensions\DropDownButtonBehavior.cs" />
@@ -164,11 +164,11 @@
     <Compile Include="Navigation\Content\SyncRelationshipView.xaml.cs">
       <DependentUpon>SyncRelationshipView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Navigation\Content\SyncRunHistoryView.xaml.cs">
-      <DependentUpon>SyncRunHistoryView.xaml</DependentUpon>
+    <Compile Include="Navigation\Content\SyncJobHistoryView.xaml.cs">
+      <DependentUpon>SyncJobHistoryView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Navigation\Content\SyncRunView.xaml.cs">
-      <DependentUpon>SyncRunView.xaml</DependentUpon>
+    <Compile Include="Navigation\Content\SyncJobView.xaml.cs">
+      <DependentUpon>SyncJobView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Navigation\DashboardViewModel.cs" />
     <Compile Include="Navigation\MenuCommands\AnalyzeRelationshipMenuCommand.cs" />
@@ -182,9 +182,9 @@
     <Compile Include="Navigation\MenuCommands\RemoveRelationshipMenuCommand.cs" />
     <Compile Include="Navigation\MenuCommands\RestoreItemMenuCommand.cs" />
     <Compile Include="Navigation\MenuCommands\SynchronzieNowMenuCommand.cs" />
-    <Compile Include="Navigation\MenuCommands\ViewSyncRunMenuCommand.cs" />
+    <Compile Include="Navigation\MenuCommands\ViewSyncJobMenuCommand.cs" />
     <Compile Include="Navigation\NavigationNodeViewModel.cs" />
-    <Compile Include="Navigation\SyncRunPanelViewModel.cs" />
+    <Compile Include="Navigation\SyncJobPanelViewModel.cs" />
     <Compile Include="Navigation\ViewModels\AnalyzeResultsNodeViewModel.cs" />
     <Compile Include="Navigation\ViewModels\BackblazeCredentialDialogViewModel.cs" />
     <Compile Include="Navigation\ViewModels\CreateBackblazeBucketDialogViewModel.cs" />
@@ -197,7 +197,7 @@
     <Compile Include="Navigation\ViewModels\SyncFoldersNodeViewModel.cs" />
     <Compile Include="Navigation\ViewModels\SyncHistoryNodeViewModel.cs" />
     <Compile Include="Navigation\ViewModels\SyncRelationshipNodeViewModel.cs" />
-    <Compile Include="Navigation\ViewModels\SyncRunNodeViewModel.cs" />
+    <Compile Include="Navigation\ViewModels\SyncJobNodeViewModel.cs" />
     <Compile Include="Properties\Annotations.cs" />
     <Compile Include="RelationshipDetails\SyncDetailsWindow.xaml.cs">
       <DependentUpon>SyncDetailsWindow.xaml</DependentUpon>
@@ -248,7 +248,7 @@
     <Compile Include="ThreadingHelper.cs" />
     <Compile Include="ViewModels\RelationshipEditorViewModel.cs" />
     <Compile Include="ViewModels\SyncRelationshipViewModel.cs" />
-    <Compile Include="ViewModels\SyncRunViewModel.cs" />
+    <Compile Include="ViewModels\SyncJobViewModel.cs" />
     <Compile Include="ViewModels\Adapters\SyncAdapterViewModel.cs" />
     <Compile Include="ViewModels\Adapters\WindowsFileSystemAdapterViewModel.cs" />
     <Compile Include="ViewModels\WizardPageViewModelBase.cs" />
@@ -344,11 +344,11 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Navigation\Content\SyncRunHistoryView.xaml">
+    <Page Include="Navigation\Content\SyncJobHistoryView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Navigation\Content\SyncRunView.xaml">
+    <Page Include="Navigation\Content\SyncJobView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

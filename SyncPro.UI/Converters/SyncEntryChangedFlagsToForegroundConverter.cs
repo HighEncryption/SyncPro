@@ -9,7 +9,7 @@ namespace SyncPro.UI.Converters
     using SyncPro.Adapters;
     using SyncPro.Runtime;
 
-    [ValueConversion(typeof(SyncRunStage), typeof(Visibility))]
+    [ValueConversion(typeof(SyncJobStage), typeof(Visibility))]
     public class SyncEntryChangedFlagsToForegroundConverter : IValueConverter
     {
         public FlagToVisibilityConverterMode Mode { get; set; }

@@ -16,34 +16,34 @@
             this.Name = "Synchronization History";
             this.IconImageSource = "/SyncPro.UI;component/Resources/Graphics/history_16.png";
 
-            foreach (SyncRunViewModel syncRunViewModel in relationship.SyncRunHistory)
+            foreach (SyncJobViewModel syncJobViewModel in relationship.SyncJobHistory)
             {
-                this.AddSyncRunHistory(syncRunViewModel);
+                this.AddSyncJobHistory(syncJobViewModel);
             }
 
-            relationship.SyncRunHistory.CollectionChanged += (sender, args) =>
+            relationship.SyncJobHistory.CollectionChanged += (sender, args) =>
             {
                 if (args.Action == NotifyCollectionChangedAction.Add)
                 {
-                    foreach (SyncRunViewModel syncRunViewModel in args.NewItems.OfType<SyncRunViewModel>())
+                    foreach (SyncJobViewModel syncJobViewModel in args.NewItems.OfType<SyncJobViewModel>())
                     {
                         App.DispatcherInvoke(() =>
                         {
-                            this.AddSyncRunHistory(syncRunViewModel);
+                            this.AddSyncJobHistory(syncJobViewModel);
                         });
                     }
                 }
             };
         }
 
-        private void AddSyncRunHistory(SyncRunViewModel syncRunViewModel)
+        private void AddSyncJobHistory(SyncJobViewModel syncJobViewModel)
         {
-            SyncRunPanelViewModel syncRunPanel = new SyncRunPanelViewModel(this.relationship)
+            SyncJobPanelViewModel syncJobPanel = new SyncJobPanelViewModel(this.relationship)
             {
-                SyncRun = syncRunViewModel
+                SyncJob = syncJobViewModel
             };
 
-            this.Children.Add(new SyncRunNodeViewModel(this, syncRunPanel));
+            this.Children.Add(new SyncJobNodeViewModel(this, syncJobPanel));
             this.RaisePropertyChanged(nameof(this.Children));
         }
     }

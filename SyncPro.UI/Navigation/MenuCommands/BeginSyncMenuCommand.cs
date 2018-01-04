@@ -41,10 +41,10 @@ namespace SyncPro.UI.Navigation.MenuCommands
 
         protected override bool CanInvokeCommand(object obj)
         {
-            var activeSyncRun = this.relationship.ActiveSyncRun;
-            if (this.isCancelMode && activeSyncRun != null)
+            var activeSyncJob = this.relationship.ActiveSyncJob;
+            if (this.isCancelMode && activeSyncJob != null)
             {
-                return activeSyncRun.CancelSyncRunCommand.CanExecute(obj);
+                return activeSyncJob.CancelSyncJobCommand.CanExecute(obj);
             }
 
             return true;
@@ -52,11 +52,11 @@ namespace SyncPro.UI.Navigation.MenuCommands
 
         protected override void InvokeCommand(object obj)
         {
-            var activeSyncRun = this.relationship.ActiveSyncRun;
+            var activeSyncJob = this.relationship.ActiveSyncJob;
 
-            if (this.isCancelMode && activeSyncRun != null)
+            if (this.isCancelMode && activeSyncJob != null)
             {
-                activeSyncRun.CancelSyncRunCommand.Execute(obj);
+                activeSyncJob.CancelSyncJobCommand.Execute(obj);
             }
             else
             {

@@ -131,9 +131,9 @@ namespace SyncPro.UnitTests
             return this;
         }
 
-        public SyncRun CurrentSyncRun { get; set; }
+        public SyncJob CurrentSyncJob { get; set; }
 
-        public TestRunWrapper<TSource, TDestination> CreateSyncRun()
+        public TestRunWrapper<TSource, TDestination> CreateSyncJob()
         {
             return new TestRunWrapper<TSource, TDestination>(this);
         }
@@ -193,23 +193,23 @@ namespace SyncPro.UnitTests
     {
         private readonly TestWrapper<TSource, TDestination> testWrapper;
 
-        public SyncRun CurrentSyncRun { get; }
+        public SyncJob CurrentSyncJob { get; }
 
         public TestRunWrapper(TestWrapper<TSource, TDestination> testWrapper)
         {
             this.testWrapper = testWrapper;
-            this.CurrentSyncRun = new SyncRun(testWrapper.Relationship);
+            this.CurrentSyncJob = new SyncJob(testWrapper.Relationship);
         }
 
         public TestRunWrapper<TSource, TDestination> RunToCompletion()
         {
             ManualResetEvent evt = new ManualResetEvent(false);
 
-            this.CurrentSyncRun.SyncFinished += (sender, args) =>
+            this.CurrentSyncJob.SyncFinished += (sender, args) =>
             {
                 evt.Set();
             };
-            this.CurrentSyncRun.Start(SyncTriggerType.Manual);
+            this.CurrentSyncJob.Start(SyncTriggerType.Manual);
 
             // 1 min max wait time
             if (evt.WaitOne(60000) == false)
@@ -220,45 +220,45 @@ namespace SyncPro.UnitTests
             return this;
         }
 
-        public TestRunWrapper<TSource, TDestination> Set(Action<SyncRun> run)
+        public TestRunWrapper<TSource, TDestination> Set(Action<SyncJob> run)
         {
-            run(this.CurrentSyncRun);
+            run(this.CurrentSyncJob);
             return this;
         }
 
         public TestRunWrapper<TSource, TDestination> VerifyAnalyzeSuccess()
         {
-            Assert.IsTrue(this.CurrentSyncRun.HasFinished);
-            Assert.IsTrue(this.CurrentSyncRun.AnalyzeResult.IsComplete);
+            Assert.IsTrue(this.CurrentSyncJob.HasFinished);
+            Assert.IsTrue(this.CurrentSyncJob.AnalyzeResult.IsComplete);
 
             return this;
         }
 
         public TestRunWrapper<TSource, TDestination> VerifySyncSuccess()
         {
-            Assert.IsTrue(this.CurrentSyncRun.HasFinished);
-            Assert.AreEqual(SyncRunResult.Success, this.CurrentSyncRun.SyncResult);
+            Assert.IsTrue(this.CurrentSyncJob.HasFinished);
+            Assert.AreEqual(SyncJobResult.Success, this.CurrentSyncJob.SyncResult);
 
             return this;
         }
 
         public TestRunWrapper<TSource, TDestination> VerifySyncNotRun()
         {
-            Assert.AreEqual(SyncRunResult.NotRun, this.CurrentSyncRun.SyncResult);
+            Assert.AreEqual(SyncJobResult.NotRun, this.CurrentSyncJob.SyncResult);
 
             return this;
         }
 
         public TestRunWrapper<TSource, TDestination> VerifyResultContainsAllFiles()
         {
-            Assert.AreEqual(this.testWrapper.SyncFileList.Count, this.CurrentSyncRun.AnalyzeResult.AdapterResults.SelectMany(r => r.Value.EntryResults).Count());
+            Assert.AreEqual(this.testWrapper.SyncFileList.Count, this.CurrentSyncJob.AnalyzeResult.AdapterResults.SelectMany(r => r.Value.EntryResults).Count());
 
             return this;
         }
 
         public TestRunWrapper<TSource, TDestination> VerifyAnalyzeEntryCount(int count)
         {
-            Assert.AreEqual(count, this.CurrentSyncRun.AnalyzeResult.AdapterResults.SelectMany(r => r.Value.EntryResults).Count());
+            Assert.AreEqual(count, this.CurrentSyncJob.AnalyzeResult.AdapterResults.SelectMany(r => r.Value.EntryResults).Count());
 
             return this;
         }

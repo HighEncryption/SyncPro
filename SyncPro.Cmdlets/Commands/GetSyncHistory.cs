@@ -25,7 +25,7 @@
             if (this.SyncHistoryId > 0)
             {
                 this.WriteObject(
-                    relationship.GetSyncRunHistory().FirstOrDefault(r => r.Id == this.SyncHistoryId));
+                    relationship.GetSyncJobHistory().FirstOrDefault(r => r.Id == this.SyncHistoryId));
                 return;
             }
 

@@ -119,7 +119,7 @@ namespace SyncPro.UnitTests
 
             ManualResetEvent evt = new ManualResetEvent(false);
 
-            SyncRun run1 = new SyncRun(newRelationship);
+            SyncJob run1 = new SyncJob(newRelationship);
             run1.SyncFinished += (sender, args) => { evt.Set(); };
             run1.Start(SyncTriggerType.Manual);
 
@@ -451,7 +451,7 @@ namespace SyncPro.UnitTests
 
             ManualResetEvent evt = new ManualResetEvent(false);
 
-            SyncRun run1 = new SyncRun(newRelationship)
+            SyncJob run1 = new SyncJob(newRelationship)
             {
                 AnalyzeOnly = true
             };
@@ -539,7 +539,7 @@ namespace SyncPro.UnitTests
 
             ManualResetEvent evt = new ManualResetEvent(false);
 
-            SyncRun run1 = new SyncRun(newRelationship);
+            SyncJob run1 = new SyncJob(newRelationship);
 
             run1.SyncFinished += (sender, args) => { evt.Set(); };
             run1.Start(SyncTriggerType.Manual);
@@ -626,7 +626,7 @@ namespace SyncPro.UnitTests
 
             ManualResetEvent evt = new ManualResetEvent(false);
 
-            SyncRun run1 = new SyncRun(newRelationship);
+            SyncJob run1 = new SyncJob(newRelationship);
 
             run1.SyncFinished += (sender, args) => { evt.Set(); };
             run1.Start(SyncTriggerType.Manual);

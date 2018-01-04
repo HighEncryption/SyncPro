@@ -2,22 +2,22 @@ namespace SyncPro.UI.Navigation.MenuCommands
 {
     public class ReanalyzeMenuCommand : NavigationItemMenuCommand
     {
-        private readonly SyncRunPanelViewModel syncRunPanel;
+        private readonly SyncJobPanelViewModel syncJobPanel;
 
-        public ReanalyzeMenuCommand(SyncRunPanelViewModel syncRunPanel)
+        public ReanalyzeMenuCommand(SyncJobPanelViewModel syncJobPanel)
             : base("RE-ANALYZE", "/SyncPro.UI;component/Resources/Graphics/select_invert_16.png")
         {
-            this.syncRunPanel = syncRunPanel;
+            this.syncJobPanel = syncJobPanel;
         }
 
         protected override bool CanInvokeCommand(object obj)
         {
-            return this.syncRunPanel.BeginAnalyzeCommand.CanExecute(obj);
+            return this.syncJobPanel.BeginAnalyzeCommand.CanExecute(obj);
         }
 
         protected override void InvokeCommand(object obj)
         {
-            this.syncRunPanel.BeginAnalyzeCommand.Execute(obj);
+            this.syncJobPanel.BeginAnalyzeCommand.Execute(obj);
         }
     }
 }

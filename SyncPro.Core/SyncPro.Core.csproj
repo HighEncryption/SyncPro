@@ -108,8 +108,8 @@
     <Compile Include="Runtime\EntryUpdateInfo.cs" />
     <Compile Include="Runtime\SyncAnalyzer.cs" />
     <Compile Include="Runtime\SyncRelationship.cs" />
-    <Compile Include="Runtime\SyncRun.cs" />
-    <Compile Include="Runtime\SyncRunProgressInfo.cs" />
+    <Compile Include="Runtime\SyncJob.cs" />
+    <Compile Include="Runtime\SyncJobProgressInfo.cs" />
     <Compile Include="Runtime\ThrottlingManager.cs" />
     <Compile Include="Utility\CommandLineHelper.cs" />
     <Compile Include="Utility\PathUtility.cs" />

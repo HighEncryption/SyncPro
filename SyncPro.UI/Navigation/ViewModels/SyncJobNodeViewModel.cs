@@ -2,18 +2,18 @@ namespace SyncPro.UI.Navigation.ViewModels
 {
     using SyncPro.Runtime;
 
-    public class SyncRunNodeViewModel : NavigationNodeViewModel
+    public class SyncJobNodeViewModel : NavigationNodeViewModel
     {
-        private readonly SyncRunPanelViewModel syncRunPanel;
+        private readonly SyncJobPanelViewModel syncJobPanel;
 
-        public SyncRunNodeViewModel(NavigationNodeViewModel parent, SyncRunPanelViewModel syncRunPanel) 
-            : base(parent, syncRunPanel)
+        public SyncJobNodeViewModel(NavigationNodeViewModel parent, SyncJobPanelViewModel syncJobPanel) 
+            : base(parent, syncJobPanel)
         {
-            this.syncRunPanel = syncRunPanel;
+            this.syncJobPanel = syncJobPanel;
 
-            if (syncRunPanel.SyncRun != null)
+            if (syncJobPanel.SyncJob != null)
             {
-                this.Name = syncRunPanel.SyncRun.StartTime.ToString("g");
+                this.Name = syncJobPanel.SyncJob.StartTime.ToString("g");
             }
 
             this.SetIconImage();
@@ -21,24 +21,24 @@ namespace SyncPro.UI.Navigation.ViewModels
 
         private void SetIconImage()
         {
-            if (this.syncRunPanel.SyncRun == null)
+            if (this.syncJobPanel.SyncJob == null)
             {
                 this.IconImageSource = "/SyncPro.UI;component/Resources/Graphics/list_16.png";
                 return;
             }
 
-            switch (this.syncRunPanel.SyncRun.SyncRunResult)
+            switch (this.syncJobPanel.SyncJob.SyncJobResult)
             {
-                case SyncRunResult.Success:
+                case SyncJobResult.Success:
                     this.IconImageSource = "/SyncPro.UI;component/Resources/Graphics/list_ok_16.png";
                     break;
-                case SyncRunResult.Warning:
+                case SyncJobResult.Warning:
                     this.IconImageSource = "/SyncPro.UI;component/Resources/Graphics/list_warn_16.png";
                     break;
-                case SyncRunResult.Error:
+                case SyncJobResult.Error:
                     this.IconImageSource = "/SyncPro.UI;component/Resources/Graphics/list_error_16.png";
                     break;
-                case SyncRunResult.NotRun:
+                case SyncJobResult.NotRun:
                     this.IconImageSource = "/SyncPro.UI;component/Resources/Graphics/list_16.png";
                     break;
                 default:
@@ -49,7 +49,7 @@ namespace SyncPro.UI.Navigation.ViewModels
 
         protected override void OnIsSelected()
         {
-            this.syncRunPanel.SyncRun?.BeginLoad();
+            this.syncJobPanel.SyncJob?.BeginLoad();
         }
     }
 }

@@ -16,13 +16,13 @@ namespace SyncPro.UI.Navigation.ViewModels
     using SyncPro.UI.Utility;
     using SyncPro.UI.ViewModels;
 
-    public class SyncRunReferenceViewModel : ViewModelBase
+    public class SyncJobReferenceViewModel : ViewModelBase
     {
         public string DisplayName { get; }
 
         public int Id { get; }
 
-        public SyncRunReferenceViewModel(string displayName, int runId)
+        public SyncJobReferenceViewModel(string displayName, int runId)
         {
             this.DisplayName = displayName;
             this.Id = runId;
@@ -37,10 +37,10 @@ namespace SyncPro.UI.Navigation.ViewModels
 
         public ICommand SelectItemCommand { get; }
 
-        private ObservableCollection<SyncRunReferenceViewModel> syncRunReferences;
+        private ObservableCollection<SyncJobReferenceViewModel> syncJobReferences;
 
-        public ObservableCollection<SyncRunReferenceViewModel> SyncRunReferences
-            => this.syncRunReferences ?? (this.syncRunReferences = new ObservableCollection<SyncRunReferenceViewModel>());
+        public ObservableCollection<SyncJobReferenceViewModel> SyncJobReferences
+            => this.syncJobReferences ?? (this.syncJobReferences = new ObservableCollection<SyncJobReferenceViewModel>());
 
         public SyncEntryViewModel(NavigationNodeViewModel navigationNodeViewModel, SyncEntry syncEntry, SyncRelationshipViewModel syncRelationship)
         {
@@ -87,7 +87,7 @@ namespace SyncPro.UI.Navigation.ViewModels
             {
                 if (this.SetProperty(ref this.isSelected, value) && value)
                 {
-                    this.BeginLoadSyncRunReferences();
+                    this.BeginLoadSyncJobReferences();
                 }
             }
         }
@@ -96,7 +96,7 @@ namespace SyncPro.UI.Navigation.ViewModels
 
         private bool isLoadingStarted = false;
 
-        private void BeginLoadSyncRunReferences()
+        private void BeginLoadSyncJobReferences()
         {
             if (!this.isLoadingStarted)
             {
@@ -104,13 +104,13 @@ namespace SyncPro.UI.Navigation.ViewModels
                 {
                     if (!this.isLoadingStarted)
                     {
-                        Task.Factory.StartNew(this.BeginLoadSyncRunReferencesInternal);
+                        Task.Factory.StartNew(this.BeginLoadSyncJobReferencesInternal);
                     }
                 }
             }
         }
 
-        private void BeginLoadSyncRunReferencesInternal()
+        private void BeginLoadSyncJobReferencesInternal()
         {
             using (var db = this.syncRelationship.GetDatabase())
             {
@@ -127,10 +127,10 @@ namespace SyncPro.UI.Navigation.ViewModels
                 {
                     foreach (SyncHistoryData historyData in matches)
                     {
-                        if (this.SyncRunReferences.All(r => r.Id != historyData.Id))
+                        if (this.SyncJobReferences.All(r => r.Id != historyData.Id))
                         {
-                            this.SyncRunReferences.Add(
-                                new SyncRunReferenceViewModel(historyData.Start.ToString("g"), historyData.Id));
+                            this.SyncJobReferences.Add(
+                                new SyncJobReferenceViewModel(historyData.Start.ToString("g"), historyData.Id));
                         }
                     }
                 });

@@ -8,8 +8,8 @@
     using SyncPro.Adapters;
     using SyncPro.Runtime;
 
-    [Cmdlet(VerbsCommon.Get, "SyncProAnalyzeRun")]
-    public class GetAnalyzeRun : PSCmdlet
+    [Cmdlet(VerbsCommon.Get, "SyncProAnalyzeJob")]
+    public class GetAnalyzeJob : PSCmdlet
     {
         [Parameter]
         [Alias("Rid")]
@@ -19,32 +19,32 @@
         {
             SyncRelationship relationship = CmdletCommon.GetSyncRelationship(this.RelationshipId);
 
-            if (relationship.ActiveAnalyzeRun == null)
+            if (relationship.ActiveAnalyzeJob == null)
             {
-                throw new ItemNotFoundException("There is no active analyze run for this relationship");
+                throw new ItemNotFoundException("There is no active analyze job for this relationship");
             }
 
-            var psRun = new PSAnalyzeRun(relationship.ActiveAnalyzeRun);
+            var psRun = new PSAnalyzeJob(relationship.ActiveAnalyzeJob);
 
             this.WriteObject(psRun);
         }
     }
 
-    public class PSAnalyzeRun
+    public class PSAnalyzeJob
     {
-        private readonly SyncRun syncRun;
+        private readonly SyncJob syncJob;
 
-        public DateTime StartTime => this.syncRun.StartTime;
-        public DateTime? EndTime => this.syncRun.EndTime;
+        public DateTime StartTime => this.syncJob.StartTime;
+        public DateTime? EndTime => this.syncJob.EndTime;
 
         public PSAnalyzeRelationshipResult AnalyzeResult { get; }
 
-        public PSAnalyzeRun(SyncRun syncRun)
+        public PSAnalyzeJob(SyncJob syncJob)
         {
-            this.syncRun = syncRun;
+            this.syncJob = syncJob;
 
             this.AnalyzeResult = new PSAnalyzeRelationshipResult(
-                this.syncRun.AnalyzeResult);
+                this.syncJob.AnalyzeResult);
         }
     }
 

@@ -5,16 +5,15 @@ namespace SyncPro.UI.Navigation
 
     using SyncPro.UI.Framework;
     using SyncPro.UI.Framework.MVVM;
-    using SyncPro.UI.Navigation.ViewModels;
     using SyncPro.UI.ViewModels;
 
-    public enum SyncRunFilesViewMode
+    public enum SyncJobFilesViewMode
     {
         Flat,
         Tree
     }
 
-    public class SyncRunPanelViewModel : ViewModelBase
+    public class SyncJobPanelViewModel : ViewModelBase
     {
         public SyncRelationshipViewModel Relationship { get; }
 
@@ -22,13 +21,13 @@ namespace SyncPro.UI.Navigation
 
         public ICommand BeginSyncCommand { get; }
 
-        public SyncRunPanelViewModel(SyncRelationshipViewModel relationship)
+        public SyncJobPanelViewModel(SyncRelationshipViewModel relationship)
         {
             this.Relationship = relationship;
             this.BeginAnalyzeCommand = new DelegatedCommand(this.BeginAnalyze, this.CanBeginAnalyze);
             this.BeginSyncCommand = new DelegatedCommand(this.BeginSync, this.CanBeginAnalyze);
 
-            this.FileDisplayMode = SyncRunFilesViewMode.Flat;
+            this.FileDisplayMode = SyncJobFilesViewMode.Flat;
 
             this.Relationship.PropertyChanged += (sender, args) =>
             {
@@ -44,7 +43,7 @@ namespace SyncPro.UI.Navigation
             // This will re-use the result from the analyze phase (if present) so that what is synced exactly 
             // matches what is seen in the results. This is important because we want to be sure that we dont
             // synchronize any changes that arent shown in the results page.
-            this.Relationship.StartSyncRun(this.SyncRun.SyncRun.AnalyzeResult);
+            this.Relationship.StartSyncJob(this.SyncJob.SyncJob.AnalyzeResult);
         }
 
         private bool CanBeginAnalyze(object obj)
@@ -54,7 +53,7 @@ namespace SyncPro.UI.Navigation
 
         private void BeginAnalyze(object obj)
         {
-            this.SyncRun = this.Relationship.StartSyncRun(SyncTriggerType.Manual, true);
+            this.SyncJob = this.Relationship.StartSyncJob(SyncTriggerType.Manual, true);
         }
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -67,12 +66,12 @@ namespace SyncPro.UI.Navigation
         }
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private SyncRunViewModel syncRun;
+        private SyncJobViewModel syncJob;
 
-        public SyncRunViewModel SyncRun
+        public SyncJobViewModel SyncJob
         {
-            get { return this.syncRun; }
-            set { this.SetProperty(ref this.syncRun, value); }
+            get { return this.syncJob; }
+            set { this.SetProperty(ref this.syncJob, value); }
         }
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -85,9 +84,9 @@ namespace SyncPro.UI.Navigation
         }
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private SyncRunFilesViewMode fileDisplayMode;
+        private SyncJobFilesViewMode fileDisplayMode;
 
-        public SyncRunFilesViewMode FileDisplayMode
+        public SyncJobFilesViewMode FileDisplayMode
         {
             get { return this.fileDisplayMode; }
             set { this.SetProperty(ref this.fileDisplayMode, value); }

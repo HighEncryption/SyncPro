@@ -20,41 +20,41 @@
     using SyncPro.UI.Navigation;
     using SyncPro.UI.Navigation.ViewModels;
 
-    public enum SyncRunChangesDisplayMode
+    public enum SyncJobChangesDisplayMode
     {
         OnlyChanges,
         AllFiles,
     }
 
-    public class SyncRunViewModel : ViewModelBase, IRequestClose
+    public class SyncJobViewModel : ViewModelBase, IRequestClose
     {
-        public SyncRun SyncRun { get; }
+        public SyncJob SyncJob { get; }
         private bool loadFromHistory;
 
         public ICommand CloseWindowCommand { get; }
 
-        public ICommand ViewSyncRunCommand { get; }
+        public ICommand ViewSyncJobCommand { get; }
 
-        public ICommand BeginSyncRunCommand { get; }
+        public ICommand BeginSyncJobCommand { get; }
 
-        public ICommand CancelSyncRunCommand { get; }
+        public ICommand CancelSyncJobCommand { get; }
 
         public SyncRelationshipViewModel SyncRelationship { get; }
 
-        public SyncRunViewModel(SyncRun syncRun, SyncRelationshipViewModel relationshipViewModel, bool loadFromHistory)
+        public SyncJobViewModel(SyncJob syncJob, SyncRelationshipViewModel relationshipViewModel, bool loadFromHistory)
         {
-            this.SyncRun = syncRun;
+            this.SyncJob = syncJob;
             this.SyncRelationship = relationshipViewModel;
             this.loadFromHistory = loadFromHistory;
 
-            this.SyncRun.SyncStarted += this.SyncRunOnSyncStarted;
-            this.SyncRun.SyncFinished += this.SyncRunOnSyncFinished;
-            this.SyncRun.ProgressChanged += this.SyncRunOnProgressChanged;
+            this.SyncJob.SyncStarted += this.SyncJobOnSyncStarted;
+            this.SyncJob.SyncFinished += this.SyncJobOnSyncFinished;
+            this.SyncJob.ProgressChanged += this.SyncJobOnProgressChanged;
 
             this.CloseWindowCommand = new DelegatedCommand(o => this.HandleClose(false));
-            this.ViewSyncRunCommand = new DelegatedCommand(o => this.ViewSyncRun());
-            this.BeginSyncRunCommand = new DelegatedCommand(o => this.BeginSyncRun());
-            this.CancelSyncRunCommand = new DelegatedCommand(o => this.CancelSyncRun());
+            this.ViewSyncJobCommand = new DelegatedCommand(o => this.ViewSyncJob());
+            this.BeginSyncJobCommand = new DelegatedCommand(o => this.BeginSyncJob());
+            this.CancelSyncJobCommand = new DelegatedCommand(o => this.CancelSyncJob());
 
             this.ChangeMetricsList = new List<ChangeMetrics>()
             {
@@ -63,25 +63,25 @@
                 new ChangeMetrics("Bytes", true)
             };
 
-            if (syncRun.HasStarted)
+            if (syncJob.HasStarted)
             {
-                this.StartTime = syncRun.StartTime;
+                this.StartTime = syncJob.StartTime;
             }
 
-            if (syncRun.HasFinished)
+            if (syncJob.HasFinished)
             {
-                this.EndTime = syncRun.EndTime ?? DateTime.MinValue;
+                this.EndTime = syncJob.EndTime ?? DateTime.MinValue;
                 this.ItemsCopiedDisplayString = String.Format(
                     "{0} files / {1}",
-                    this.SyncRun.FilesTotal,
-                    FileSizeConverter.Convert(this.SyncRun.BytesTotal, 1));
+                    this.SyncJob.FilesTotal,
+                    FileSizeConverter.Convert(this.SyncJob.BytesTotal, 1));
                 this.Duration = this.EndTime - this.StartTime;
                 this.SetStatusDescription();
             }
 
             if (this.SyncRelationship.State == SyncRelationshipState.Running)
             {
-                this.SyncRunOnSyncStarted(this, new EventArgs());
+                this.SyncJobOnSyncStarted(this, new EventArgs());
             }
         }
 
@@ -106,7 +106,7 @@
                     foreach (
                         SyncHistoryEntryData entry in
                             db.HistoryEntries
-                                .Where(e => e.SyncHistoryId == this.SyncRun.Id)
+                                .Where(e => e.SyncHistoryId == this.SyncJob.Id)
                                 .Include(e => e.SyncEntry)
                                 .OrderBy(e => e.SyncEntryId))
                     {
@@ -174,7 +174,7 @@
             }
         }
 
-        private void ViewSyncRun()
+        private void ViewSyncJob()
         {
             // Find the navigation tree item for this relationship
             SyncRelationshipNodeViewModel relatonshipNavItem =
@@ -187,50 +187,50 @@
                 relatonshipNavItem.Children.OfType<SyncHistoryNodeViewModel>().First();
 
             // Check if a Sync History item is already present under this relationship for this history
-            foreach (SyncRunNodeViewModel syncRunNode in syncHistoryNode.Children.OfType<SyncRunNodeViewModel>())
+            foreach (SyncJobNodeViewModel syncJobNodeViewModel in syncHistoryNode.Children.OfType<SyncJobNodeViewModel>())
             {
-                var panelViewModel = syncRunNode.Item as SyncRunPanelViewModel;
-                if (panelViewModel != null && panelViewModel.SyncRun == this)
+                var panelViewModel = syncJobNodeViewModel.Item as SyncJobPanelViewModel;
+                if (panelViewModel != null && panelViewModel.SyncJob == this)
                 {
-                    syncRunNode.IsSelected = true;
+                    syncJobNodeViewModel.IsSelected = true;
                     return;
                 }
             }
         }
 
-        private void BeginSyncRun()
+        private void BeginSyncJob()
         {
-            this.SyncRun.Start(SyncTriggerType.Manual);
+            this.SyncJob.Start(SyncTriggerType.Manual);
         }
 
-        private void CancelSyncRun()
+        private void CancelSyncJob()
         {
-            if (this.SyncRun.HasStarted)
+            if (this.SyncJob.HasStarted)
             {
-                this.SyncRun.Cancel();
+                this.SyncJob.Cancel();
             }
         }
 
         private void SetStatusDescription()
         {
-            switch (this.SyncRun.SyncResult)
+            switch (this.SyncJob.SyncResult)
             {
-                case SyncRunResult.Undefined:
+                case SyncJobResult.Undefined:
                     this.StatusDescription = "Unknown";
                     break;
-                case SyncRunResult.Success:
+                case SyncJobResult.Success:
                     this.StatusDescription = "Finished Successfully";
                     break;
-                case SyncRunResult.Warning:
+                case SyncJobResult.Warning:
                     this.StatusDescription = "Finished With Warnings";
                     break;
-                case SyncRunResult.Error:
+                case SyncJobResult.Error:
                     this.StatusDescription = "Failed";
                     break;
-                case SyncRunResult.NotRun:
+                case SyncJobResult.NotRun:
                     this.StatusDescription = "Sync Not Run";
                     break;
-                case SyncRunResult.Cancelled:
+                case SyncJobResult.Cancelled:
                     this.StatusDescription = "Cancelled";
                     break;
                 default:
@@ -238,21 +238,21 @@
             }
         }
 
-        public SyncRunResult SyncRunResult => this.SyncRun.SyncResult;
+        public SyncJobResult SyncJobResult => this.SyncJob.SyncResult;
 
-        private void SyncRunOnSyncFinished(object sender, EventArgs eventArgs)
+        private void SyncJobOnSyncFinished(object sender, EventArgs eventArgs)
         {
-            this.EndTime = this.SyncRun.EndTime.Value;
+            this.EndTime = this.SyncJob.EndTime.Value;
             this.ItemsCopiedDisplayString = 
                 string.Format(
                     "{0} files / {1}", 
-                    this.SyncRun.FilesTotal, 
-                    FileSizeConverter.Convert(this.SyncRun.BytesTotal, 1));
+                    this.SyncJob.FilesTotal, 
+                    FileSizeConverter.Convert(this.SyncJob.BytesTotal, 1));
 
             // Calculate unchanges files and folders
-            this.ChangeMetricsList[0].Unchanged = this.SyncRun.AnalyzeResult.UnchangedFileCount;
-            this.ChangeMetricsList[1].Unchanged = this.SyncRun.AnalyzeResult.UnchangedFolderCount;
-            this.ChangeMetricsList[2].Unchanged = this.SyncRun.AnalyzeResult.UnchangedFileBytes;
+            this.ChangeMetricsList[0].Unchanged = this.SyncJob.AnalyzeResult.UnchangedFileCount;
+            this.ChangeMetricsList[1].Unchanged = this.SyncJob.AnalyzeResult.UnchangedFolderCount;
+            this.ChangeMetricsList[2].Unchanged = this.SyncJob.AnalyzeResult.UnchangedFileBytes;
 
             this.SetStatusDescription();
 
@@ -261,9 +261,9 @@
 
         private CancellationTokenSource metadataUpdateCancellationToken;
 
-        private void SyncRunOnSyncStarted(object sender, EventArgs eventArgs)
+        private void SyncJobOnSyncStarted(object sender, EventArgs eventArgs)
         {
-            this.StartTime = this.SyncRun.StartTime;
+            this.StartTime = this.SyncJob.StartTime;
             this.metadataUpdateCancellationToken = new CancellationTokenSource();
 
             Task t = new Task(async () =>
@@ -285,63 +285,63 @@
         }
 
         /// <summary>
-        /// During an active sync run, this methods is invoked on progress changed (aka when a change is detected).
+        /// During an active sync job, this methods is invoked on progress changed (aka when a change is detected).
         /// </summary>
         /// <param name="sender">The sender</param>
-        /// <param name="syncRunProgressInfo">The progressInfo object</param>
-        private void SyncRunOnProgressChanged(object sender, SyncRunProgressInfo syncRunProgressInfo)
+        /// <param name="syncJobProgressInfo">The progressInfo object</param>
+        private void SyncJobOnProgressChanged(object sender, SyncJobProgressInfo syncJobProgressInfo)
         {
             App.Current.Dispatcher.Invoke(() =>
             {
-                this.Stage = syncRunProgressInfo.Stage;
+                this.Stage = syncJobProgressInfo.Stage;
 
-                if (syncRunProgressInfo.Message != null)
+                if (syncJobProgressInfo.Message != null)
                 {
-                    this.SyncProgressCurrentText = syncRunProgressInfo.Message;
+                    this.SyncProgressCurrentText = syncJobProgressInfo.Message;
                 }
 
-                if (syncRunProgressInfo.Stage == SyncRunStage.Sync)
+                if (syncJobProgressInfo.Stage == SyncJobStage.Sync)
                 {
-                    if (double.IsInfinity(syncRunProgressInfo.ProgressValue))
+                    if (double.IsInfinity(syncJobProgressInfo.ProgressValue))
                     {
                     }
                     else
                     {
                         this.ShowDiscreteProgress = true;
 
-                        this.ProgressValue = syncRunProgressInfo.ProgressValue;
-                        this.SyncProgressCurrentText = syncRunProgressInfo.ProgressValue.ToString("P0") + " complete";
+                        this.ProgressValue = syncJobProgressInfo.ProgressValue;
+                        this.SyncProgressCurrentText = syncJobProgressInfo.ProgressValue.ToString("P0") + " complete";
 
-                        this.BytesCompleted = syncRunProgressInfo.BytesCompleted;
-                        this.BytesRemaining = syncRunProgressInfo.BytesTotal - syncRunProgressInfo.BytesCompleted;
+                        this.BytesCompleted = syncJobProgressInfo.BytesCompleted;
+                        this.BytesRemaining = syncJobProgressInfo.BytesTotal - syncJobProgressInfo.BytesCompleted;
 
-                        this.FilesCompleted = syncRunProgressInfo.FilesCompleted;
-                        this.FilesRemaining = syncRunProgressInfo.FilesTotal - syncRunProgressInfo.FilesCompleted;
+                        this.FilesCompleted = syncJobProgressInfo.FilesCompleted;
+                        this.FilesRemaining = syncJobProgressInfo.FilesTotal - syncJobProgressInfo.FilesCompleted;
 
                         this.TimeElapsed = DateTime.Now.Subtract(this.StartTime);
 
-                        if (syncRunProgressInfo.BytesPerSecond > 0)
+                        if (syncJobProgressInfo.BytesPerSecond > 0)
                         {
                             this.TimeRemaining = TimeSpan.FromSeconds(
-                                this.BytesRemaining / syncRunProgressInfo.BytesPerSecond);
+                                this.BytesRemaining / syncJobProgressInfo.BytesPerSecond);
                         }
                         else
                         {
                             this.TimeRemaining = TimeSpan.Zero;
                         }
 
-                        this.Throughput = FileSizeConverter.Convert(syncRunProgressInfo.BytesPerSecond, 2) + " per second";
+                        this.Throughput = FileSizeConverter.Convert(syncJobProgressInfo.BytesPerSecond, 2) + " per second";
                     }
                 }
-                else if (syncRunProgressInfo.Stage == SyncRunStage.Analyze)
+                else if (syncJobProgressInfo.Stage == SyncJobStage.Analyze)
                 {
                     this.AnalyzeStatusString =
-                        string.Format("Analyzing. Found {0} changes", syncRunProgressInfo.FilesTotal);
+                        string.Format("Analyzing. Found {0} changes", syncJobProgressInfo.FilesTotal);
                 }
 
-                if (!this.EntryUpdatesTreeList.Any() && syncRunProgressInfo.UpdateInfo != null)
+                if (!this.EntryUpdatesTreeList.Any() && syncJobProgressInfo.UpdateInfo != null)
                 {
-                    SyncEntry rootEntry = syncRunProgressInfo.UpdateInfo.OriginatingAdapter.GetRootSyncEntry();
+                    SyncEntry rootEntry = syncJobProgressInfo.UpdateInfo.OriginatingAdapter.GetRootSyncEntry();
 
                     var rootNode = new EntryUpdateInfoViewModel
                     {
@@ -353,15 +353,15 @@
                 }
 
                 // 10/26: Why did we care about the stage??
-                //if (syncRunProgressInfo.Stage == SyncRunStage.Sync && syncRunProgressInfo.UpdateInfo != null)
-                if (syncRunProgressInfo.UpdateInfo != null)
+                //if (syncJobProgressInfo.Stage == SyncJobStage.Sync && syncJobProgressInfo.UpdateInfo != null)
+                if (syncJobProgressInfo.UpdateInfo != null)
                 {
-                    IList<string> pathStack = syncRunProgressInfo.UpdateInfo.RelativePath.Split('\\').ToList();
+                    IList<string> pathStack = syncJobProgressInfo.UpdateInfo.RelativePath.Split('\\').ToList();
 
-                    this.CalculateChangeMetrics(syncRunProgressInfo.UpdateInfo);
+                    this.CalculateChangeMetrics(syncJobProgressInfo.UpdateInfo);
 
                     this.AddEntryUpdate(
-                        new EntryUpdateInfoViewModel(syncRunProgressInfo.UpdateInfo, this.SyncRelationship), 
+                        new EntryUpdateInfoViewModel(syncJobProgressInfo.UpdateInfo, this.SyncRelationship), 
                         pathStack);
                 }
             });
@@ -447,9 +447,9 @@
         }
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private SyncRunStage stage;
+        private SyncJobStage stage;
 
-        public SyncRunStage Stage
+        public SyncJobStage Stage
         {
             get { return this.stage; }
             set { this.SetProperty(ref this.stage, value); }
@@ -549,7 +549,7 @@
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private string itemsCopiedDisplayString;
 
-        // Number of items updated? (only used for completed runs)
+        // Number of items updated? (only used for completed jobs)
         public string ItemsCopiedDisplayString
         {
             get { return this.itemsCopiedDisplayString; }
@@ -559,7 +559,7 @@
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private string statusDescription;
 
-        // Overall description (only used for completed runs)
+        // Overall description (only used for completed jobs)
         public string StatusDescription
         {
             get { return this.statusDescription; }
@@ -639,7 +639,7 @@
 
         public bool MustClose { get; set; }
 
-        public bool IsAnalyzeOnly => this.SyncRun.AnalyzeOnly;
+        public bool IsAnalyzeOnly => this.SyncJob.AnalyzeOnly;
 
         #endregion IRequestClose
     }

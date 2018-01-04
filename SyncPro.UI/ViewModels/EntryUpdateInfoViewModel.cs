@@ -166,7 +166,7 @@
                     this.largeIcon = fileInfo.LargeIcon;
                 }
 
-                this.BeginLoadSyncRunReferences();
+                this.BeginLoadSyncJobReferences();
 
                 return this.largeIcon;
             }
@@ -260,17 +260,17 @@
 
         public bool ShowSizeOld => (this.Flags & SyncEntryChangedFlags.FileSize) != 0 && !this.IsDirectory;
 
-        private ObservableCollection<SyncRunReferenceViewModel> syncRunReferences;
+        private ObservableCollection<SyncJobReferenceViewModel> syncJobReferences;
 
-        public ObservableCollection<SyncRunReferenceViewModel> SyncRunReferences
-            => this.syncRunReferences ?? (this.syncRunReferences = new ObservableCollection<SyncRunReferenceViewModel>());
+        public ObservableCollection<SyncJobReferenceViewModel> SyncJobReferences
+            => this.syncJobReferences ?? (this.syncJobReferences = new ObservableCollection<SyncJobReferenceViewModel>());
 
         private volatile object loadLock = new object();
 
         private bool isLoadingStarted = false;
         private readonly long syncEntryId;
 
-        private void BeginLoadSyncRunReferences()
+        private void BeginLoadSyncJobReferences()
         {
             if (!this.isLoadingStarted)
             {
@@ -279,13 +279,13 @@
                     if (!this.isLoadingStarted)
                     {
                         this.isLoadingStarted = true;
-                        Task.Factory.StartNew(this.BeginLoadSyncRunReferencesInternal);
+                        Task.Factory.StartNew(this.BeginLoadSyncJobReferencesInternal);
                     }
                 }
             }
         }
 
-        private void BeginLoadSyncRunReferencesInternal()
+        private void BeginLoadSyncJobReferencesInternal()
         {
             using (var db = this.syncRelationship.GetDatabase())
             {
@@ -300,7 +300,7 @@
 
                 foreach (SyncHistoryData historyData in matches)
                 {
-                    App.DispatcherInvoke(() => this.SyncRunReferences.Add(new SyncRunReferenceViewModel(
+                    App.DispatcherInvoke(() => this.SyncJobReferences.Add(new SyncJobReferenceViewModel(
                         historyData.Start.ToString("g"), historyData.Id)));
                 }
             }

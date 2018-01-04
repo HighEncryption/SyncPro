@@ -14,7 +14,7 @@ namespace SyncPro.UI.Converters
         ExactMatch
     }
 
-    [ValueConversion(typeof(SyncRunStage), typeof(Visibility))]
+    [ValueConversion(typeof(SyncJobStage), typeof(Visibility))]
     public class SyncEntryChangedFlagsToVisibilityConverter : IValueConverter
     {
         public FlagToVisibilityConverterMode Mode { get; set; }

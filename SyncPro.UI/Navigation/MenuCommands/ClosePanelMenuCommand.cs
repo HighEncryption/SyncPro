@@ -8,7 +8,6 @@ namespace SyncPro.UI.Navigation.MenuCommands
         private readonly NavigationNodeViewModel viewModel;
 
         public ClosePanelMenuCommand(SyncRelationshipViewModel relationship, NavigationNodeViewModel navigationNodeViewModel)
-            //: base("REMOVE RELATIONSHIP", "/SyncPro.UI;component/Resources/Graphics/delete_16.png")
             : base("CLOSE", "/SyncPro.UI;component/Resources/Graphics/close_window_16.png")
         {
             this.relationship = relationship;
@@ -23,7 +22,7 @@ namespace SyncPro.UI.Navigation.MenuCommands
         protected override void InvokeCommand(object obj)
         {
             this.viewModel.Parent.Children.Remove(this.viewModel);
-            this.relationship.ClearActiveAnalyzeRun();
+            this.relationship.ClearActiveAnalyzeJob();
         }
     }
 }

@@ -7,8 +7,8 @@ namespace SyncPro.UI.Converters
 
     using SyncPro.Runtime;
 
-    [ValueConversion(typeof(SyncRunStage), typeof(Visibility))]
-    public class SyncRunStageToVisiblityConverter : IValueConverter
+    [ValueConversion(typeof(SyncJobStage), typeof(Visibility))]
+    public class SyncJobStageToVisiblityConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
@@ -19,7 +19,7 @@ namespace SyncPro.UI.Converters
                 return DependencyProperty.UnsetValue;
             }
 
-            SyncRunStage desiredStage;
+            SyncJobStage desiredStage;
             if (!Enum.TryParse(stageName, out desiredStage))
             {
                 return DependencyProperty.UnsetValue;
@@ -30,7 +30,7 @@ namespace SyncPro.UI.Converters
                 return Visibility.Collapsed;
             }
 
-            SyncRunStage stage = (SyncRunStage) value;
+            SyncJobStage stage = (SyncJobStage) value;
 
             if (stage == desiredStage)
             {

@@ -4,9 +4,9 @@
 
     public class AnalyzeResultsNodeViewModel : NavigationNodeViewModel
     {
-        private readonly SyncRunPanelViewModel viewModel;
+        private readonly SyncJobPanelViewModel viewModel;
 
-        public AnalyzeResultsNodeViewModel(NavigationNodeViewModel parent, SyncRunPanelViewModel viewModel)
+        public AnalyzeResultsNodeViewModel(NavigationNodeViewModel parent, SyncJobPanelViewModel viewModel)
             : base(parent, viewModel) 
         {
             this.viewModel = viewModel;

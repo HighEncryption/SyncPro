@@ -16,9 +16,9 @@
     using SyncPro.Tracing;
 
     /// <summary>
-    /// Enumeration of the options for the result of a sync run
+    /// Enumeration of the options for the result of a sync job
     /// </summary>
-    public enum SyncRunResult
+    public enum SyncJobResult
     {
         Undefined,
         Success,
@@ -29,9 +29,9 @@
     }
 
     /// <summary>
-    /// Enumeration of the stages of a sync run
+    /// Enumeration of the stages of a sync job
     /// </summary>
-    public enum SyncRunStage
+    public enum SyncJobStage
     {
         Undefined,
         Analyze,
@@ -41,7 +41,7 @@
     /// <summary>
     /// Contains the core logic for synchronizing (copying) files between two adapters.
     /// </summary>
-    public class SyncRun
+    public class SyncJob
     {
         /// <summary>
         /// The buffer size used for copying data between adapters (currently 64k).
@@ -65,7 +65,7 @@
         private X509Certificate2 encryptionCertificate;
 
         /// <summary>
-        /// The unique Id of this sync run (unique within the relationship)
+        /// The unique Id of this sync job (unique within the relationship)
         /// </summary>
         public int Id { get; set; }
 
@@ -81,19 +81,19 @@
 
         /// <summary>
         /// The analysis result indicating the items that are to be synchronized. If this property is set
-        /// prior to starting the sync run, the items specified in the analyze result will be used to 
+        /// prior to starting the sync job, the items specified in the analyze result will be used to 
         /// determine what is synchronized. If this property is not set, the analysis will be done as
-        /// a part of the sync run, and those items will be synchronized.
+        /// a part of the sync job, and those items will be synchronized.
         /// </summary>
         public AnalyzeRelationshipResult AnalyzeResult { get; set; }
 
         /// <summary>
-        /// Indicates whether the sync run has started
+        /// Indicates whether the sync job has started
         /// </summary>
         public bool HasStarted => this.StartTime != DateTime.MinValue;
 
         /// <summary>
-        /// Indicates whether the sync run has finished
+        /// Indicates whether the sync job has finished
         /// </summary>
         public bool HasFinished => this.StartTime != DateTime.MinValue;
 
@@ -108,12 +108,12 @@
         public long BytesTotal { get; private set; }
 
         /// <summary>
-        /// The result of the sync run
+        /// The result of the sync job
         /// </summary>
-        public SyncRunResult SyncResult { get; private set; }
+        public SyncJobResult SyncResult { get; private set; }
 
         /// <summary>
-        /// Indicates whether this sync run is for analysis only (meaning that no items will 
+        /// Indicates whether this sync job is for analysis only (meaning that no items will 
         /// be synchronized).
         /// </summary>
         public bool AnalyzeOnly
@@ -130,7 +130,7 @@
             }
         }
 
-        public event EventHandler<SyncRunProgressInfo> ProgressChanged;
+        public event EventHandler<SyncJobProgressInfo> ProgressChanged;
 
         public event EventHandler SyncStarted;
 
@@ -158,7 +158,7 @@
 
             this.ProgressChanged?.Invoke(
                 this,
-                new SyncRunProgressInfo(
+                new SyncJobProgressInfo(
                     updateInfo, 
                     this.FilesTotal, 
                     Convert.ToInt32(Interlocked.Read(ref this.filesCompleted)), 
@@ -168,10 +168,10 @@
         }
 
         /// <summary>
-        /// Create a new <see cref="SyncRun"/>
+        /// Create a new <see cref="SyncJob"/>
         /// </summary>
         /// <param name="relationship">The relationship to be synchonized</param>
-        public SyncRun(SyncRelationship relationship)
+        public SyncJob(SyncRelationship relationship)
         {
             this.relationship = relationship;
         } // 420fe8033179cfb0ef21862d24bf6a1ec7df6c6d
@@ -180,7 +180,7 @@
         {
             if (this.AnalyzeOnly)
             {
-                // If this is an analyze-only run, clear out any pre-existing results
+                // If this is an analyze-only job, clear out any pre-existing results
                 this.AnalyzeResult = null;
             }
 
@@ -194,7 +194,7 @@
         private bool analyzeOnly;
 
         /// <summary>
-        /// The main processing method for the sync run.
+        /// The main processing method for the sync job.
         /// </summary>
         /// <returns>Async task</returns>
         private async Task RunMainThread()
@@ -203,12 +203,12 @@
             this.relationship.State = SyncRelationshipState.Running;
 
             // Create a new sync history entry (except for analyze-only runs)
-            this.CreateNewSyncHistoryRun();
+            this.CreateNewSyncJobHistory();
 
             // Raise event that the sync has started
             this.SyncStarted?.Invoke(this, new EventArgs());
 
-            // If there is no analyze result, then this is a new sync run. Create the SyncAnalyzer to process
+            // If there is no analyze result, then this is a new sync job. Create the SyncAnalyzer to process
             // the entries that need to be synchronzied.
             if (this.AnalyzeResult == null)
             {
@@ -222,11 +222,11 @@
                 this.AnalyzeResult = await syncAnalyzer.AnalyzeChangesAsync().ConfigureAwait(false);
             }
 
-            // If this is an analyze-only run, or if there is nothing to synchronize, dont attempt to synchronize
+            // If this is an analyze-only job, or if there is nothing to synchronize, dont attempt to synchronize
             if (this.AnalyzeOnly || this.AnalyzeResult.IsUpToDate)
             {
                 this.EndTime = DateTime.Now;
-                this.SyncResult = SyncRunResult.NotRun;
+                this.SyncResult = SyncJobResult.NotRun;
             }
             else
             {
@@ -235,35 +235,35 @@
             }
 
             /*
-             * The sync run is now complete (if run) or it was not run.
+             * The sync job is now complete (if run) or it was not run.
              */
 
             // If sync was run successfully commit the tracked changes for each adapter
-            if (this.SyncResult == SyncRunResult.Success)
+            if (this.SyncResult == SyncJobResult.Success)
             {
                 await this.AnalyzeResult.CommitTrackedChangesAsync().ConfigureAwait(false);
             }
 
-            // If a sync run was requested but not needed because all of the files are already up to date, commit change
+            // If a sync job was requested but not needed because all of the files are already up to date, commit change
             // if needed (because the delta token was refreshed).
             if (!this.AnalyzeOnly && this.AnalyzeResult.IsUpToDate)
             {
                 await this.AnalyzeResult.CommitTrackedChangesAsync().ConfigureAwait(false);
             }
 
-            // If this is an AnalyzeOnly run and no changes were found, commit tracked changes (if needed). In a case 
+            // If this is an AnalyzeOnly job and no changes were found, commit tracked changes (if needed). In a case 
             // where the delta token has expired but no changes were made, we can save the new delta token.
-            if (this.AnalyzeOnly && this.SyncResult == SyncRunResult.NotRun && this.AnalyzeResult.IsUpToDate)
+            if (this.AnalyzeOnly && this.SyncResult == SyncJobResult.NotRun && this.AnalyzeResult.IsUpToDate)
             {
                 await this.AnalyzeResult.CommitTrackedChangesAsync().ConfigureAwait(false);
             }
 
-            this.SaveSyncRunHistory();
+            this.SaveSyncJobHistory();
 
             this.SyncFinished?.Invoke(this, new EventArgs());
         }
 
-        private void SaveSyncRunHistory()
+        private void SaveSyncJobHistory()
         {
             if (this.AnalyzeOnly)
             {
@@ -283,16 +283,16 @@
             }
         }
 
-        private void CreateNewSyncHistoryRun()
+        private void CreateNewSyncJobHistory()
         {
-            // If this is a full sync run (not just an analyze run), create a history entry. We dont create history
-            // entries for analyze-only run.
+            // If this is a full sync job (not just an analyze job), create a history entry. We dont create history
+            // entries for analyze-only job.
             if (this.AnalyzeOnly)
             {
                 return;
             }
 
-            // Create a history entry for this run in the database
+            // Create a history entry for this job in the database
             using (var db = this.relationship.GetDatabase())
             {
                 SyncHistoryData syncHistory = new SyncHistoryData()
@@ -317,7 +317,7 @@
         public SyncTriggerType TriggerType { get; private set; }
 
         /// <summary>
-        /// Asynchronously cancel the sync run
+        /// Asynchronously cancel the sync job
         /// </summary>
         public void Cancel()
         {
@@ -371,7 +371,7 @@
             if (this.relationship.IsThrottlingEnabled)
             {
                 Logger.Debug(
-                    "SyncRun will use throttling manager with rate={0} B/sec",
+                    "SyncJob will use throttling manager with rate={0} B/sec",
                     this.relationship.IsThrottlingEnabled);
 
                 int bytesPerSecond = this.relationship.ThrottlingValue * this.relationship.ThrottlingScaleFactor;
@@ -413,15 +413,15 @@
 
             if (this.cancellationTokenSource.Token.IsCancellationRequested)
             {
-                this.SyncResult = SyncRunResult.Cancelled;
+                this.SyncResult = SyncJobResult.Cancelled;
             }
             else if (updateList.Any(e => e.State == EntryUpdateState.Failed))
             {
-                this.SyncResult = SyncRunResult.Error;
+                this.SyncResult = SyncJobResult.Error;
             }
             else
             {
-                this.SyncResult = SyncRunResult.Success;
+                this.SyncResult = SyncJobResult.Success;
             }
 
             using (var db = this.relationship.GetDatabase())
@@ -1161,9 +1161,9 @@
             }
         }
 
-        public static SyncRun FromHistoryEntry(SyncRelationship relationship, SyncHistoryData history)
+        public static SyncJob FromHistoryEntry(SyncRelationship relationship, SyncHistoryData history)
         {
-            SyncRun run = new SyncRun(relationship)
+            SyncJob job = new SyncJob(relationship)
             {
                 Id = history.Id,
                 StartTime = history.Start,
@@ -1173,7 +1173,7 @@
                 SyncResult = history.Result
             };
 
-            return run;
+            return job;
         }
     }
 }

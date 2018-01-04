@@ -242,7 +242,7 @@
 
                     <TextBlock Grid.Column="0" Grid.Row="4" Text="Sync Runs" Foreground="#7d7d7d" Margin="0,16,0,0" />
                     <ItemsControl Grid.Column="2" Grid.Row="4" Margin="4,16,0,0"
-                                  ItemsSource="{Binding Path=SelectedChildEntry.SyncRunReferences}">
+                                  ItemsSource="{Binding Path=SelectedChildEntry.SyncJobReferences}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding Path=DisplayName}" TextDecorations="Underline"

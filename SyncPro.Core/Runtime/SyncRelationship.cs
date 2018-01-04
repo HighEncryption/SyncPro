@@ -580,30 +580,30 @@
 
         private void SyncSchedulerHandleAdapterItemChangeNotification(object sender, ItemChangedEventArgs e)
         {
-            if (this.ActiveSyncRun != null)
+            if (this.ActiveSyncJob != null)
             {
                 return;
             }
 
-            this.BeginSyncRun(SyncTriggerType.Continuous, false, null);
+            this.BeginSyncJob(SyncTriggerType.Continuous, false, null);
         }
 
         private static readonly TimeSpan SyncSchedulerDelay = TimeSpan.FromMinutes(1);
         private Task syncSchedulerTask;
         private CancellationTokenSource syncSchedulerCancellationTokenSource;
 
-        private SyncRun activeSyncRun;
+        private SyncJob activeSyncJob;
 
-        public SyncRun ActiveSyncRun
+        public SyncJob ActiveSyncJob
         {
-            get { return this.activeSyncRun; }
-            private set { this.SetProperty(ref this.activeSyncRun, value); }
+            get { return this.activeSyncJob; }
+            private set { this.SetProperty(ref this.activeSyncJob, value); }
         }
 
-        public SyncRun ActiveAnalyzeRun { get; set; }
+        public SyncJob ActiveAnalyzeJob { get; set; }
 
-        public event EventHandler<SyncRun> SyncRunStarted;
-        public event EventHandler<SyncRun> SyncRunFinished;
+        public event EventHandler<SyncJob> SyncJobStarted;
+        public event EventHandler<SyncJob> SyncJobFinished;
 
         private SyncRelationshipState state;
 
@@ -621,17 +621,17 @@
             set { this.SetProperty(ref this.errorMessage, value); }
         }
 
-        public SyncRun BeginSyncRun(
+        public SyncJob BeginSyncJob(
             SyncTriggerType syncTriggerType, 
             bool analyzeOnly, 
             AnalyzeRelationshipResult previousResult)
         {
-            if (this.ActiveSyncRun != null)
+            if (this.ActiveSyncJob != null)
             {
                 return null;
             }
 
-            this.ActiveSyncRun = new SyncRun(this)
+            this.ActiveSyncJob = new SyncJob(this)
             {
                 AnalyzeOnly = analyzeOnly,
                 AnalyzeResult = previousResult
@@ -639,34 +639,34 @@
 
             if (analyzeOnly)
             {
-                this.ActiveAnalyzeRun = this.ActiveSyncRun;
+                this.ActiveAnalyzeJob = this.ActiveSyncJob;
             }
 
-            this.ActiveSyncRun.SyncStarted += (sender, args) =>
+            this.ActiveSyncJob.SyncStarted += (sender, args) =>
             {
-                this.SyncRunStarted?.Invoke(this, this.ActiveSyncRun); 
+                this.SyncJobStarted?.Invoke(this, this.ActiveSyncJob); 
             };
 
-            this.ActiveSyncRun.SyncFinished += (sender, args) =>
+            this.ActiveSyncJob.SyncFinished += (sender, args) =>
             {
-                SyncRun syncRun = this.ActiveSyncRun;
-                this.ActiveSyncRun = null;
-                this.SyncRunFinished?.Invoke(this, syncRun);
+                SyncJob syncJob = this.ActiveSyncJob;
+                this.ActiveSyncJob = null;
+                this.SyncJobFinished?.Invoke(this, syncJob);
             };
 
-            this.ActiveSyncRun.Start(syncTriggerType);
+            this.ActiveSyncJob.Start(syncTriggerType);
 
-            return this.ActiveSyncRun;
+            return this.ActiveSyncJob;
         }
 
-        public IList<SyncRun> GetSyncRunHistory()
+        public IList<SyncJob> GetSyncJobHistory()
         {
-            List<SyncRun> runs = new List<SyncRun>();
+            List<SyncJob> runs = new List<SyncJob>();
             using (var db = this.GetDatabase())
             {
                 foreach (SyncHistoryData historyData in db.History)
                 {
-                    runs.Add(SyncRun.FromHistoryEntry(this, historyData));
+                    runs.Add(SyncJob.FromHistoryEntry(this, historyData));
                 }
             }
 

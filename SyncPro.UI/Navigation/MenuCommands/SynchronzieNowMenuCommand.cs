@@ -2,22 +2,22 @@ namespace SyncPro.UI.Navigation.MenuCommands
 {
     public class SynchronzieNowMenuCommand : NavigationItemMenuCommand
     {
-        private readonly SyncRunPanelViewModel syncRunPanel;
+        private readonly SyncJobPanelViewModel syncJobPanel;
 
-        public SynchronzieNowMenuCommand(SyncRunPanelViewModel syncRunPanel)
+        public SynchronzieNowMenuCommand(SyncJobPanelViewModel syncJobPanel)
             : base("SYNCHRONIZE NOW", "/SyncPro.UI;component/Resources/Graphics/refresh_update_16.png")
         {
-            this.syncRunPanel = syncRunPanel;
+            this.syncJobPanel = syncJobPanel;
         }
 
         protected override bool CanInvokeCommand(object obj)
         {
-            return this.syncRunPanel.BeginSyncCommand.CanExecute(obj);
+            return this.syncJobPanel.BeginSyncCommand.CanExecute(obj);
         }
 
         protected override void InvokeCommand(object obj)
         {
-            this.syncRunPanel.BeginSyncCommand.Execute(obj);
+            this.syncJobPanel.BeginSyncCommand.Execute(obj);
         }
     }
 }

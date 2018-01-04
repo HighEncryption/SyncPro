@@ -1,6 +1,6 @@
 namespace SyncPro.Runtime
 {
-    public class SyncRunProgressInfo
+    public class SyncJobProgressInfo
     {
         /// <summary>
         /// Indicates the value of progress from 0.00 to 1.00. A value of  -1.0 indicates that progress is indeterminate.
@@ -31,19 +31,19 @@ namespace SyncPro.Runtime
 
         public string Message { get; }
 
-        public SyncRunStage Stage { get; }
+        public SyncJobStage Stage { get; }
 
         public EntryUpdateInfo UpdateInfo { get; }
 
-        public SyncRunProgressInfo(SyncRunStage stage, string message)
+        public SyncJobProgressInfo(SyncJobStage stage, string message)
         {
             this.Stage = stage;
             this.Message = message;
         }
 
-        public SyncRunProgressInfo(EntryUpdateInfo updateInfo, int filesTotal, long bytesTotal)
+        public SyncJobProgressInfo(EntryUpdateInfo updateInfo, int filesTotal, long bytesTotal)
         {
-            this.Stage = SyncRunStage.Analyze;
+            this.Stage = SyncJobStage.Analyze;
             this.ProgressValue = double.PositiveInfinity;
             this.FilesTotal = filesTotal;
             this.BytesTotal = bytesTotal;
@@ -51,7 +51,7 @@ namespace SyncPro.Runtime
             this.UpdateInfo = updateInfo;
         }
 
-        public SyncRunProgressInfo(
+        public SyncJobProgressInfo(
             EntryUpdateInfo updateInfo,
             int filesTotal,
             int filesCompleted,
@@ -59,7 +59,7 @@ namespace SyncPro.Runtime
             long bytesCompleted,
             int bytesPerSecond)
         {
-            this.Stage = SyncRunStage.Sync;
+            this.Stage = SyncJobStage.Sync;
             this.UpdateInfo = updateInfo;
 
             this.ProgressValue = (double)bytesCompleted / (double)bytesTotal;

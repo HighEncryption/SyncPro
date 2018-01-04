@@ -3,11 +3,11 @@
 namespace SyncPro.UI.Navigation.Content
 {
     /// <summary>
-    /// Interaction logic for SyncRunHistoryView.xaml
+    /// Interaction logic for SyncJobHistoryView.xaml
     /// </summary>
-    public partial class SyncRunHistoryView
+    public partial class SyncJobHistoryView
     {
-        public SyncRunHistoryView()
+        public SyncJobHistoryView()
         {
             this.InitializeComponent();
         }
@@ -15,7 +15,7 @@ namespace SyncPro.UI.Navigation.Content
         public static readonly DependencyProperty NavigationNodeViewModelProperty = DependencyProperty.Register(
             "NavigationNodeViewModel", 
             typeof (NavigationNodeViewModel), 
-            typeof (SyncRunHistoryView),
+            typeof (SyncJobHistoryView),
             new PropertyMetadata(default(NavigationNodeViewModel)));
 
         public NavigationNodeViewModel NavigationNodeViewModel

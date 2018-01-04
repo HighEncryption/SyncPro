@@ -1,11 +1,11 @@
 ﻿namespace SyncPro.UI.Navigation.Content
 {
     /// <summary>
-    /// Interaction logic for SyncRunView.xaml
+    /// Interaction logic for SyncJobView.xaml
     /// </summary>
-    public partial class SyncRunView
+    public partial class SyncJobView
     {
-        public SyncRunView()
+        public SyncJobView()
         {
             this.InitializeComponent();
         }

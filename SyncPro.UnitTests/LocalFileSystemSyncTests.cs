@@ -27,7 +27,7 @@
                 .CreateBasicSourceStructure();
 
             testWrapper
-                .CreateSyncRun()
+                .CreateSyncJob()
                 .Set(r => r.AnalyzeOnly = true)
                 .RunToCompletion()
                 .VerifyAnalyzeSuccess()
@@ -45,7 +45,7 @@
                 .CreateLocalToLocal(this.TestContext)
                 .SaveRelationship()
                 .CreateBasicSourceStructure()
-                .CreateSyncRun()
+                .CreateSyncJob()
                 .RunToCompletion()
                 .VerifySyncSuccess()
                 .VerifyResultContainsAllFiles()
@@ -60,17 +60,17 @@
                 .SaveRelationship()
                 .CreateBasicSourceStructure();
 
-            // First sync run
+            // First sync job
             testWrapper
-                .CreateSyncRun()
+                .CreateSyncJob()
                 .RunToCompletion()
                 .VerifySyncSuccess()
                 .VerifyResultContainsAllFiles()
                 .VerifyDatabaseHashes();
 
-            // Second sync run
+            // Second sync job
             testWrapper
-                .CreateSyncRun()
+                .CreateSyncJob()
                 .RunToCompletion()
                 .VerifyAnalyzeSuccess()
                 .VerifySyncNotRun()
@@ -85,9 +85,9 @@
                 .SaveRelationship()
                 .CreateBasicSourceStructure();
 
-            // First sync run
+            // First sync job
             testWrapper
-                .CreateSyncRun()
+                .CreateSyncJob()
                 .RunToCompletion()
                 .VerifySyncSuccess()
                 .VerifyResultContainsAllFiles()
@@ -108,9 +108,9 @@
             testWrapper.SyncFileList.Remove("dir1\\file2.txt");
             testWrapper.SyncFileList.RemoveAll(e => e.StartsWith("dir2\\dir3"));
 
-            // Second sync run
+            // Second sync job
             testWrapper
-                .CreateSyncRun()
+                .CreateSyncJob()
                 .RunToCompletion()
                 .VerifySyncSuccess()
                 .VerifyAnalyzeEntryCount(6)
@@ -125,9 +125,9 @@
                 .SaveRelationship()
                 .CreateSimpleSourceStructure();
 
-            // First sync run
+            // First sync job
             testWrapper
-                .CreateSyncRun()
+                .CreateSyncJob()
                 .RunToCompletion()
                 .VerifySyncSuccess()
                 .VerifyResultContainsAllFiles()
@@ -145,18 +145,18 @@
             var newCreationTime = File.GetCreationTimeUtc(filePath).AddSeconds(1);
             File.SetCreationTimeUtc(filePath, newCreationTime);
 
-            // Second sync run
-            var syncRun = testWrapper
-                .CreateSyncRun();
+            // Second sync job
+            var syncJob = testWrapper
+                .CreateSyncJob();
 
-            syncRun
+            syncJob
                 .RunToCompletion()
                 .VerifySyncSuccess()
                 .VerifyAnalyzeEntryCount(1)
                 .VerifyDatabaseHashes();
 
             // Verify that only the created timestamp change was detected
-            var changedSyncEntry = syncRun.CurrentSyncRun.AnalyzeResult.AdapterResults[1].EntryResults[0];
+            var changedSyncEntry = syncJob.CurrentSyncJob.AnalyzeResult.AdapterResults[1].EntryResults[0];
             Assert.AreEqual(changedSyncEntry.Flags, SyncEntryChangedFlags.CreatedTimestamp);
 
             // Verify that the timestamp was copied
@@ -173,9 +173,9 @@
                 .SaveRelationship()
                 .CreateSimpleSourceStructure();
 
-            // First sync run
+            // First sync job
             testWrapper
-                .CreateSyncRun()
+                .CreateSyncJob()
                 .RunToCompletion()
                 .VerifySyncSuccess()
                 .VerifyResultContainsAllFiles()
@@ -193,18 +193,18 @@
             var newModifiedTime = File.GetLastWriteTimeUtc(filePath).AddSeconds(1);
             File.SetLastWriteTimeUtc(filePath, newModifiedTime);
 
-            // Second sync run
-            var syncRun = testWrapper
-                .CreateSyncRun();
+            // Second sync job
+            var syncJob = testWrapper
+                .CreateSyncJob();
 
-            syncRun
+            syncJob
                 .RunToCompletion()
                 .VerifySyncSuccess()
                 .VerifyAnalyzeEntryCount(1)
                 .VerifyDatabaseHashes();
 
             // Verify that only the created timestamp change was detected
-            var changedSyncEntry = syncRun.CurrentSyncRun.AnalyzeResult.AdapterResults[1].EntryResults[0];
+            var changedSyncEntry = syncJob.CurrentSyncJob.AnalyzeResult.AdapterResults[1].EntryResults[0];
             Assert.AreEqual(changedSyncEntry.Flags, SyncEntryChangedFlags.ModifiedTimestamp);
 
             // Verify that the timestamp was copied
@@ -225,7 +225,7 @@
                 .SaveRelationship()
                 .CreateBasicSourceStructure()
                 .CreateBasicDestinationStructure()
-                .CreateSyncRun()
+                .CreateSyncJob()
                 .RunToCompletion()
                 .VerifySyncSuccess()
                 .VerifyResultContainsAllFiles()

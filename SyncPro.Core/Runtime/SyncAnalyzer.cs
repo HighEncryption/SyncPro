@@ -20,7 +20,7 @@ namespace SyncPro.Runtime
         private readonly CancellationToken cancellationToken;
         private readonly AnalyzeRelationshipResult analyzeResult;
 
-        public EventHandler<SyncRunProgressInfo> ChangeDetected;
+        public EventHandler<SyncJobProgressInfo> ChangeDetected;
 
         public SyncAnalyzer(SyncRelationship relationship, CancellationToken cancellationToken)
         {
@@ -743,7 +743,7 @@ namespace SyncPro.Runtime
             this.analyzeResult.AdapterResults[adapterId].EntryResults.Add(updateInfo);
             this.ChangeDetected?.Invoke(
                 this, 
-                new SyncRunProgressInfo(
+                new SyncJobProgressInfo(
                     updateInfo, 
                     this.analyzeResult.AdapterResults[adapterId].EntryResults.Count,
                     0));

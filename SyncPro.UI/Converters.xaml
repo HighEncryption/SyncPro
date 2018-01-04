@@ -29,7 +29,7 @@
 
     <converters:ByteArrayToString x:Key="ByteArrayToString" />
 
-    <converters:SyncRunStageToVisiblityConverter x:Key="SyncRunStageToVisiblity" />
+    <converters:SyncJobStageToVisiblityConverter x:Key="SyncJobStageToVisiblity" />
     
     <converters:NullImageConverter x:Key="NullImageConverter" />
 

@@ -37,7 +37,7 @@ namespace SyncPro.UI.Navigation.MenuCommands
             // An analyze item is not present, so add a new one.
             if (analyzeItem == null)
             {
-                SyncRunPanelViewModel viewModel = new SyncRunPanelViewModel(this.relationship)
+                SyncJobPanelViewModel viewModel = new SyncJobPanelViewModel(this.relationship)
                 {
                     IsAnalyzeOnlyMode = true
                 };
@@ -47,10 +47,10 @@ namespace SyncPro.UI.Navigation.MenuCommands
             }
 
             analyzeItem.IsSelected = true;
-            SyncRunPanelViewModel syncRunViewModel = (SyncRunPanelViewModel) analyzeItem.Item;
-            if (syncRunViewModel.BeginAnalyzeCommand.CanExecute(null))
+            SyncJobPanelViewModel syncJobViewModel = (SyncJobPanelViewModel) analyzeItem.Item;
+            if (syncJobViewModel.BeginAnalyzeCommand.CanExecute(null))
             {
-                syncRunViewModel.BeginAnalyzeCommand.Execute(null);
+                syncJobViewModel.BeginAnalyzeCommand.Execute(null);
             }
         }
     }
