@@ -150,7 +150,7 @@ namespace SyncPro.UnitTests
 
                     Assert.IsNotNull(entryResult);
 
-                    byte[] databaseHash = entryResult.Entry.SourceSha1Hash;
+                    byte[] databaseHash = entryResult.Entry.OriginalSha1Hash;
 
                     Assert.AreEqual(
                         TestHelper.HashToHex(localFileHash),

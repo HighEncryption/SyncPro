@@ -51,62 +51,62 @@
         /// <summary>
         /// The previous size in bytes of the entry's source file (if changed)
         /// </summary>
-        public long SourceSizeOld { get; set; }
+        public long OriginalSizeOld { get; set; }
 
         /// <summary>
         /// The size of the entry's source file (in bytes) at the time when it was synced.
         /// </summary>
-        public long SourceSizeNew { get; set; }
+        public long OriginalSizeNew { get; set; }
 
         /// <summary>
         /// The previous size in bytes of the entry's destination file (if changed)
         /// </summary>
-        public long DestinationSizeOld { get; set; }
+        public long EncryptedSizeOld { get; set; }
 
         /// <summary>
         /// The size of the entry (in bytes) at the time when it was synced.
         /// </summary>
-        public long DestinationSizeNew { get; set; }
+        public long EncryptedSizeNew { get; set; }
 
         /// <summary>
         /// The previous SHA1 Hash of the file content (if changed)
         /// </summary>
-        public byte[] SourceSha1HashOld { get; set; }
+        public byte[] OriginalSha1HashOld { get; set; }
 
         /// <summary>
         /// The SHA1 Hash of the file content at the time when it was synced.
         /// </summary>
-        public byte[] SourceSha1HashNew { get; set; }
+        public byte[] OriginalSha1HashNew { get; set; }
 
         /// <summary>
         /// The previous SHA1 Hash of the file content (if changed)
         /// </summary>
-        public byte[] DestinationSha1HashOld { get; set; }
+        public byte[] EncryptedSha1HashOld { get; set; }
 
         /// <summary>
         /// The SHA1 Hash of the file content at the time when it was synced.
         /// </summary>
-        public byte[] DestinationSha1HashNew { get; set; }
+        public byte[] EncryptedSha1HashNew { get; set; }
 
         /// <summary>
         /// The previous MD5 Hash of the file content (if changed)
         /// </summary>
-        public byte[] SourceMd5HashOld { get; set; }
+        public byte[] OriginalMd5HashOld { get; set; }
 
         /// <summary>
         /// The MD5 Hash of the file content at the time when it was synced.
         /// </summary>
-        public byte[] SourceMd5HashNew { get; set; }
+        public byte[] OriginalMd5HashNew { get; set; }
 
         /// <summary>
         /// The previous MD5 Hash of the file content (if changed)
         /// </summary>
-        public byte[] DestinationMd5HashOld { get; set; }
+        public byte[] EncryptedMd5HashOld { get; set; }
 
         /// <summary>
         /// The MD5 Hash of the file content at the time when it was synced.
         /// </summary>
-        public byte[] DestinationMd5HashNew { get; set; }
+        public byte[] EncryptedMd5HashNew { get; set; }
 
         /// <summary>
         /// The previous CreationTime of the entry (if changed)

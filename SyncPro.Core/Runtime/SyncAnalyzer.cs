@@ -10,6 +10,7 @@ namespace SyncPro.Runtime
     using System.Threading.Tasks;
 
     using SyncPro.Adapters;
+    using SyncPro.Configuration;
     using SyncPro.Data;
     using SyncPro.Tracing;
 
@@ -98,7 +99,7 @@ namespace SyncPro.Runtime
                             break;
                         case SyncEntryType.File:
                             this.analyzeResult.UnchangedFileCount++;
-                            this.analyzeResult.UnchangedFileBytes += syncEntry.SourceSize;
+                            this.analyzeResult.UnchangedFileBytes += syncEntry.GetSize(this.relationship, SyncEntryPropertyLocation.Source);
                             break;
                         default:
                             throw new ArgumentOutOfRangeException();
@@ -402,8 +403,16 @@ namespace SyncPro.Runtime
 
                 // Some providers can return information that normally isn't known until the item 
                 // is copied. Copy the values to the UpdateInfo object.
-                logicalChild.UpdateInfo.SourceSizeNew = changeAdapterItem.Size;
-                logicalChild.UpdateInfo.SourceSha1HashNew = changeAdapterItem.Sha1Hash;
+                if (this.relationship.EncryptionMode == EncryptionMode.Decrypt)
+                {
+                    logicalChild.UpdateInfo.EncryptedSizeNew = changeAdapterItem.Size;
+                    logicalChild.UpdateInfo.EncryptedSha1HashNew = changeAdapterItem.Sha1Hash;
+                }
+                else
+                {
+                    logicalChild.UpdateInfo.OriginalSizeNew = changeAdapterItem.Size;
+                    logicalChild.UpdateInfo.OriginalSha1HashNew = changeAdapterItem.Sha1Hash;
+                }
 
                 // Raise change notification so that the UI can be updated in "real time" rather than waiting for the analyze process to finish.
                 this.RaiseChangeDetected(adapter.Configuration.Id, logicalChild.UpdateInfo);
@@ -601,9 +610,19 @@ namespace SyncPro.Runtime
                             logicalChild.UpdateInfo.PathNew = logicalChild.UpdateInfo.RelativePath;
                         }
 
-                        if (logicalChild.UpdateInfo.SourceSizeOld != adapterChild.Size)
+                        if (this.relationship.EncryptionMode == EncryptionMode.Decrypt)
                         {
-                            logicalChild.UpdateInfo.SourceSizeNew = adapterChild.Size;
+                            if (logicalChild.UpdateInfo.EncryptedSizeOld != adapterChild.Size)
+                            {
+                                logicalChild.UpdateInfo.EncryptedSizeNew = adapterChild.Size;
+                            }
+                        }
+                        else
+                        {
+                            if (logicalChild.UpdateInfo.OriginalSizeOld != adapterChild.Size)
+                            {
+                                logicalChild.UpdateInfo.OriginalSizeNew = adapterChild.Size;
+                            }
                         }
 
                         // Set the NotSynchronized flag so that we know this has not yet been committed to the database.

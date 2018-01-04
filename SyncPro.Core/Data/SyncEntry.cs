@@ -7,6 +7,7 @@
     using System.Diagnostics;
     using System.Linq;
 
+    using SyncPro.Configuration;
     using SyncPro.Runtime;
     using SyncPro.Utility;
 
@@ -33,6 +34,12 @@
         /// </summary>
         IsDeleted = 0x02,
         Undefined = 0xFF
+    }
+
+    public enum SyncEntryPropertyLocation
+    {
+        Source,
+        Destination
     }
 
     /// <summary>
@@ -79,38 +86,38 @@
         public DateTime EntryLastUpdatedDateTimeUtc { get; set; }
 
         /// <summary>
-        /// The SHA1 hash of the source file contents
+        /// The SHA1 hash of the unencrypted source file contents
         /// </summary>
         [MaxLength(20)]
-        public byte[] SourceSha1Hash { get; set; }
+        public byte[] OriginalSha1Hash { get; set; }
 
         /// <summary>
-        /// The SHA1 hash of the destination file contents. Only set when the destination differs from the source.
+        /// The SHA1 hash of the encrytped file contents. Only set when the file is encrypted.
         /// </summary>
         [MaxLength(20)]
-        public byte[] DestinationSha1Hash { get; set; }
+        public byte[] EncryptedSha1Hash { get; set; }
 
         /// <summary>
-        /// The MD5 hash of the source file contents
+        /// The MD5 hash of the unencrypted file contents
         /// </summary>
         [MaxLength(16)]
-        public byte[] SourceMd5Hash { get; set; }
+        public byte[] OriginalMd5Hash { get; set; }
 
         /// <summary>
-        /// The MD5 hash of the destination file contents. Only set when the destination differs from the source.
+        /// The MD5 hash of the encrypted file contents. Only set when the file is encrypted.
         /// </summary>
         [MaxLength(16)]
-        public byte[] DestinationMd5Hash { get; set; }
+        public byte[] EncryptedMd5Hash { get; set; }
 
         /// <summary>
-        /// The size of the source source file (bytes)
+        /// The size of the unencrypted file (bytes)
         /// </summary>
-        public long SourceSize { get; set; }
+        public long OriginalSize { get; set; }
 
         /// <summary>
-        /// The size of the destination file (bytes)
+        /// The size of the encrypted file (bytes)
         /// </summary>
-        public long DestinationSize { get; set; }
+        public long EncryptedSize { get; set; }
 
         public SyncEntryState State { get; set; }
 
@@ -173,6 +180,91 @@
         {
             return this.relativePathStack ?? (this.relativePathStack = this.GetRelativePathStackInternal(database));
         }
+
+        public long GetSize(SyncRelationship relationship, SyncEntryPropertyLocation location)
+        {
+            // When decrypting, the source will be encrypted
+            if (location == SyncEntryPropertyLocation.Source &&
+                relationship.EncryptionMode == EncryptionMode.Decrypt)
+            {
+                return this.EncryptedSize;
+            }
+
+            // When encrypting, the destination will be encrypted
+            if (location == SyncEntryPropertyLocation.Destination &&
+                relationship.EncryptionMode == EncryptionMode.Encrypt)
+            {
+                return this.EncryptedSize;
+            }
+
+            // For all other cases, use the original (unencrypted) value
+            return this.OriginalSize;
+        }
+
+        public void SetSize(SyncRelationship relationship, SyncEntryPropertyLocation location, long value)
+        {
+            // When decrypting, the source will be encrypted
+            if (location == SyncEntryPropertyLocation.Source &&
+                relationship.EncryptionMode == EncryptionMode.Decrypt)
+            {
+                this.EncryptedSize = value;
+                return;
+            }
+
+            // When encrypting, the destination will be encrypted
+            if (location == SyncEntryPropertyLocation.Destination &&
+                relationship.EncryptionMode == EncryptionMode.Encrypt)
+            {
+                this.EncryptedSize = value;
+                return;
+            }
+
+            // For all other cases, use the original (unencrypted) value
+            this.OriginalSize = value;
+        }
+
+        public byte[] GetSha1Hash(SyncRelationship relationship, SyncEntryPropertyLocation location)
+        {
+            // When decrypting, the source will be encrypted
+            if (location == SyncEntryPropertyLocation.Source &&
+                relationship.EncryptionMode == EncryptionMode.Decrypt)
+            {
+                return this.EncryptedSha1Hash;
+            }
+
+            // When encrypting, the destination will be encrypted
+            if (location == SyncEntryPropertyLocation.Destination &&
+                relationship.EncryptionMode == EncryptionMode.Encrypt)
+            {
+                return this.EncryptedSha1Hash;
+            }
+
+            // For all other cases, use the original (unencrypted) value
+            return this.OriginalSha1Hash;
+        }
+
+        public void SetSha1Hash(SyncRelationship relationship, SyncEntryPropertyLocation location, byte[] value)
+        {
+            // When decrypting, the source will be encrypted
+            if (location == SyncEntryPropertyLocation.Source &&
+                relationship.EncryptionMode == EncryptionMode.Decrypt)
+            {
+                this.EncryptedSha1Hash = value;
+                return;
+            }
+
+            // When encrypting, the destination will be encrypted
+            if (location == SyncEntryPropertyLocation.Destination &&
+                relationship.EncryptionMode == EncryptionMode.Encrypt)
+            {
+                this.EncryptedSha1Hash = value;
+                return;
+            }
+
+            // For all other cases, use the original (unencrypted) value
+            this.OriginalSha1Hash = value;
+        }
+
     }
 
     /// <summary>

@@ -103,12 +103,12 @@ namespace SyncPro.UnitTests
                 Logger.Info("   Creation: {0}", entry.CreationDateTimeUtc);
                 Logger.Info("   Modified: {0}", entry.ModifiedDateTimeUtc);
                 Logger.Info("   Last Updated: {0}", entry.EntryLastUpdatedDateTimeUtc);
-                Logger.Info("   Source Size: {0}", entry.SourceSize);
-                Logger.Info("   Dest Size: {0}", entry.DestinationSize);
-                Logger.Info("   Source SHA1 Hash: {0}", HashToHex(entry.SourceSha1Hash));
-                Logger.Info("   Dest SHA1 Hash: {0}", HashToHex(entry.DestinationSha1Hash));
-                Logger.Info("   Source MD5 Hash: {0}", HashToHex(entry.SourceMd5Hash));
-                Logger.Info("   Dest MD5 Hash: {0}", HashToHex(entry.DestinationMd5Hash));
+                Logger.Info("   Source Size: {0}", entry.OriginalSize);
+                Logger.Info("   Dest Size: {0}", entry.EncryptedSize);
+                Logger.Info("   Source SHA1 Hash: {0}", HashToHex(entry.OriginalSha1Hash));
+                Logger.Info("   Dest SHA1 Hash: {0}", HashToHex(entry.EncryptedSha1Hash));
+                Logger.Info("   Source MD5 Hash: {0}", HashToHex(entry.OriginalMd5Hash));
+                Logger.Info("   Dest MD5 Hash: {0}", HashToHex(entry.EncryptedMd5Hash));
                 Logger.Info("   Adapter IDs:");
 
                 foreach (SyncEntryAdapterData adapterEntry in entry.AdapterEntries)

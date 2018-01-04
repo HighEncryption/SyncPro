@@ -150,13 +150,13 @@
                 if (entry.HasSyncEntryFlag(SyncEntryChangedFlags.NewFile))
                 {
                     this.ChangeMetricsList[0].Added++;
-                    this.ChangeMetricsList[2].Added += entry.SourceSizeNew;
-                    this.BytesToCopy += entry.SourceSizeNew;
+                    this.ChangeMetricsList[2].Added += entry.OriginalSizeNew;
+                    this.BytesToCopy += entry.OriginalSizeNew;
                 }
                 else if (entry.HasSyncEntryFlag(SyncEntryChangedFlags.Deleted))
                 {
                     this.ChangeMetricsList[0].Removed++;
-                    this.ChangeMetricsList[2].Removed += entry.SourceSizeNew;
+                    this.ChangeMetricsList[2].Removed += entry.OriginalSizeNew;
                 }
                 else if (entry.HasSyncEntryFlag(SyncEntryChangedFlags.CreatedTimestamp)
                          || entry.HasSyncEntryFlag(SyncEntryChangedFlags.ModifiedTimestamp))
@@ -168,8 +168,8 @@
                          || entry.HasSyncEntryFlag(SyncEntryChangedFlags.FileSize))
                 {
                     this.ChangeMetricsList[0].Modified++;
-                    this.ChangeMetricsList[2].Modified += entry.SourceSizeNew;
-                    this.BytesToCopy += entry.SourceSizeNew;
+                    this.ChangeMetricsList[2].Modified += entry.OriginalSizeNew;
+                    this.BytesToCopy += entry.OriginalSizeNew;
                 }
             }
         }
@@ -390,13 +390,13 @@
                 if (info.HasSyncEntryFlag(SyncEntryChangedFlags.NewFile))
                 {
                     this.ChangeMetricsList[0].Added++;
-                    this.ChangeMetricsList[2].Added += info.Entry.SourceSize;
-                    this.BytesToCopy += info.Entry.SourceSize;
+                    this.ChangeMetricsList[2].Added += info.Entry.GetSize(this.SyncRelationship.GetSyncRelationship(), SyncEntryPropertyLocation.Source);
+                    this.BytesToCopy += info.Entry.GetSize(this.SyncRelationship.GetSyncRelationship(), SyncEntryPropertyLocation.Source);
                 }
                 else if (info.HasSyncEntryFlag(SyncEntryChangedFlags.Deleted))
                 {
                     this.ChangeMetricsList[0].Removed++;
-                    this.ChangeMetricsList[2].Removed += info.Entry.SourceSize;
+                    this.ChangeMetricsList[2].Removed += info.Entry.GetSize(this.SyncRelationship.GetSyncRelationship(), SyncEntryPropertyLocation.Source);
                 }
                 else if (info.HasSyncEntryFlag(SyncEntryChangedFlags.CreatedTimestamp)
                          || info.HasSyncEntryFlag(SyncEntryChangedFlags.ModifiedTimestamp))
@@ -408,8 +408,8 @@
                          || info.HasSyncEntryFlag(SyncEntryChangedFlags.FileSize))
                 {
                     this.ChangeMetricsList[0].Modified++;
-                    this.ChangeMetricsList[2].Modified += info.Entry.SourceSize;
-                    this.BytesToCopy += info.Entry.SourceSize;
+                    this.ChangeMetricsList[2].Modified += info.Entry.GetSize(this.SyncRelationship.GetSyncRelationship(), SyncEntryPropertyLocation.Source);
+                    this.BytesToCopy += info.Entry.GetSize(this.SyncRelationship.GetSyncRelationship(), SyncEntryPropertyLocation.Source);
                 }
             }
         }

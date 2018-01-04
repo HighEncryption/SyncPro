@@ -5,64 +5,64 @@
     public interface ISyncEntryMetadataChange
     {
         /// <summary>
-        /// The previous size in bytes of the entry (if changed)
+        /// The unencrypted size in bytes of the entry (if changed)
         /// </summary>
-        long SourceSizeOld { get; set; }
+        long OriginalSizeOld { get; set; }
 
         /// <summary>
-        /// The size of the entry (in bytes) at the time when it was synced.
+        /// The unencryptedsize of the entry (in bytes) at the time when it was synced.
         /// </summary>
-        long SourceSizeNew { get; set; }
+        long OriginalSizeNew { get; set; }
 
         /// <summary>
-        /// The previous size in bytes of the entry (if changed)
+        /// The encrypted size in bytes of the entry (if changed)
         /// </summary>
-        long DestinationSizeOld { get; set; }
+        long EncryptedSizeOld { get; set; }
 
         /// <summary>
-        /// The size of the entry (in bytes) at the time when it was synced.
+        /// The encrypted size of the entry (in bytes) at the time when it was synced.
         /// </summary>
-        long DestinationSizeNew { get; set; }
+        long EncryptedSizeNew { get; set; }
 
         /// <summary>
-        /// The previous SHA1 Hash of the file content (if changed)
+        /// The unencrypted SHA1 Hash of the file content (if changed)
         /// </summary>
-        byte[] SourceSha1HashOld { get; set; }
-
-        /// <summary>
-        /// The SHA1 Hash of the file content at the time when it was synced.
-        /// </summary>
-        byte[] SourceSha1HashNew { get; set; }
-
-        /// <summary>
-        /// The previous SHA1 Hash of the file content (if changed)
-        /// </summary>
-        byte[] DestinationSha1HashOld { get; set; }
+        byte[] OriginalSha1HashOld { get; set; }
 
         /// <summary>
         /// The SHA1 Hash of the file content at the time when it was synced.
         /// </summary>
-        byte[] DestinationSha1HashNew { get; set; }
+        byte[] OriginalSha1HashNew { get; set; }
+
+        /// <summary>
+        /// The previous encrytped SHA1 Hash of the file content (if changed)
+        /// </summary>
+        byte[] EncryptedSha1HashOld { get; set; }
+
+        /// <summary>
+        /// The SHA1 Hash of the encrypted file content at the time when it was synced.
+        /// </summary>
+        byte[] EncryptedSha1HashNew { get; set; }
 
         /// <summary>
         /// The previous MD5 Hash of the file content (if changed)
         /// </summary>
-        byte[] SourceMd5HashOld { get; set; }
+        byte[] OriginalMd5HashOld { get; set; }
 
         /// <summary>
         /// The MD5 Hash of the file content at the time when it was synced.
         /// </summary>
-        byte[] SourceMd5HashNew { get; set; }
+        byte[] OriginalMd5HashNew { get; set; }
 
         /// <summary>
         /// The previous MD5 Hash of the file content (if changed)
         /// </summary>
-        byte[] DestinationMd5HashOld { get; set; }
+        byte[] EncryptedMd5HashOld { get; set; }
 
         /// <summary>
         /// The MD5 Hash of the file content at the time when it was synced.
         /// </summary>
-        byte[] DestinationMd5HashNew { get; set; }
+        byte[] EncryptedMd5HashNew { get; set; }
 
         /// <summary>
         /// The previous CreationTime of the entry (if changed)

@@ -5,6 +5,7 @@
     using System.IO;
     using System.Linq;
     using System.Text;
+    using System.Threading;
     using System.Threading.Tasks;
 
     using SyncPro.Adapters.GoogleDrive.DataModel;
@@ -177,8 +178,18 @@
             else
             {
                 entry.Type = SyncEntryType.File;
-                entry.SourceSize = item.Size;
-                entry.SourceMd5Hash = HexToBytes(item.Md5Checksum);
+
+                if (this.Relationship.EncryptionMode == EncryptionMode.None ||
+                    this.Relationship.EncryptionMode == EncryptionMode.Encrypt)
+                {
+                    entry.OriginalSize = item.Size;
+                    entry.OriginalMd5Hash = HexToBytes(item.Md5Checksum);
+                }
+                else
+                {
+                    entry.EncryptedSize = item.Size;
+                    entry.EncryptedMd5Hash = HexToBytes(item.Md5Checksum);
+                }
             }
 
 

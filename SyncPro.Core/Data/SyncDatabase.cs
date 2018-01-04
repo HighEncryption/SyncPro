@@ -63,12 +63,12 @@
             entry.CreationDateTimeUtc = syncEntry.CreationDateTimeUtc;
             entry.ModifiedDateTimeUtc = syncEntry.ModifiedDateTimeUtc;
             entry.EntryLastUpdatedDateTimeUtc = syncEntry.EntryLastUpdatedDateTimeUtc;
-            entry.SourceSha1Hash = syncEntry.SourceSha1Hash;
-            entry.DestinationSha1Hash = syncEntry.DestinationSha1Hash;
-            entry.SourceMd5Hash = syncEntry.SourceMd5Hash;
-            entry.DestinationMd5Hash = syncEntry.DestinationMd5Hash;
-            entry.SourceSize = syncEntry.SourceSize;
-            entry.DestinationSize = syncEntry.DestinationSize;
+            entry.OriginalSha1Hash = syncEntry.OriginalSha1Hash;
+            entry.EncryptedSha1Hash = syncEntry.EncryptedSha1Hash;
+            entry.OriginalMd5Hash = syncEntry.OriginalMd5Hash;
+            entry.EncryptedMd5Hash = syncEntry.EncryptedMd5Hash;
+            entry.OriginalSize = syncEntry.OriginalSize;
+            entry.EncryptedSize = syncEntry.EncryptedSize;
             entry.State = syncEntry.State;
 
             return entry;

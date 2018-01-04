@@ -74,18 +74,18 @@
         // members, simply copy this same block from the SyncHistoryEntryData class.
         #region Metadata Properties
 
-        public long SourceSizeOld { get; set; }
-        public long SourceSizeNew { get; set; }
-        public long DestinationSizeOld { get; set; }
-        public long DestinationSizeNew { get; set; }
-        public byte[] SourceSha1HashOld { get; set; }
-        public byte[] SourceSha1HashNew { get; set; }
-        public byte[] DestinationSha1HashOld { get; set; }
-        public byte[] DestinationSha1HashNew { get; set; }
-        public byte[] SourceMd5HashOld { get; set; }
-        public byte[] SourceMd5HashNew { get; set; }
-        public byte[] DestinationMd5HashOld { get; set; }
-        public byte[] DestinationMd5HashNew { get; set; }
+        public long OriginalSizeOld { get; set; }
+        public long OriginalSizeNew { get; set; }
+        public long EncryptedSizeOld { get; set; }
+        public long EncryptedSizeNew { get; set; }
+        public byte[] OriginalSha1HashOld { get; set; }
+        public byte[] OriginalSha1HashNew { get; set; }
+        public byte[] EncryptedSha1HashOld { get; set; }
+        public byte[] EncryptedSha1HashNew { get; set; }
+        public byte[] OriginalMd5HashOld { get; set; }
+        public byte[] OriginalMd5HashNew { get; set; }
+        public byte[] EncryptedMd5HashOld { get; set; }
+        public byte[] EncryptedMd5HashNew { get; set; }
 
         /// <summary>
         /// The previous CreationTime of the entry (if changed)
@@ -188,18 +188,18 @@
             this.IsUpdatedItem = (info.Flags & SyncEntryChangedFlags.IsUpdated) != 0;
             this.IsDeletedItem = (info.Flags & SyncEntryChangedFlags.Deleted) != 0;
 
-            this.SourceSizeOld = info.SourceSizeOld;
-            this.DestinationSizeOld = info.DestinationSizeOld;
-            this.SourceSizeNew = info.SourceSizeNew;
-            this.DestinationSizeNew = info.DestinationSizeNew;
-            this.SourceSha1HashOld = info.SourceSha1HashOld;
-            this.DestinationSha1HashOld = info.DestinationSha1HashOld;
-            this.SourceSha1HashNew = info.SourceSha1HashNew;
-            this.DestinationSha1HashNew = info.DestinationSha1HashNew;
-            this.SourceMd5HashOld = info.SourceMd5HashOld;
-            this.DestinationMd5HashOld = info.DestinationMd5HashOld;
-            this.SourceMd5HashNew = info.SourceMd5HashNew;
-            this.DestinationMd5HashNew = info.DestinationMd5HashNew;
+            this.OriginalSizeOld = info.OriginalSizeOld;
+            this.EncryptedSizeOld = info.EncryptedSizeOld;
+            this.OriginalSizeNew = info.OriginalSizeNew;
+            this.EncryptedSizeNew = info.EncryptedSizeNew;
+            this.OriginalSha1HashOld = info.OriginalSha1HashOld;
+            this.EncryptedSha1HashOld = info.EncryptedSha1HashOld;
+            this.OriginalSha1HashNew = info.OriginalSha1HashNew;
+            this.EncryptedSha1HashNew = info.EncryptedSha1HashNew;
+            this.OriginalMd5HashOld = info.OriginalMd5HashOld;
+            this.EncryptedMd5HashOld = info.EncryptedMd5HashOld;
+            this.OriginalMd5HashNew = info.OriginalMd5HashNew;
+            this.EncryptedMd5HashNew = info.EncryptedMd5HashNew;
             this.CreationDateTimeUtcOld = info.CreationDateTimeUtcOld;
             this.CreationDateTimeUtcNew = info.CreationDateTimeUtcNew;
             this.ModifiedDateTimeUtcOld = info.ModifiedDateTimeUtcOld;
@@ -235,18 +235,18 @@
             this.IsUpdatedItem = (entry.Flags & SyncEntryChangedFlags.IsUpdated) != 0;
             this.IsDeletedItem = (entry.Flags & SyncEntryChangedFlags.Deleted) != 0;
 
-            this.SourceSizeOld = entry.SourceSizeOld;
-            this.DestinationSizeOld = entry.DestinationSizeOld;
-            this.SourceSizeNew = entry.SourceSizeNew;
-            this.DestinationSizeNew = entry.DestinationSizeNew;
-            this.SourceSha1HashOld = entry.SourceSha1HashOld;
-            this.DestinationSha1HashOld = entry.DestinationSha1HashOld;
-            this.SourceSha1HashNew = entry.SourceSha1HashNew;
-            this.DestinationSha1HashNew = entry.DestinationSha1HashNew;
-            this.SourceMd5HashOld = entry.SourceMd5HashOld;
-            this.DestinationMd5HashOld = entry.DestinationMd5HashOld;
-            this.SourceMd5HashNew = entry.SourceMd5HashNew;
-            this.DestinationMd5HashNew = entry.DestinationMd5HashNew;
+            this.OriginalSizeOld = entry.OriginalSizeOld;
+            this.EncryptedSizeOld = entry.EncryptedSizeOld;
+            this.OriginalSizeNew = entry.OriginalSizeNew;
+            this.EncryptedSizeNew = entry.EncryptedSizeNew;
+            this.OriginalSha1HashOld = entry.OriginalSha1HashOld;
+            this.EncryptedSha1HashOld = entry.EncryptedSha1HashOld;
+            this.OriginalSha1HashNew = entry.OriginalSha1HashNew;
+            this.EncryptedSha1HashNew = entry.EncryptedSha1HashNew;
+            this.OriginalMd5HashOld = entry.OriginalMd5HashOld;
+            this.EncryptedMd5HashOld = entry.EncryptedMd5HashOld;
+            this.OriginalMd5HashNew = entry.OriginalMd5HashNew;
+            this.EncryptedMd5HashNew = entry.EncryptedMd5HashNew;
             this.CreationDateTimeUtcOld = entry.CreationDateTimeUtcOld;
             this.CreationDateTimeUtcNew = entry.CreationDateTimeUtcNew;
             this.ModifiedDateTimeUtcOld = entry.ModifiedDateTimeUtcOld;

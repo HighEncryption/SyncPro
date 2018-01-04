@@ -57,18 +57,18 @@
             this.SyncEntryId = info.SyncEntryId;
             this.Flags = info.Flags;
             this.Result = info.Result;
-            this.SourceSizeOld = info.SourceSizeOld;
-            this.DestinationSizeOld = info.DestinationSizeOld;
-            this.SourceSizeNew = info.SourceSizeNew;
-            this.DestinationSizeNew = info.DestinationSizeNew;
-            this.SourceSha1HashOld = this.GetHashString(info.SourceSha1HashOld);
-            this.DestinationSha1HashOld = this.GetHashString(info.DestinationSha1HashOld);
-            this.SourceSha1HashNew = this.GetHashString(info.SourceSha1HashNew);
-            this.DestinationSha1HashNew = this.GetHashString(info.DestinationSha1HashNew);
-            this.SourceMd5HashOld = this.GetHashString(info.SourceMd5HashOld);
-            this.DestinationMd5HashOld = this.GetHashString(info.DestinationMd5HashOld);
-            this.SourceMd5HashNew = this.GetHashString(info.SourceMd5HashNew);
-            this.DestinationMd5HashNew = this.GetHashString(info.DestinationMd5HashNew);
+            this.OriginalSizeOld = info.OriginalSizeOld;
+            this.EncryptedSizeOld = info.EncryptedSizeOld;
+            this.OriginalSizeNew = info.OriginalSizeNew;
+            this.EncryptedSizeNew = info.EncryptedSizeNew;
+            this.OriginalSha1HashOld = this.GetHashString(info.OriginalSha1HashOld);
+            this.EncryptedSha1HashOld = this.GetHashString(info.EncryptedSha1HashOld);
+            this.OriginalSha1HashNew = this.GetHashString(info.OriginalSha1HashNew);
+            this.EncryptedSha1HashNew = this.GetHashString(info.EncryptedSha1HashNew);
+            this.OriginalMd5HashOld = this.GetHashString(info.OriginalMd5HashOld);
+            this.EncryptedMd5HashOld = this.GetHashString(info.EncryptedMd5HashOld);
+            this.OriginalMd5HashNew = this.GetHashString(info.OriginalMd5HashNew);
+            this.EncryptedMd5HashNew = this.GetHashString(info.EncryptedMd5HashNew);
             this.CreationDateTimeUtcOld = info.CreationDateTimeUtcOld;
             this.CreationDateTimeUtcNew = info.CreationDateTimeUtcNew;
             this.ModifiedDateTimeUtcOld = info.ModifiedDateTimeUtcOld;
@@ -99,38 +99,38 @@
         /// </summary>
         public DateTime Timestamp { get; set; }
 
-        public long SourceSizeOld { get; }
-        public long DestinationSizeOld { get; }
+        public long OriginalSizeOld { get; }
+        public long EncryptedSizeOld { get; }
 
         /// <summary>
         /// The size of the entry (in bytes) at the time when it was synced.
         /// </summary>
-        public long SourceSizeNew { get; }
-        public long DestinationSizeNew { get; }
+        public long OriginalSizeNew { get; }
+        public long EncryptedSizeNew { get; }
 
         /// <summary>
         /// The previous SHA1 Hash of the file content (if changed)
         /// </summary>
-        public string SourceSha1HashOld { get; }
-        public string DestinationSha1HashOld { get; }
+        public string OriginalSha1HashOld { get; }
+        public string EncryptedSha1HashOld { get; }
 
         /// <summary>
         /// The SHA1 Hash of the file content at the time when it was synced.
         /// </summary>
-        public string SourceSha1HashNew { get; }
-        public string DestinationSha1HashNew { get; }
+        public string OriginalSha1HashNew { get; }
+        public string EncryptedSha1HashNew { get; }
 
         /// <summary>
         /// The previous MD5 Hash of the file content (if changed)
         /// </summary>
-        public string SourceMd5HashOld { get; }
-        public string DestinationMd5HashOld { get; }
+        public string OriginalMd5HashOld { get; }
+        public string EncryptedMd5HashOld { get; }
 
         /// <summary>
         /// The MD5 Hash of the file content at the time when it was synced.
         /// </summary>
-        public string SourceMd5HashNew { get; }
-        public string DestinationMd5HashNew { get; }
+        public string OriginalMd5HashNew { get; }
+        public string EncryptedMd5HashNew { get; }
 
         /// <summary>
         /// The previous CreationTime of the entry (if changed)

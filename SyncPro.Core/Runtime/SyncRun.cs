@@ -361,7 +361,7 @@
 
             this.BytesTotal = updateList
                 .Where(item => item.HasSyncEntryFlag(SyncEntryChangedFlags.IsNewOrUpdated))
-                .Aggregate((long)0, (current, info) => current + info.Entry.SourceSize);
+                .Aggregate((long)0, (current, info) => current + info.Entry.GetSize(this.relationship, SyncEntryPropertyLocation.Source));
             this.bytesCompleted = 0;
 
             this.syncProgressUpdateStopwatch = new Stopwatch();
@@ -886,20 +886,22 @@
 
             try
             {
-                long writeStreamLength = updateInfo.Entry.SourceSize;
+                // Assume the original size of the file will be the write size. If encryption is enabled, the value
+                // will be updated below.
+                long writeStreamLength = updateInfo.Entry.OriginalSize;
 
                 if (this.relationship.EncryptionMode == EncryptionMode.Encrypt)
                 {
                     short padding;
                     writeStreamLength = EncryptionManager.CalculateEncryptedFileSize(
-                        updateInfo.Entry.SourceSize,
+                        updateInfo.Entry.OriginalSize,
                         out padding);
                 }
                 else if (this.relationship.EncryptionMode == EncryptionMode.Decrypt)
                 {
                     short padding;
                     writeStreamLength = EncryptionManager.CalculateDecryptedFileSize(
-                        updateInfo.Entry.SourceSize,
+                        updateInfo.Entry.EncryptedSize,
                         out padding);
                 }
 
@@ -915,9 +917,9 @@
 
                     encryptionManager = new EncryptionManager(
                         certificate,
-                        EncryptionMode.Encrypt,
+                        this.relationship.EncryptionMode,
                         toStream,
-                        updateInfo.Entry.SourceSize);
+                        updateInfo.Entry.GetSize(this.relationship, SyncEntryPropertyLocation.Source));
                 }
 
                 TransferResult result = await this.TransferDataWithHashAsync(
@@ -928,24 +930,53 @@
                         encryptionManager)
                     .ConfigureAwait(false);
 
-                // Add the transfer information back to the update info (so that it can be persisted later)
-                updateInfo.SourceSizeNew = result.BytesRead;
-                updateInfo.DestinationSizeNew = result.BytesWritten;
-
-                updateInfo.SourceSha1HashNew = result.Sha1Hash;
-                updateInfo.SourceMd5HashNew = result.Md5Hash;
-
-                if (encryptionManager != null)
+                if (this.relationship.EncryptionMode == EncryptionMode.Encrypt)
                 {
-                    updateInfo.DestinationSha1HashNew = result.TransformedSha1Hash;
-                    updateInfo.DestinationMd5HashNew = result.TransformedMd5Hash;
-                }
+                    // The file was encrytped, so we read the original file and wrote the encrypted file.
+                    updateInfo.OriginalSizeNew = result.BytesRead;
+                    updateInfo.EncryptedSizeNew = result.BytesWritten;
 
-                // Add the hash information to the entry that was copied
-                updateInfo.Entry.SourceSha1Hash = result.Sha1Hash;
-                updateInfo.Entry.DestinationSha1Hash = result.TransformedSha1Hash ?? result.Sha1Hash;
-                updateInfo.Entry.SourceMd5Hash = result.Md5Hash;
-                updateInfo.Entry.DestinationMd5Hash = result.TransformedMd5Hash ?? result.Md5Hash;
+                    updateInfo.OriginalSha1HashNew = result.Sha1Hash;
+                    updateInfo.OriginalMd5HashNew = result.Md5Hash;
+
+                    updateInfo.EncryptedSha1HashNew = result.TransformedSha1Hash;
+                    updateInfo.EncryptedMd5HashNew = result.TransformedMd5Hash;
+
+                    // Add the hash information to the entry that was copied
+                    updateInfo.Entry.OriginalSha1Hash = result.Sha1Hash;
+                    updateInfo.Entry.EncryptedSha1Hash = result.TransformedSha1Hash;
+                    updateInfo.Entry.OriginalMd5Hash = result.Md5Hash;
+                    updateInfo.Entry.EncryptedMd5Hash = result.TransformedMd5Hash;
+                }
+                else if (this.relationship.EncryptionMode == EncryptionMode.Decrypt)
+                {
+                    // The file was descrypted, so we read the encrypted file and wrote the original (unencrypted) file.
+                    updateInfo.EncryptedSizeNew = result.BytesRead;
+                    updateInfo.OriginalSizeNew = result.BytesWritten;
+
+                    updateInfo.EncryptedSha1HashNew = result.Sha1Hash;
+                    updateInfo.EncryptedMd5HashNew = result.Md5Hash;
+
+                    updateInfo.OriginalSha1HashNew = result.TransformedSha1Hash;
+                    updateInfo.OriginalMd5HashNew = result.TransformedMd5Hash;
+
+                    // Add the hash information to the entry that was copied
+                    updateInfo.Entry.OriginalSha1Hash = result.TransformedSha1Hash;
+                    updateInfo.Entry.EncryptedSha1Hash = result.Sha1Hash;
+                    updateInfo.Entry.OriginalMd5Hash = result.TransformedMd5Hash;
+                    updateInfo.Entry.EncryptedMd5Hash = result.Md5Hash;
+                }
+                else
+                {
+                    // The file was transferred without any encryption operation
+                    updateInfo.OriginalSizeNew = result.BytesRead;
+
+                    updateInfo.OriginalSha1HashNew = result.Sha1Hash;
+                    updateInfo.OriginalMd5HashNew = result.Md5Hash;
+
+                    updateInfo.Entry.OriginalSha1Hash = result.Sha1Hash;
+                    updateInfo.Entry.OriginalMd5Hash = result.Md5Hash;
+                }
             }
             finally
             {

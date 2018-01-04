@@ -571,7 +571,7 @@
                     if (syncEntry.Type == SyncEntryType.File)
                     {
                         fileCount++;
-                        byteCount += syncEntry.SourceSize;
+                        byteCount += syncEntry.GetSize(this.BaseModel, SyncEntryPropertyLocation.Source);
                     }
                     else if (syncEntry.Type == SyncEntryType.Directory)
                     {

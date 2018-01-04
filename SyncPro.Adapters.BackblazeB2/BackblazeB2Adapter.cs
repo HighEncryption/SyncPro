@@ -7,6 +7,7 @@
     using System.Threading.Tasks;
 
     using SyncPro.Adapters.BackblazeB2.DataModel;
+    using SyncPro.Configuration;
     using SyncPro.Data;
     using SyncPro.Runtime;
 
@@ -85,7 +86,7 @@
         {
             // Create a default session. By itself, the file will be uploaded to Backblaze when the stream
             // containins the session is disposed.
-            BackblazeB2UploadSession session = new BackblazeB2UploadSession(entry);
+            BackblazeB2UploadSession session = new BackblazeB2UploadSession(entry, length);
 
             // If the file is large enough, call the method below to get the large file upload information. When
             // these properties are present, the stream will upload the file's parts individually.
@@ -106,12 +107,15 @@
 
         public async Task<BackblazeB2FileUploadResponse> UploadFileDirect(SyncEntry entry, Stream contentStream)
         {
+            long size = entry.GetSize(this.Relationship, SyncEntryPropertyLocation.Destination);
+            byte[] sha1Hash = entry.GetSha1Hash(this.Relationship, SyncEntryPropertyLocation.Destination);
+
             return await this.backblazeClient.UploadFile(
-                entry.GetRelativePath(null, "/"),
-                BitConverter.ToString(entry.DestinationSha1Hash).Replace("-", ""),
-                entry.DestinationSize,
-                this.TypedConfiguration.BucketId,
-                contentStream)
+                    entry.GetRelativePath(null, "/"),
+                    BitConverter.ToString(sha1Hash).Replace("-", ""),
+                    size,
+                    this.TypedConfiguration.BucketId,
+                    contentStream)
                 .ConfigureAwait(false);
         }
 
@@ -214,13 +218,14 @@
 
             if (uploadStream.Session.StartLargeFileResponse != null)
             {
-                if (uploadStream.Session.BytesUploaded != uploadStream.Session.Entry.DestinationSize)
+                long size = uploadStream.Session.Entry.GetSize(this.Relationship, SyncEntryPropertyLocation.Destination);
+                if (uploadStream.Session.BytesUploaded != size)
                 {
                     // TODO: Cancel the upload?
                     throw new Exception(
                         string.Format(
-                            "File size if {0}, but uploaded {1}", 
-                            uploadStream.Session.Entry.DestinationSize,
+                            "File size if {0}, but uploaded {1}",
+                            size,
                             uploadStream.Session.BytesUploaded));
                 }
 

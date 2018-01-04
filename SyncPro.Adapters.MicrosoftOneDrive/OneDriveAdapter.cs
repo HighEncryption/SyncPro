@@ -9,6 +9,7 @@
     using System.Threading.Tasks;
 
     using SyncPro.Adapters.MicrosoftOneDrive.DataModel;
+    using SyncPro.Configuration;
     using SyncPro.Data;
     using SyncPro.OAuth;
     using SyncPro.Runtime;
@@ -101,11 +102,14 @@
             if (item.File != null)
             {
                 entry.Type = SyncEntryType.File;
-                entry.SourceSize = item.Size;
+                entry.SetSize(this.Relationship, SyncEntryPropertyLocation.Source, item.Size);
 
-                if (item.File.Hashes != null && !string.IsNullOrWhiteSpace(item.File.Hashes.Sha1Hash))
+                if (!string.IsNullOrWhiteSpace(item.File.Hashes?.Sha1Hash))
                 {
-                    entry.SourceSha1Hash = HexToBytes(item.File.Hashes.Sha1Hash);
+                    entry.SetSha1Hash(
+                        this.Relationship, 
+                        SyncEntryPropertyLocation.Source, 
+                        HexToBytes(item.File.Hashes.Sha1Hash));
                 }
             }
 
@@ -333,7 +337,7 @@
             {
                 fileType = SyncEntryType.File;
 
-                if (item.Item.Size != childEntry.SourceSize)
+                if (item.Item.Size != childEntry.GetSize(this.Relationship, SyncEntryPropertyLocation.Source))
                 {
                     // Before reporting the size of the item as changed, check the SHA1 hash. If the hash is unchanged, then the 
                     // file is the same as it was before. This is due to a bug in OneDrive where the reported size includes
@@ -341,7 +345,7 @@
                     if (item.Item.File.Hashes != null)
                     {
                         byte[] sha1Hash = HexToBytes(item.Item.File.Hashes.Sha1Hash);
-                        if (!sha1Hash.SequenceEqual(childEntry.SourceSha1Hash))
+                        if (!sha1Hash.SequenceEqual(childEntry.GetSha1Hash(this.Relationship, SyncEntryPropertyLocation.Source)))
                         {
                             result.ChangeFlags |= SyncEntryChangedFlags.FileSize;
                             result.ChangeFlags |= SyncEntryChangedFlags.Sha1Hash;

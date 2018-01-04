@@ -69,12 +69,12 @@
         {
             this.Flags = info.Flags;
             this.State = info.State;
-            this.SizeOld = info.SourceSizeOld;
-            this.SizeNew = info.SourceSizeNew;
-            this.Sha1HashOld = this.GetHashString(info.SourceSha1HashOld);
-            this.Sha1HashNew = this.GetHashString(info.SourceSha1HashNew);
-            this.Md5HashOld = this.GetHashString(info.SourceMd5HashOld);
-            this.Md5HashNew = this.GetHashString(info.SourceMd5HashNew);
+            this.SizeOld = info.OriginalSizeOld;
+            this.SizeNew = info.OriginalSizeNew;
+            this.Sha1HashOld = this.GetHashString(info.OriginalSha1HashOld);
+            this.Sha1HashNew = this.GetHashString(info.OriginalSha1HashNew);
+            this.Md5HashOld = this.GetHashString(info.OriginalMd5HashOld);
+            this.Md5HashNew = this.GetHashString(info.OriginalMd5HashNew);
             this.CreationDateTimeUtcOld = info.CreationDateTimeUtcOld;
             this.CreationDateTimeUtcNew = info.CreationDateTimeUtcNew;
             this.ModifiedDateTimeUtcOld = info.ModifiedDateTimeUtcOld;

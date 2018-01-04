@@ -238,7 +238,7 @@
                                Visibility="{Binding Path=SelectedChildEntry.IsDirectory, Converter={StaticResource BooleanToVisibilityReversed}}" />
                     <TextBlock Grid.Column="2" Grid.Row="3" Margin="4,2,0,0" 
                                Visibility="{Binding Path=SelectedChildEntry.IsDirectory, Converter={StaticResource BooleanToVisibilityReversed}}"
-                               Text="{Binding Path=SelectedChildEntry.SyncEntry.SourceSize, Converter={StaticResource FileSize}}"/>
+                               Text="{Binding Path=SelectedChildEntry.SyncEntry.OriginalSize, Converter={StaticResource FileSize}}"/>
 
                     <TextBlock Grid.Column="0" Grid.Row="4" Text="Sync Runs" Foreground="#7d7d7d" Margin="0,16,0,0" />
                     <ItemsControl Grid.Column="2" Grid.Row="4" Margin="4,16,0,0"
@@ -271,15 +271,15 @@
                                Visibility="{Binding Path=SelectedChildEntry.IsDirectory, Converter={StaticResource BooleanToVisibilityReversed}}" />
                     <TextBlock Grid.Column="2" Grid.Row="5" Margin="0,16,0,0" TextTrimming="CharacterEllipsis" Width="150"
                                Visibility="{Binding Path=SelectedChildEntry.IsDirectory, Converter={StaticResource BooleanToVisibilityReversed}}"
-                               Text="{Binding Path=SelectedChildEntry.SyncEntry.SourceMd5Hash, Converter={StaticResource ByteArrayToString}}"
-                               ToolTip="{Binding Path=SelectedChildEntry.SyncEntry.SourceMd5Hash, Converter={StaticResource ByteArrayToString}}"/>
+                               Text="{Binding Path=SelectedChildEntry.SyncEntry.OriginalMd5Hash, Converter={StaticResource ByteArrayToString}}"
+                               ToolTip="{Binding Path=SelectedChildEntry.SyncEntry.OriginalMd5Hash, Converter={StaticResource ByteArrayToString}}"/>
 
                     <TextBlock Grid.Column="0" Grid.Row="6" Text="SHA1 Hash" Foreground="#7d7d7d" Margin="0,2,0,0"
                                Visibility="{Binding Path=SelectedChildEntry.IsDirectory, Converter={StaticResource BooleanToVisibilityReversed}}" />
                     <TextBlock Grid.Column="2" Grid.Row="6" Margin="0,2,0,0"  TextTrimming="CharacterEllipsis" Width="150"
                                Visibility="{Binding Path=SelectedChildEntry.IsDirectory, Converter={StaticResource BooleanToVisibilityReversed}}"
-                               Text="{Binding Path=SelectedChildEntry.SyncEntry.SourceSha1Hash, Converter={StaticResource ByteArrayToString}}"
-                               ToolTip="{Binding Path=SelectedChildEntry.SyncEntry.SourceSha1Hash, Converter={StaticResource ByteArrayToString}}"/>
+                               Text="{Binding Path=SelectedChildEntry.SyncEntry.OriginalSha1Hash, Converter={StaticResource ByteArrayToString}}"
+                               ToolTip="{Binding Path=SelectedChildEntry.SyncEntry.OriginalSha1Hash, Converter={StaticResource ByteArrayToString}}"/>
                 </Grid>
             </StackPanel>
         </Border>

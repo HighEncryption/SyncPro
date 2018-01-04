@@ -7,9 +7,10 @@ namespace SyncPro.Adapters.BackblazeB2
 
     public class BackblazeB2UploadSession
     {
-        public BackblazeB2UploadSession(SyncEntry entry)
+        public BackblazeB2UploadSession(SyncEntry entry, long fileSize)
         {
             this.Entry = entry;
+            this.FileSize = fileSize;
 
             this.PartHashes = new Dictionary<int, string>();
 
@@ -18,7 +19,9 @@ namespace SyncPro.Adapters.BackblazeB2
             this.CurrentPartNumber = 1;
         }
 
-        public SyncEntry Entry { get; set; }
+        public SyncEntry Entry { get; }
+
+        public long FileSize { get; }
 
         public BackblazeB2FileUploadResponse UploadResponse { get; set; }
 

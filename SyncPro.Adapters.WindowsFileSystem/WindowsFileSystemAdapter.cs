@@ -241,7 +241,7 @@
             {
                 fileType = SyncEntryType.File;
 
-                if (fileInfo.Length != childEntry.SourceSize)
+                if (fileInfo.Length != childEntry.GetSize(this.Relationship, SyncEntryPropertyLocation.Source))
                 {
                     result.ChangeFlags |= SyncEntryChangedFlags.FileSize;
                 }
@@ -344,7 +344,7 @@
             if (fileInfo != null)
             {
                 entry.Type = SyncEntryType.File;
-                entry.SourceSize = fileInfo.Length;
+                entry.SetSize(this.Relationship, SyncEntryPropertyLocation.Source, fileInfo.Length);
             }
 
             DirectoryInfo directoryInfo = info as DirectoryInfo;
