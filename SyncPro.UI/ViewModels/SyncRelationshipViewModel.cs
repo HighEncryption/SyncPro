@@ -594,5 +594,12 @@
             stopwatch.Stop();
             Logger.Debug("Finished CalculateRelationshipMetadataAsync. Duration=" + stopwatch.Elapsed);
         }
+
+        public async Task RestoreFilesAsync(IList<SyncEntryViewModel> syncEntries, string restorePath)
+        {
+            await this.BaseModel
+                .RestoreFilesAsync(syncEntries.Select(e => e.SyncEntry), restorePath)
+                .ConfigureAwait(false);
+        }
     }
 }

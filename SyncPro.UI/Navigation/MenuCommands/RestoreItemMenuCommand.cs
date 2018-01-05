@@ -3,17 +3,21 @@ namespace SyncPro.UI.Navigation.MenuCommands
     using System;
     using System.ComponentModel;
     using System.Linq;
+    using System.Windows.Forms;
 
     using SyncPro.UI.Navigation.ViewModels;
+    using SyncPro.UI.ViewModels;
 
     public class RestoreItemMenuCommand : NavigationItemMenuCommand
     {
         private readonly IFolderNodeViewModel nodeViewModel;
+        private readonly SyncRelationshipViewModel relationship;
 
-        public RestoreItemMenuCommand(IFolderNodeViewModel nodeViewModel)
+        public RestoreItemMenuCommand(IFolderNodeViewModel nodeViewModel, SyncRelationshipViewModel relationship)
             : base("RESTORE FILE", "/SyncPro.UI;component/Resources/Graphics/install_16.png")
         {
             this.nodeViewModel = nodeViewModel;
+            this.relationship = relationship;
             this.nodeViewModel.PropertyChanged += this.NodeViewModelPropertyChanged;
         }
 
@@ -50,6 +54,17 @@ namespace SyncPro.UI.Navigation.MenuCommands
             {
                 dialog.Description = "Select the folder where items will be restored to.";
                 System.Windows.Forms.DialogResult result = dialog.ShowDialog();
+
+                if (result != DialogResult.OK)
+                {
+                    return;
+                }
+
+#pragma warning disable 4014
+                this.relationship.RestoreFilesAsync(
+                    this.nodeViewModel.SelectedChildEntries,
+                    dialog.SelectedPath);
+#pragma warning restore 4014
             }
         }
     }

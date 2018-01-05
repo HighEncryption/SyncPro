@@ -159,9 +159,9 @@
             this.ProgressChanged?.Invoke(
                 this,
                 new SyncJobProgressInfo(
-                    updateInfo, 
-                    this.FilesTotal, 
-                    Convert.ToInt32(Interlocked.Read(ref this.filesCompleted)), 
+                    updateInfo,
+                    this.FilesTotal,
+                    Convert.ToInt32(Interlocked.Read(ref this.filesCompleted)),
                     this.BytesTotal,
                     this.bytesCompleted,
                     bytesPerSecond));
@@ -174,7 +174,7 @@
         public SyncJob(SyncRelationship relationship)
         {
             this.relationship = relationship;
-        } // 420fe8033179cfb0ef21862d24bf6a1ec7df6c6d
+        }
 
         public void Start(SyncTriggerType triggerType)
         {
@@ -342,8 +342,8 @@
                 store.Open(OpenFlags.ReadOnly);
 
                 var cert = store.Certificates.Find(
-                    X509FindType.FindByThumbprint, 
-                    this.relationship.EncryptionCertificateThumbprint, 
+                    X509FindType.FindByThumbprint,
+                    this.relationship.EncryptionCertificateThumbprint,
                     false);
 
                 this.encryptionCertificate = cert[0];
@@ -705,7 +705,7 @@
                     {
                         Interlocked.Increment(ref this.filesCompleted);
 
-                        SyncHistoryEntryData historyEntry = 
+                        SyncHistoryEntryData historyEntry =
                             ctx.EntryUpdateInfo.CreateSyncHistoryEntryData();
 
                         Pre.Assert(this.syncHistoryId != null, "this.syncHistoryId != null");
@@ -807,7 +807,7 @@
                 if ((entryUpdateInfo.Flags & SyncEntryChangedFlags.CreatedTimestamp) != 0)
                 {
                     //entryUpdateInfo.CreationDateTimeUtcNew =
-                } 
+                }
             }
             else
             {
@@ -874,8 +874,8 @@
         /// <param name="throttlingManager">The throtting manager</param>
         /// <returns>The async task</returns>
         private async Task CopyFileAsync(
-            AdapterBase fromAdapter, 
-            AdapterBase toAdapter, 
+            AdapterBase fromAdapter,
+            AdapterBase toAdapter,
             EntryUpdateInfo updateInfo,
             ThrottlingManager throttlingManager)
         {
@@ -1017,8 +1017,8 @@
         /// <param name="encryptionManager">The encryption manager (only used when encrypting/decrypting)</param>
         /// <returns>(async) The result of the transfer</returns>
         private async Task<TransferResult> TransferDataWithHashAsync(
-            Stream sourceStream, 
-            Stream destinationStream, 
+            Stream sourceStream,
+            Stream destinationStream,
             EntryUpdateInfo updateInfo,
             ThrottlingManager throttlingManager,
             EncryptionManager encryptionManager)

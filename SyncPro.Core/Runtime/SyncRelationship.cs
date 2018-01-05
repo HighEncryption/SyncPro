@@ -566,6 +566,15 @@
             }
         }
 
+        public async Task RestoreFilesAsync(IEnumerable<SyncEntry> syncEntries, string restorePath)
+        {
+            if (this.ActiveSyncJob != null)
+            {
+                return;
+            }
+
+        }
+
         private async Task SyncSchedulerScheduledMainThread()
         {
             while (!this.syncSchedulerCancellationTokenSource.Token.IsCancellationRequested)

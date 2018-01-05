@@ -133,7 +133,6 @@ namespace SyncPro.Runtime
             Pre.Assert(this.IV != null, "this.IV != null");
             Pre.Assert(this.IV.Length == IVStorageSize, "this.IV.Length == IVStorageSize");
 
-            Pre.Assert(this.OriginalFileLength > 0, "this.OriginalFileLength > 0");
             Pre.Assert(this.EncryptedFileLength > 0, "this.EncryptedFileLength > 0");
 
             byte[] headerBytes;

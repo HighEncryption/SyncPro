@@ -65,7 +65,7 @@ namespace SyncPro.UI.Navigation.ViewModels
             this.Name = "Files & Folders";
             this.IconImageSource = "/SyncPro.UI;component/Resources/Graphics/folder_open_16.png";
 
-            this.MenuCommands.Add(new RestoreItemMenuCommand(this));
+            this.MenuCommands.Add(new RestoreItemMenuCommand(this, this.syncRelationship));
         }
 
         protected override void LoadChildren()
