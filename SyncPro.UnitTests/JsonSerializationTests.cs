@@ -6,6 +6,7 @@ namespace SyncPro.UnitTests
 
     using Newtonsoft.Json;
 
+    using SyncPro.Adapters;
     using SyncPro.Adapters.BackblazeB2;
     using SyncPro.Utility;
 
@@ -15,6 +16,11 @@ namespace SyncPro.UnitTests
         [TestMethod]
         public void SecureStringToProtectedData()
         {
+            AdapterRegistry.RegisterAdapter(
+                BackblazeB2Adapter.TargetTypeId,
+                typeof(BackblazeB2Adapter),
+                typeof(BackblazeB2AdapterConfiguration));
+
             BackblazeB2AdapterConfiguration config = new BackblazeB2AdapterConfiguration();
 
             config.AccountId = "1234";

@@ -117,17 +117,20 @@ namespace SyncPro.UnitTests
 
             SyncRelationship newRelationship = this.SetupRelationship(testRootPath, syncSourcePath, remoteTestFolder);
 
-            ManualResetEvent evt = new ManualResetEvent(false);
+            AnalyzeJob analyzeJob = new AnalyzeJob(newRelationship);
 
-            SyncJob run1 = new SyncJob(newRelationship);
-            run1.Finished += (sender, args) => { evt.Set(); };
-            run1.Start(SyncTriggerType.Manual);
+            analyzeJob.ContinuationJob = new SyncJob(newRelationship, analyzeJob.AnalyzeResult)
+            {
+                TriggerType = SyncTriggerType.Manual
+            };
 
-            evt.WaitOne();
+            analyzeJob.Start();
 
-            Assert.IsTrue(run1.HasFinished);
+            SyncJob syncJob = (SyncJob)analyzeJob.WaitForCompletion();
 
-            Assert.AreEqual(syncFileList.Count, run1.AnalyzeResult.AdapterResults.SelectMany(r => r.Value.EntryResults).Count());
+            Assert.IsTrue(syncJob.HasFinished);
+
+            Assert.AreEqual(syncFileList.Count, syncJob.AnalyzeResult.AdapterResults.SelectMany(r => r.Value.EntryResults).Count());
             OneDriveAdapter oneDriveAdapter =
                 newRelationship.Adapters.First(a => !a.Configuration.IsOriginator) as OneDriveAdapter;
 
@@ -144,7 +147,7 @@ namespace SyncPro.UnitTests
                     EntryUpdateInfo entryResult;
                     using (var db = newRelationship.GetDatabase())
                     {
-                        entryResult = run1.AnalyzeResult.AdapterResults.SelectMany(r => r.Value.EntryResults).FirstOrDefault(
+                        entryResult = syncJob.AnalyzeResult.AdapterResults.SelectMany(r => r.Value.EntryResults).FirstOrDefault(
                             r => r.Entry.GetRelativePath(db, "\\") == syncFile);
                     }
 
@@ -534,23 +537,21 @@ namespace SyncPro.UnitTests
                 new Tuple<string, long, SyncEntryType>("sample_photo_03.jpg", 35859, SyncEntryType.File)
             };
 
-            ManualResetEvent evt = new ManualResetEvent(false);
+            AnalyzeJob analyzeJob = new AnalyzeJob(newRelationship);
 
-            SyncJob run1 = new SyncJob(newRelationship);
-
-            run1.Finished += (sender, args) => { evt.Set(); };
-            run1.Start(SyncTriggerType.Manual);
-
-            // 10min max wait time
-            if (evt.WaitOne(600000) == false)
+            analyzeJob.ContinuationJob = new SyncJob(newRelationship, analyzeJob.AnalyzeResult)
             {
-                Assert.Fail("Timeout");
-            }
+                TriggerType = SyncTriggerType.Manual
+            };
 
-            Assert.IsTrue(run1.HasFinished);
+            analyzeJob.Start();
+
+            SyncJob syncJob = (SyncJob) analyzeJob.WaitForCompletion();
+
+            Assert.IsTrue(syncJob.HasFinished);
 
             // Ensure that the right number of entries are present in the result
-            Assert.AreEqual(syncFileList.Count, run1.AnalyzeResult.AdapterResults.SelectMany(r => r.Value.EntryResults).Count());
+            Assert.AreEqual(syncFileList.Count, syncJob.AnalyzeResult.AdapterResults.SelectMany(r => r.Value.EntryResults).Count());
 
             string[] localFiles = Directory.GetFileSystemEntries(syncDestinationPath, "*", SearchOption.AllDirectories);
 
@@ -621,20 +622,18 @@ namespace SyncPro.UnitTests
 
             newRelationship.SaveAsync().Wait();
 
-            ManualResetEvent evt = new ManualResetEvent(false);
+            AnalyzeJob analyzeJob = new AnalyzeJob(newRelationship);
 
-            SyncJob run1 = new SyncJob(newRelationship);
-
-            run1.Finished += (sender, args) => { evt.Set(); };
-            run1.Start(SyncTriggerType.Manual);
-
-            // 10min max wait time
-            if (evt.WaitOne(600000) == false)
+            analyzeJob.ContinuationJob = new SyncJob(newRelationship, analyzeJob.AnalyzeResult)
             {
-                Assert.Fail("Timeout");
-            }
+                TriggerType = SyncTriggerType.Manual
+            };
 
-            Assert.IsTrue(run1.HasFinished);
+            analyzeJob.Start();
+
+            SyncJob syncJob = (SyncJob)analyzeJob.WaitForCompletion();
+
+            Assert.IsTrue(syncJob.HasFinished);
 
             //Assert.AreEqual(syncFileList.Count, run1.AnalyzeResult.EntryResults.Count);
         }

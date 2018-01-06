@@ -4,6 +4,19 @@ namespace SyncPro.Runtime
     using System.Threading;
     using System.Threading.Tasks;
 
+    /// <summary>
+    /// Enumeration of the options for the result of a job
+    /// </summary>
+    public enum JobResult
+    {
+        Undefined,
+        Success,
+        Warning,
+        Error,
+        NotRun,
+        Cancelled,
+    }
+
     public abstract class JobBase
     {
         public SyncRelationship Relationship { get; }
@@ -27,6 +40,11 @@ namespace SyncPro.Runtime
         /// The datetime when the job finished
         /// </summary>
         public DateTime? EndTime { get; private set; }
+
+        /// <summary>
+        /// The result of the sync job
+        /// </summary>
+        public JobResult JobResult { get; protected set; }
 
         /// <summary>
         /// Indicates whether the job has started

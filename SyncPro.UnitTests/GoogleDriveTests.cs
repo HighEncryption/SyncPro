@@ -228,23 +228,21 @@
                 new Tuple<string, long, SyncEntryType>("sample_photo_03.jpg", 35859, SyncEntryType.File)
             };
 
-            ManualResetEvent evt = new ManualResetEvent(false);
+            AnalyzeJob analyzeJob = new AnalyzeJob(newRelationship);
 
-            SyncJob run1 = new SyncJob(newRelationship);
-
-            run1.Finished += (sender, args) => { evt.Set(); };
-            run1.Start(SyncTriggerType.Manual);
-
-            // 10min max wait time
-            if (evt.WaitOne(600000) == false)
+            analyzeJob.ContinuationJob = new SyncJob(newRelationship, analyzeJob.AnalyzeResult)
             {
-                Assert.Fail("Timeout");
-            }
+                TriggerType = SyncTriggerType.Manual
+            };
 
-            Assert.IsTrue(run1.HasFinished);
+            analyzeJob.Start();
+
+            SyncJob syncJob = (SyncJob)analyzeJob.WaitForCompletion();
+
+            Assert.IsTrue(syncJob.HasFinished);
 
             // Ensure that the right number of entries are present in the result
-            Assert.AreEqual(syncFileList.Count, run1.AnalyzeResult.AdapterResults.SelectMany(r => r.Value.EntryResults).Count());
+            Assert.AreEqual(syncFileList.Count, syncJob.AnalyzeResult.AdapterResults.SelectMany(r => r.Value.EntryResults).Count());
 
             string[] localFiles = Directory.GetFileSystemEntries(syncDestinationPath, "*", SearchOption.AllDirectories);
 

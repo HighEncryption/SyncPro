@@ -29,18 +29,18 @@ namespace SyncPro.UI.Navigation.ViewModels
                 return;
             }
 
-            switch (this.syncJobPanel.SyncJobViewModel.SyncJobResult)
+            switch (this.syncJobPanel.SyncJobViewModel.JobResult)
             {
-                case SyncJobResult.Success:
+                case JobResult.Success:
                     this.IconImageSource = "/SyncPro.UI;component/Resources/Graphics/list_ok_16.png";
                     break;
-                case SyncJobResult.Warning:
+                case JobResult.Warning:
                     this.IconImageSource = "/SyncPro.UI;component/Resources/Graphics/list_warn_16.png";
                     break;
-                case SyncJobResult.Error:
+                case JobResult.Error:
                     this.IconImageSource = "/SyncPro.UI;component/Resources/Graphics/list_error_16.png";
                     break;
-                case SyncJobResult.NotRun:
+                case JobResult.NotRun:
                     this.IconImageSource = "/SyncPro.UI;component/Resources/Graphics/list_16.png";
                     break;
                 default:

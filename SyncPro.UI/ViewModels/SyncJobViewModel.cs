@@ -165,24 +165,24 @@
 
         private void SetStatusDescription()
         {
-            switch (this.SyncJob.SyncResult)
+            switch (this.SyncJob.JobResult)
             {
-                case SyncJobResult.Undefined:
+                case JobResult.Undefined:
                     this.StatusDescription = "Unknown";
                     break;
-                case SyncJobResult.Success:
+                case JobResult.Success:
                     this.StatusDescription = "Finished Successfully";
                     break;
-                case SyncJobResult.Warning:
+                case JobResult.Warning:
                     this.StatusDescription = "Finished With Warnings";
                     break;
-                case SyncJobResult.Error:
+                case JobResult.Error:
                     this.StatusDescription = "Failed";
                     break;
-                case SyncJobResult.NotRun:
+                case JobResult.NotRun:
                     this.StatusDescription = "Sync Not Run";
                     break;
-                case SyncJobResult.Cancelled:
+                case JobResult.Cancelled:
                     this.StatusDescription = "Cancelled";
                     break;
                 default:
@@ -190,7 +190,7 @@
             }
         }
 
-        public SyncJobResult SyncJobResult => this.SyncJob.SyncResult;
+        public JobResult JobResult => this.SyncJob.JobResult;
 
         private void SyncJobOnSyncFinished(object sender, EventArgs eventArgs)
         {

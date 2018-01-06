@@ -662,7 +662,7 @@
             {
                 AnalyzeJob newAnalyzeJob = new AnalyzeJob(this);
 
-                newAnalyzeJob.ContinuationJob = new SyncJob(this, newAnalyzeJob.Result)
+                newAnalyzeJob.ContinuationJob = new SyncJob(this, newAnalyzeJob.AnalyzeResult)
                 {
                     TriggerType = syncTriggerType
                 };

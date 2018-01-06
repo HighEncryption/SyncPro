@@ -24,6 +24,6 @@
 
         public SyncTriggerType TriggeredBy { get; set; }
 
-        public SyncJobResult Result { get; set; }
+        public JobResult Result { get; set; }
     }
 }

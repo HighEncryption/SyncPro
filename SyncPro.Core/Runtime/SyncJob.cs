@@ -16,19 +16,6 @@
     using SyncPro.Tracing;
 
     /// <summary>
-    /// Enumeration of the options for the result of a sync job
-    /// </summary>
-    public enum SyncJobResult
-    {
-        Undefined,
-        Success,
-        Warning,
-        Error,
-        NotRun,
-        Cancelled,
-    }
-
-    /// <summary>
     /// Contains the core logic for synchronizing (copying) files between two adapters.
     /// </summary>
     public class SyncJob : JobBase
@@ -60,42 +47,42 @@
         /// </summary>
         public AnalyzeRelationshipResult AnalyzeResult { get; }
 
-        /// <summary>
-        /// The result of the sync job
-        /// </summary>
-        public SyncJobResult SyncResult { get; private set; }
-
         public event EventHandler<SyncJobProgressInfo> ProgressChanged;
 
         private readonly Queue<Tuple<DateTime, long>> throughputCalculationCache = new Queue<Tuple<DateTime, long>>();
 
+        private readonly object progressLock = new object();
+
         private void RaiseSyncProgressChanged(EntryUpdateInfo updateInfo)
         {
-            this.throughputCalculationCache.Enqueue(
-                new Tuple<DateTime, long>(
-                    DateTime.Now,
-                    this.bytesCompleted));
-
-            int bytesPerSecond = 0;
-            if (this.throughputCalculationCache.Count() > 10)
+            lock (this.progressLock)
             {
-                Tuple<DateTime, long> oldest = this.throughputCalculationCache.Dequeue();
+                this.throughputCalculationCache.Enqueue(
+                    new Tuple<DateTime, long>(
+                        DateTime.Now,
+                        this.bytesCompleted));
 
-                TimeSpan delay = DateTime.Now - oldest.Item1;
-                long bytes = this.bytesCompleted - oldest.Item2;
+                int bytesPerSecond = 0;
+                if (this.throughputCalculationCache.Count() > 10)
+                {
+                    Tuple<DateTime, long> oldest = this.throughputCalculationCache.Dequeue();
 
-                bytesPerSecond = Convert.ToInt32(Math.Floor(bytes / delay.TotalSeconds));
+                    TimeSpan delay = DateTime.Now - oldest.Item1;
+                    long bytes = this.bytesCompleted - oldest.Item2;
+
+                    bytesPerSecond = Convert.ToInt32(Math.Floor(bytes / delay.TotalSeconds));
+                }
+
+                this.ProgressChanged?.Invoke(
+                    this,
+                    new SyncJobProgressInfo(
+                        updateInfo,
+                        this.FilesTotal,
+                        Convert.ToInt32(Interlocked.Read(ref this.filesCompleted)),
+                        this.BytesTotal,
+                        this.bytesCompleted,
+                        bytesPerSecond));
             }
-
-            this.ProgressChanged?.Invoke(
-                this,
-                new SyncJobProgressInfo(
-                    updateInfo,
-                    this.FilesTotal,
-                    Convert.ToInt32(Interlocked.Read(ref this.filesCompleted)),
-                    this.BytesTotal,
-                    this.bytesCompleted,
-                    bytesPerSecond));
         }
 
         /// <summary>
@@ -145,7 +132,7 @@
             {
                 if (this.AnalyzeResult.IsUpToDate)
                 {
-                    this.SyncResult = SyncJobResult.NotRun;
+                    this.JobResult = JobResult.NotRun;
                 }
                 else
                 {
@@ -154,7 +141,7 @@
                 }
 
                 // If sync was run successfully commit the tracked changes for each adapter
-                if (this.SyncResult == SyncJobResult.Success)
+                if (this.JobResult == JobResult.Success)
                 {
                     await this.AnalyzeResult.CommitTrackedChangesAsync().ConfigureAwait(false);
                 }
@@ -181,7 +168,7 @@
                 historyData.End = this.EndTime;
                 historyData.TotalFiles = this.FilesTotal;
                 historyData.TotalBytes = this.BytesTotal;
-                historyData.Result = this.SyncResult;
+                historyData.Result = this.JobResult;
 
                 db.SaveChanges();
             }
@@ -196,7 +183,7 @@
                 {
                     Start = this.StartTime,
                     End = this.EndTime,
-                    Result = this.SyncResult,
+                    Result = this.JobResult,
                     TriggeredBy = this.TriggerType,
                 };
 
@@ -295,15 +282,15 @@
 
             if (this.CancellationToken.IsCancellationRequested)
             {
-                this.SyncResult = SyncJobResult.Cancelled;
+                this.JobResult = JobResult.Cancelled;
             }
             else if (updateList.Any(e => e.State == EntryUpdateState.Failed))
             {
-                this.SyncResult = SyncJobResult.Error;
+                this.JobResult = JobResult.Error;
             }
             else
             {
-                this.SyncResult = SyncJobResult.Success;
+                this.JobResult = JobResult.Success;
             }
 
             using (var db = this.relationship.GetDatabase())
@@ -313,7 +300,7 @@
                 historyData.End = this.EndTime;
                 historyData.TotalFiles = Convert.ToInt32(this.filesCompleted);
                 historyData.TotalBytes = this.bytesCompleted;
-                historyData.Result = this.SyncResult;
+                historyData.Result = this.JobResult;
 
                 db.SaveChanges();
             }
@@ -917,7 +904,6 @@
                 // Allocate the buffer that will be used to transfer the data. The source stream will be read one
                 // suffer-size as a time, then written to the destination.
                 byte[] buffer = new byte[transferBufferSize];
-                int read;
                 long readTotal = 0;
                 long writtenTotal = 0;
 
@@ -946,12 +932,12 @@
                     }
 
                     // Read data from the source adapter
-                    read = sourceStream.Read(buffer, 0, buffer.Length);
+                    int read = sourceStream.Read(buffer, 0, buffer.Length);
 
                     // Increment the total number of bytes read from the source adapter
                     readTotal += read;
 
-                    if (read <= buffer.Length)
+                    if (read < buffer.Length)
                     {
                         // Compute the last part of the SHA1 and MD5 hashes (this finished the algorithm's work).
                         sha1.TransformFinalBlock(buffer, 0, read);
@@ -964,17 +950,18 @@
                         else
                         {
                             destinationStream.Write(buffer, 0, read);
+                            destinationStream.Flush();
                             writtenTotal += buffer.Length;
                         }
 
                         // Increment the total number of bytes written to the desination adapter
                         this.bytesCompleted += read;
 
-                        if (this.syncProgressUpdateStopwatch.ElapsedMilliseconds > 100)
-                        {
+                        //if (this.syncProgressUpdateStopwatch.ElapsedMilliseconds > 100)
+                        //{
                             this.RaiseSyncProgressChanged(updateInfo);
-                            this.syncProgressUpdateStopwatch.Restart();
-                        }
+                        //    this.syncProgressUpdateStopwatch.Restart();
+                        //}
 
                         // Read the end of the stream
                         break;
@@ -1050,7 +1037,7 @@
                 Id = history.Id,
                 FilesTotal = history.TotalFiles,
                 BytesTotal = history.TotalBytes,
-                SyncResult = history.Result
+                JobResult = history.Result
             };
 
             return job;

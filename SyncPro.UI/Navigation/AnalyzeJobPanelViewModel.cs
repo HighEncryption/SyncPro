@@ -59,7 +59,7 @@ namespace SyncPro.UI.Navigation
             // This will re-use the result from the analyze phase (if present) so that what is synced exactly 
             // matches what is seen in the results. This is important because we want to be sure that we dont
             // synchronize any changes that arent shown in the results page.
-            this.Relationship.StartSyncJob(this.AnalyzeJobViewModel.AnalyzeJob.Result);
+            this.Relationship.StartSyncJob(this.AnalyzeJobViewModel.AnalyzeJob.AnalyzeResult);
         }
 
         private bool CanBeginAnalyze(object obj)

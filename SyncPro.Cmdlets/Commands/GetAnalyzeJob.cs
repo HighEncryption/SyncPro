@@ -44,7 +44,7 @@
         {
             this.job = job;
 
-            this.AnalyzeResult = new PSAnalyzeRelationshipResult(this.job.Result);
+            this.AnalyzeResult = new PSAnalyzeRelationshipResult(this.job.AnalyzeResult);
         }
     }
 

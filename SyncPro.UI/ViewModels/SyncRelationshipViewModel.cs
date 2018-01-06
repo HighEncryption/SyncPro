@@ -270,7 +270,11 @@
                 return;
             }
 
-            this.LastSyncDisplayString = this.SyncJobHistory.First().EndTime.ToString("g");
+            var history = this.SyncJobHistory
+                .Where(h => h.Job.JobResult == JobResult.Success || h.Job.JobResult == JobResult.Warning)
+                .OrderBy(h => h.StartTime);
+
+            this.LastSyncDisplayString = history.Last().EndTime.ToString("g");
             this.SyncStatusDescription = "Idle";
             this.IsNeverSynchronized = false;
             this.NextSyncDisplayString = "Calculating...";
@@ -480,7 +484,7 @@
 
         private bool CanDeleteRelationship(object obj)
         {
-            return this.ActiveJob != null;
+            return this.ActiveJob == null;
         }
 
         public SyncDatabase GetDatabase()

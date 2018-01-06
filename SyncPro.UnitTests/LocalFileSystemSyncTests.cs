@@ -28,7 +28,7 @@
                 .CreateBasicSourceStructure();
 
             testWrapper
-                .CreateSyncJob()
+                .CreateAnalyzeJob()
                 .RunToCompletion()
                 .VerifyAnalyzeSuccess()
                 .VerifyResultContainsAllFiles();
@@ -146,17 +146,19 @@
             File.SetCreationTimeUtc(filePath, newCreationTime);
 
             // Second sync job
-            var syncJob = testWrapper
+            var jobWrapper = testWrapper
                 .CreateSyncJob();
 
-            syncJob
+            jobWrapper
                 .RunToCompletion()
                 .VerifySyncSuccess()
                 .VerifyAnalyzeEntryCount(1)
                 .VerifyDatabaseHashes();
 
+            SyncJob syncJob = (SyncJob)((AnalyzeJob)jobWrapper.CurrentJob).ContinuationJob;
+
             // Verify that only the created timestamp change was detected
-            var changedSyncEntry = ((SyncJob)syncJob.CurrentJob).AnalyzeResult.AdapterResults[1].EntryResults[0];
+            var changedSyncEntry = syncJob.AnalyzeResult.AdapterResults[1].EntryResults[0];
             Assert.AreEqual(changedSyncEntry.Flags, SyncEntryChangedFlags.CreatedTimestamp);
 
             // Verify that the timestamp was copied
@@ -194,17 +196,19 @@
             File.SetLastWriteTimeUtc(filePath, newModifiedTime);
 
             // Second sync job
-            var syncJob = testWrapper
+            var jobWrapper = testWrapper
                 .CreateSyncJob();
 
-            syncJob
+            jobWrapper
                 .RunToCompletion()
                 .VerifySyncSuccess()
                 .VerifyAnalyzeEntryCount(1)
                 .VerifyDatabaseHashes();
 
+            SyncJob syncJob = (SyncJob)((AnalyzeJob)jobWrapper.CurrentJob).ContinuationJob;
+
             // Verify that only the created timestamp change was detected
-            var changedSyncEntry = ((SyncJob)syncJob.CurrentJob).AnalyzeResult.AdapterResults[1].EntryResults[0];
+            var changedSyncEntry = syncJob.AnalyzeResult.AdapterResults[1].EntryResults[0];
             Assert.AreEqual(changedSyncEntry.Flags, SyncEntryChangedFlags.ModifiedTimestamp);
 
             // Verify that the timestamp was copied

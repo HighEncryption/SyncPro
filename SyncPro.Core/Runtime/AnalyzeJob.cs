@@ -19,7 +19,7 @@ namespace SyncPro.Runtime
 
         public EventHandler<AnalyzeJobProgressInfo> ChangeDetected;
 
-        public AnalyzeRelationshipResult Result => this.analyzeResult;
+        public AnalyzeRelationshipResult AnalyzeResult => this.analyzeResult;
 
         public AnalyzeJob(SyncRelationship relationship)
             : base(relationship)

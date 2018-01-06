@@ -75,9 +75,9 @@ namespace SyncPro.UI.ViewModels
             this.EndTime = this.AnalyzeJob.EndTime.Value;
 
             // Calculate unchanges files and folders
-            this.ChangeMetricsList[0].Unchanged = this.AnalyzeJob.Result.UnchangedFileCount;
-            this.ChangeMetricsList[1].Unchanged = this.AnalyzeJob.Result.UnchangedFolderCount;
-            this.ChangeMetricsList[2].Unchanged = this.AnalyzeJob.Result.UnchangedFileBytes;
+            this.ChangeMetricsList[0].Unchanged = this.AnalyzeJob.AnalyzeResult.UnchangedFileCount;
+            this.ChangeMetricsList[1].Unchanged = this.AnalyzeJob.AnalyzeResult.UnchangedFolderCount;
+            this.ChangeMetricsList[2].Unchanged = this.AnalyzeJob.AnalyzeResult.UnchangedFileBytes;
 
             this.metadataUpdateCancellationToken.Cancel();
         }

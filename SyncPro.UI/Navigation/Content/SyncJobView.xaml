@@ -41,7 +41,7 @@
             </DataTemplate>
 
             <DataTemplate x:Key="LastModifiedCellTemplate" DataType="{x:Type viewModels:EntryUpdateInfoViewModel}">
-                <TextBlock x:Name="TextBox" Text="{Binding Path=LastModified, Converter={StaticResource FileDateTime}}">
+                <TextBlock x:Name="TextBox" Text="{Binding Path=ModifiedDateTimeUtcNew, Converter={StaticResource FileDateTime}}">
                     <TextBlock.Style>
                         <Style TargetType="TextBlock" BasedOn="{StaticResource TreeListItemStyle}">
                             <Style.Triggers>
@@ -55,7 +55,7 @@
             </DataTemplate>
 
             <DataTemplate x:Key="SizeCellTemplate" DataType="{x:Type viewModels:EntryUpdateInfoViewModel}">
-                <TextBlock x:Name="TextBox" Text="{Binding Path=Size, Converter={StaticResource FileSize2}}" >
+                <TextBlock x:Name="TextBox" Text="{Binding Path=OriginalSizeNew, Converter={StaticResource FileSize2}}" >
                     <TextBlock.Style>
                         <Style TargetType="TextBlock" BasedOn="{StaticResource TreeListItemStyle}">
                             <Style.Triggers>

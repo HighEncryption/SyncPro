@@ -164,8 +164,8 @@ namespace SyncPro.UnitTests
                                 memoryStream)
                             .Result;
 
-                    Assert.AreEqual(5242880, partUploadResponse.ContentLength);
-                    Assert.AreEqual(1, partUploadResponse.PartNumber);
+                    Assert.AreEqual(5242880, int.Parse(partUploadResponse.ContentLength));
+                    Assert.AreEqual(1, Int32.Parse(partUploadResponse.PartNumber));
                     Assert.AreEqual(sha1Array[0], partUploadResponse.ContentSha1);
                 }
 
@@ -181,8 +181,8 @@ namespace SyncPro.UnitTests
                                 memoryStream)
                             .Result;
 
-                    Assert.AreEqual(5242880, partUploadResponse.ContentLength);
-                    Assert.AreEqual(2, partUploadResponse.PartNumber);
+                    Assert.AreEqual(5242880, int.Parse(partUploadResponse.ContentLength));
+                    Assert.AreEqual(2, int.Parse(partUploadResponse.PartNumber));
                     Assert.AreEqual(sha1Array[1], partUploadResponse.ContentSha1);
                 }
 
@@ -198,8 +198,8 @@ namespace SyncPro.UnitTests
                                 memoryStream)
                             .Result;
 
-                    Assert.AreEqual(65536, partUploadResponse.ContentLength);
-                    Assert.AreEqual(3, partUploadResponse.PartNumber);
+                    Assert.AreEqual(65536, int.Parse(partUploadResponse.ContentLength));
+                    Assert.AreEqual(3, int.Parse(partUploadResponse.PartNumber));
                     Assert.AreEqual(sha1Array[2], partUploadResponse.ContentSha1);
                 }
 

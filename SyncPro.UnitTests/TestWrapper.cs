@@ -135,7 +135,14 @@ namespace SyncPro.UnitTests
 
         public TestRunWrapper<TSource, TDestination> CreateSyncJob()
         {
-            return new TestRunWrapper<TSource, TDestination>(this, new SyncJob(this.Relationship));
+            AnalyzeJob newAnalyzeJob = new AnalyzeJob(this.Relationship);
+
+            newAnalyzeJob.ContinuationJob = new SyncJob(this.Relationship, newAnalyzeJob.AnalyzeResult)
+            {
+                TriggerType = SyncTriggerType.Manual
+            };
+
+            return new TestRunWrapper<TSource, TDestination>(this, newAnalyzeJob);
         }
 
         public TestRunWrapper<TSource, TDestination> CreateAnalyzeJob()
@@ -208,24 +215,13 @@ namespace SyncPro.UnitTests
 
         public TestRunWrapper<TSource, TDestination> RunToCompletion()
         {
-            ManualResetEvent evt = new ManualResetEvent(false);
-
-            this.CurrentJob.Finished += (sender, args) =>
-            {
-                evt.Set();
-            };
-
             AnalyzeJob analyzeJob = this.CurrentJob as AnalyzeJob;
             analyzeJob?.Start();
 
             SyncJob syncJob = this.CurrentJob as SyncJob;
             syncJob?.Start(SyncTriggerType.Manual);
 
-            // 1 min max wait time
-            if (evt.WaitOne(60000) == false)
-            {
-                Assert.Fail("Timeout");
-            }
+            this.CurrentJob.WaitForCompletion();
 
             return this;
         }
@@ -241,42 +237,51 @@ namespace SyncPro.UnitTests
             AnalyzeJob analyzeJob = (AnalyzeJob)this.CurrentJob;
 
             Assert.IsTrue(analyzeJob.HasFinished);
-            Assert.IsTrue(analyzeJob.Result.IsComplete);
+            Assert.IsTrue(analyzeJob.AnalyzeResult.IsComplete);
 
             return this;
         }
 
         public TestRunWrapper<TSource, TDestination> VerifySyncSuccess()
         {
-            SyncJob syncJob = (SyncJob) this.CurrentJob;
+            SyncJob syncJob = (SyncJob)((AnalyzeJob) this.CurrentJob).ContinuationJob;
 
             Assert.IsTrue(syncJob.HasFinished);
-            Assert.AreEqual(SyncJobResult.Success, syncJob.SyncResult);
+            Assert.AreEqual(JobResult.Success, syncJob.JobResult);
 
             return this;
         }
 
         public TestRunWrapper<TSource, TDestination> VerifySyncNotRun()
         {
-            SyncJob syncJob = (SyncJob)this.CurrentJob;
+            SyncJob syncJob = (SyncJob)((AnalyzeJob)this.CurrentJob).ContinuationJob;
 
-            Assert.AreEqual(SyncJobResult.NotRun, syncJob.SyncResult);
+            Assert.AreEqual(JobResult.NotRun, syncJob.JobResult);
 
             return this;
         }
 
         public TestRunWrapper<TSource, TDestination> VerifyResultContainsAllFiles()
         {
-            SyncJob syncJob = (SyncJob)this.CurrentJob;
+            SyncJob syncJob = (SyncJob)((AnalyzeJob)this.CurrentJob).ContinuationJob;
+            if (syncJob != null)
+            {
+                Assert.AreEqual(this.testWrapper.SyncFileList.Count, syncJob.AnalyzeResult.AdapterResults.SelectMany(r => r.Value.EntryResults).Count());
+                return this;
+            }
 
-            Assert.AreEqual(this.testWrapper.SyncFileList.Count, syncJob.AnalyzeResult.AdapterResults.SelectMany(r => r.Value.EntryResults).Count());
+            AnalyzeJob analyzeJob = this.CurrentJob as AnalyzeJob;
+            if (analyzeJob != null)
+            {
+                Assert.AreEqual(this.testWrapper.SyncFileList.Count, analyzeJob.AnalyzeResult.AdapterResults.SelectMany(r => r.Value.EntryResults).Count());
+            }
 
             return this;
         }
 
         public TestRunWrapper<TSource, TDestination> VerifyAnalyzeEntryCount(int count)
         {
-            SyncJob syncJob = (SyncJob)this.CurrentJob;
+            SyncJob syncJob = (SyncJob)((AnalyzeJob)this.CurrentJob).ContinuationJob;
 
             Assert.AreEqual(count, syncJob.AnalyzeResult.AdapterResults.SelectMany(r => r.Value.EntryResults).Count());
 
@@ -367,4 +372,31 @@ namespace SyncPro.UnitTests
         }
     }
 
+    public static class JobExtensions
+    {
+        public static JobBase WaitForCompletion(this JobBase job)
+        {
+            ManualResetEvent evt = new ManualResetEvent(false);
+            while (true)
+            {
+                job.Finished += (sender, args) =>
+                {
+                    evt.Set();
+                };
+
+                if (evt.WaitOne(60000) == false)
+                {
+                    Assert.Fail("Timeout");
+                }
+
+                if (job.ContinuationJob == null)
+                {
+                    return job;
+                }
+
+                evt.Reset();
+                job = job.ContinuationJob;
+            }
+        }
+    }
 }
