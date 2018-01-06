@@ -70,9 +70,12 @@
     <Compile Include="Adapters\AdapterFaultInformation.cs" />
     <Compile Include="Adapters\AdapterItem.cs" />
     <Compile Include="NativeMethods.cs" />
+    <Compile Include="Runtime\AnalyzeJobProgressInfo.cs" />
     <Compile Include="Runtime\EncryptedFileHeader.cs" />
     <Compile Include="Runtime\EncryptionManager.cs" />
     <Compile Include="Runtime\EntryProcessingSorter.cs" />
+    <Compile Include="Runtime\JobBase.cs" />
+    <Compile Include="Runtime\RestoreJob.cs" />
     <Compile Include="Utility\SecureStringConverter.cs" />
     <Compile Include="Utility\SecureStringToProtectedDataConverter.cs" />
     <Compile Include="Adapters\IChangeTracking.cs" />
@@ -106,7 +109,7 @@
     <Compile Include="Runtime\AnalyzeAdapterResult.cs" />
     <Compile Include="Runtime\AnalyzeRelationshipResult.cs" />
     <Compile Include="Runtime\EntryUpdateInfo.cs" />
-    <Compile Include="Runtime\SyncAnalyzer.cs" />
+    <Compile Include="Runtime\AnalyzeJob.cs" />
     <Compile Include="Runtime\SyncRelationship.cs" />
     <Compile Include="Runtime\SyncJob.cs" />
     <Compile Include="Runtime\SyncJobProgressInfo.cs" />

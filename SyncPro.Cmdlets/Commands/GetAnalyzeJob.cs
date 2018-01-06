@@ -19,12 +19,13 @@
         {
             SyncRelationship relationship = CmdletCommon.GetSyncRelationship(this.RelationshipId);
 
-            if (relationship.ActiveAnalyzeJob == null)
+            AnalyzeJob job = relationship.ActiveJob as AnalyzeJob;
+            if (job == null)
             {
                 throw new ItemNotFoundException("There is no active analyze job for this relationship");
             }
 
-            var psRun = new PSAnalyzeJob(relationship.ActiveAnalyzeJob);
+            var psRun = new PSAnalyzeJob(job);
 
             this.WriteObject(psRun);
         }
@@ -32,19 +33,18 @@
 
     public class PSAnalyzeJob
     {
-        private readonly SyncJob syncJob;
+        private readonly AnalyzeJob job;
 
-        public DateTime StartTime => this.syncJob.StartTime;
-        public DateTime? EndTime => this.syncJob.EndTime;
+        public DateTime StartTime => this.job.StartTime;
+        public DateTime? EndTime => this.job.EndTime;
 
         public PSAnalyzeRelationshipResult AnalyzeResult { get; }
 
-        public PSAnalyzeJob(SyncJob syncJob)
+        public PSAnalyzeJob(AnalyzeJob job)
         {
-            this.syncJob = syncJob;
+            this.job = job;
 
-            this.AnalyzeResult = new PSAnalyzeRelationshipResult(
-                this.syncJob.AnalyzeResult);
+            this.AnalyzeResult = new PSAnalyzeRelationshipResult(this.job.Result);
         }
     }
 

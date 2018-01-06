@@ -14,7 +14,7 @@ namespace SyncPro.UI.Navigation.MenuCommands
 
             this.relationship.PropertyChanged += (sender, args) =>
             {
-                if (args.PropertyName == "IsSyncActive")
+                if (args.PropertyName == nameof(this.relationship.ActiveJob))
                 {
                     this.UpdateState();
                 }
@@ -25,7 +25,7 @@ namespace SyncPro.UI.Navigation.MenuCommands
 
         private void UpdateState()
         {
-            if (this.relationship.IsSyncActive)
+            if (this.relationship.ActiveJob != null)
             {
                 this.Header = "CANCEL";
                 this.IconImageSource = "/SyncPro.UI;component/Resources/Graphics/stop_16.png";
@@ -41,10 +41,10 @@ namespace SyncPro.UI.Navigation.MenuCommands
 
         protected override bool CanInvokeCommand(object obj)
         {
-            var activeSyncJob = this.relationship.ActiveSyncJob;
+            var activeSyncJob = this.relationship.ActiveJob;
             if (this.isCancelMode && activeSyncJob != null)
             {
-                return activeSyncJob.CancelSyncJobCommand.CanExecute(obj);
+                return activeSyncJob.CancelJobCommand.CanExecute(obj);
             }
 
             return true;
@@ -52,11 +52,11 @@ namespace SyncPro.UI.Navigation.MenuCommands
 
         protected override void InvokeCommand(object obj)
         {
-            var activeSyncJob = this.relationship.ActiveSyncJob;
+            var activeSyncJob = this.relationship.ActiveJob;
 
             if (this.isCancelMode && activeSyncJob != null)
             {
-                activeSyncJob.CancelSyncJobCommand.Execute(obj);
+                activeSyncJob.CancelJobCommand.Execute(obj);
             }
             else
             {

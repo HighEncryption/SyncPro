@@ -1,5 +1,7 @@
 namespace SyncPro.UI.Navigation.ViewModels
 {
+    using System;
+
     using SyncPro.Runtime;
 
     public class SyncJobNodeViewModel : NavigationNodeViewModel
@@ -11,9 +13,9 @@ namespace SyncPro.UI.Navigation.ViewModels
         {
             this.syncJobPanel = syncJobPanel;
 
-            if (syncJobPanel.SyncJob != null)
+            if (syncJobPanel.SyncJobViewModel != null)
             {
-                this.Name = syncJobPanel.SyncJob.StartTime.ToString("g");
+                this.Name = syncJobPanel.SyncJobViewModel.StartTime.ToString("g");
             }
 
             this.SetIconImage();
@@ -21,13 +23,13 @@ namespace SyncPro.UI.Navigation.ViewModels
 
         private void SetIconImage()
         {
-            if (this.syncJobPanel.SyncJob == null)
+            if (this.syncJobPanel.SyncJobViewModel == null)
             {
                 this.IconImageSource = "/SyncPro.UI;component/Resources/Graphics/list_16.png";
                 return;
             }
 
-            switch (this.syncJobPanel.SyncJob.SyncJobResult)
+            switch (this.syncJobPanel.SyncJobViewModel.SyncJobResult)
             {
                 case SyncJobResult.Success:
                     this.IconImageSource = "/SyncPro.UI;component/Resources/Graphics/list_ok_16.png";
@@ -49,7 +51,7 @@ namespace SyncPro.UI.Navigation.ViewModels
 
         protected override void OnIsSelected()
         {
-            this.syncJobPanel.SyncJob?.BeginLoad();
+            this.syncJobPanel.SyncJobViewModel?.BeginLoad();
         }
     }
 }

@@ -6,7 +6,6 @@ namespace SyncPro.UI.Converters
     using System.Windows.Data;
 
     using SyncPro.Adapters;
-    using SyncPro.Runtime;
 
     public enum FlagToVisibilityConverterMode
     {
@@ -14,7 +13,7 @@ namespace SyncPro.UI.Converters
         ExactMatch
     }
 
-    [ValueConversion(typeof(SyncJobStage), typeof(Visibility))]
+    [ValueConversion(typeof(SyncEntryChangedFlags), typeof(Visibility))]
     public class SyncEntryChangedFlagsToVisibilityConverter : IValueConverter
     {
         public FlagToVisibilityConverterMode Mode { get; set; }

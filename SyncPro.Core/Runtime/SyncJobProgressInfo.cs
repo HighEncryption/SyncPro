@@ -31,25 +31,7 @@ namespace SyncPro.Runtime
 
         public string Message { get; }
 
-        public SyncJobStage Stage { get; }
-
         public EntryUpdateInfo UpdateInfo { get; }
-
-        public SyncJobProgressInfo(SyncJobStage stage, string message)
-        {
-            this.Stage = stage;
-            this.Message = message;
-        }
-
-        public SyncJobProgressInfo(EntryUpdateInfo updateInfo, int filesTotal, long bytesTotal)
-        {
-            this.Stage = SyncJobStage.Analyze;
-            this.ProgressValue = double.PositiveInfinity;
-            this.FilesTotal = filesTotal;
-            this.BytesTotal = bytesTotal;
-
-            this.UpdateInfo = updateInfo;
-        }
 
         public SyncJobProgressInfo(
             EntryUpdateInfo updateInfo,
@@ -59,7 +41,7 @@ namespace SyncPro.Runtime
             long bytesCompleted,
             int bytesPerSecond)
         {
-            this.Stage = SyncJobStage.Sync;
+            //this.Stage = SyncJobStage.Sync;
             this.UpdateInfo = updateInfo;
 
             this.ProgressValue = (double)bytesCompleted / (double)bytesTotal;

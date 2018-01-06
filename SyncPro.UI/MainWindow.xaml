@@ -168,7 +168,6 @@
                 </Border>
             </DataTemplate>
 
-            <!-- ReSharper disable once Xaml.RedundantResource -->
             <DataTemplate DataType="{x:Type navViewModels:SyncJobNodeViewModel}">
                 <Border>
                     <content:SyncJobView DataContext="{Binding Path=Item}" />
@@ -197,9 +196,9 @@
             </DataTemplate>
 
             <!-- ReSharper disable once Xaml.RedundantResource -->
-            <DataTemplate DataType="{x:Type navViewModels:AnalyzeResultsNodeViewModel}">
+            <DataTemplate DataType="{x:Type navViewModels:AnalyzeJobNodeViewModel}">
                 <Border>
-                    <content:SyncJobView DataContext="{Binding Path=Item}" />
+                    <content:AnalyzeJobView DataContext="{Binding Path=Item}" />
                 </Border>
             </DataTemplate>
 

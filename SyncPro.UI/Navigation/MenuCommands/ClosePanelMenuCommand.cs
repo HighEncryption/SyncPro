@@ -16,13 +16,12 @@ namespace SyncPro.UI.Navigation.MenuCommands
 
         protected override bool CanInvokeCommand(object obj)
         {
-            return !this.relationship.IsSyncActive;
+            return this.relationship.ActiveJob == null;
         }
 
         protected override void InvokeCommand(object obj)
         {
             this.viewModel.Parent.Children.Remove(this.viewModel);
-            this.relationship.ClearActiveAnalyzeJob();
         }
     }
 }

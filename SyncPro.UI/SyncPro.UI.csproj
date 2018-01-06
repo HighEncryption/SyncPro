@@ -114,6 +114,9 @@
     <Compile Include="Controls\AdapterErrorView.xaml.cs">
       <DependentUpon>AdapterErrorView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\AnalyzeJobStatusView.xaml.cs">
+      <DependentUpon>AnalyzeJobStatusView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\BackblazeCredentialDialog.xaml.cs">
       <DependentUpon>BackblazeCredentialDialog.xaml</DependentUpon>
     </Compile>
@@ -128,6 +131,9 @@
     </Compile>
     <Compile Include="Controls\NavigationTreeView.cs" />
     <Compile Include="Controls\NavigationTreeViewItem.cs" />
+    <Compile Include="Controls\SyncJobStatusView.xaml.cs">
+      <DependentUpon>SyncJobStatusView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\ValidationContainer.cs" />
     <Compile Include="Converters\BooleanToVisibilityMultiConverter.cs" />
     <Compile Include="Converters\ByteArrayToString.cs" />
@@ -138,7 +144,6 @@
     <Compile Include="Converters\StringToBooleanConverter.cs" />
     <Compile Include="Converters\SyncEntryChangedFlagsToForegroundConverter.cs" />
     <Compile Include="Converters\SyncEntryChangedFlagsToVisibilityConverter.cs" />
-    <Compile Include="Converters\SyncJobStageToVisiblityConverter.cs" />
     <Compile Include="DesignTimeData\MainWindowViewModel.cs" />
     <Compile Include="DesignTimeData\SyncRelationshipViewModel.cs" />
     <Compile Include="Extensions\DropDownButtonBehavior.cs" />
@@ -155,6 +160,10 @@
     <Compile Include="Framework\Validation\ValidationException.cs" />
     <Compile Include="Framework\Validation\ValidationExceptionResult.cs" />
     <Compile Include="Framework\Validation\ValidationResult.cs" />
+    <Compile Include="Navigation\AnalyzeJobPanelViewModel.cs" />
+    <Compile Include="Navigation\Content\AnalyzeJobView.xaml.cs">
+      <DependentUpon>AnalyzeJobView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Navigation\Content\DashboardView.xaml.cs">
       <DependentUpon>DashboardView.xaml</DependentUpon>
     </Compile>
@@ -182,10 +191,10 @@
     <Compile Include="Navigation\MenuCommands\RemoveRelationshipMenuCommand.cs" />
     <Compile Include="Navigation\MenuCommands\RestoreItemMenuCommand.cs" />
     <Compile Include="Navigation\MenuCommands\SynchronzieNowMenuCommand.cs" />
-    <Compile Include="Navigation\MenuCommands\ViewSyncJobMenuCommand.cs" />
+    <Compile Include="Navigation\MenuCommands\ViewJobMenuCommand.cs" />
     <Compile Include="Navigation\NavigationNodeViewModel.cs" />
     <Compile Include="Navigation\SyncJobPanelViewModel.cs" />
-    <Compile Include="Navigation\ViewModels\AnalyzeResultsNodeViewModel.cs" />
+    <Compile Include="Navigation\ViewModels\AnalyzeJobNodeViewModel.cs" />
     <Compile Include="Navigation\ViewModels\BackblazeCredentialDialogViewModel.cs" />
     <Compile Include="Navigation\ViewModels\CreateBackblazeBucketDialogViewModel.cs" />
     <Compile Include="Navigation\ViewModels\DashboardNodeViewModel.cs" />
@@ -199,10 +208,6 @@
     <Compile Include="Navigation\ViewModels\SyncRelationshipNodeViewModel.cs" />
     <Compile Include="Navigation\ViewModels\SyncJobNodeViewModel.cs" />
     <Compile Include="Properties\Annotations.cs" />
-    <Compile Include="RelationshipDetails\SyncDetailsWindow.xaml.cs">
-      <DependentUpon>SyncDetailsWindow.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="RelationshipDetails\SyncDetailsWindowViewModel.cs" />
     <Compile Include="RelationshipEditor\DaysOfWeekSelection.cs" />
     <Compile Include="RelationshipEditor\EditorWindow.xaml.cs">
       <DependentUpon>EditorWindow.xaml</DependentUpon>
@@ -238,15 +243,18 @@
     <Compile Include="ViewModels\Adapters\BackblazeB2AdapterViewModel.cs" />
     <Compile Include="ViewModels\Adapters\GoogleDriveAdapterViewModel.cs" />
     <Compile Include="ViewModels\Adapters\OneDriveAdapterViewModel.cs" />
+    <Compile Include="ViewModels\AnalyzeJobViewModel.cs" />
     <Compile Include="ViewModels\ChangeMetrics.cs" />
     <Compile Include="ViewModels\EncryptionSettingsDialogViewModel.cs" />
     <Compile Include="ViewModels\EntryUpdateInfoViewModel.cs" />
     <Compile Include="ViewModels\Adapters\ISyncTargetViewModel.cs" />
     <Compile Include="ViewModels\Errors\OneDriveTokenExpiredErrorViewModel.cs" />
+    <Compile Include="ViewModels\JobViewModel.cs" />
     <Compile Include="ViewModels\MainWindowViewModel.cs" />
     <Compile Include="Startup.cs" />
     <Compile Include="ThreadingHelper.cs" />
     <Compile Include="ViewModels\RelationshipEditorViewModel.cs" />
+    <Compile Include="ViewModels\RestoreJobViewModel.cs" />
     <Compile Include="ViewModels\SyncRelationshipViewModel.cs" />
     <Compile Include="ViewModels\SyncJobViewModel.cs" />
     <Compile Include="ViewModels\Adapters\SyncAdapterViewModel.cs" />
@@ -254,6 +262,10 @@
     <Compile Include="ViewModels\WizardPageViewModelBase.cs" />
     <Compile Include="WebBrowserWindow.cs" />
     <Page Include="Controls\AdapterErrorView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\AnalyzeJobStatusView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -274,6 +286,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\BrowserAuthenticationWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\SyncJobStatusView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -332,6 +348,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="Navigation\Content\AnalyzeJobView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Navigation\Content\DashboardView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -353,10 +373,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Primitives.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="RelationshipDetails\SyncDetailsWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -591,6 +607,7 @@
   <ItemGroup>
     <Resource Include="Resources\Graphics\install_16.png" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>git describe --always --dirty &gt; $(ProjectDir)\version.txt</PreBuildEvent>

@@ -70,7 +70,7 @@
     
     <Grid Margin="18,0">
         <ListView ItemsSource="{Binding Path=SyncJobHistory}" SelectionMode="Single" BorderThickness="0" Margin="0,4,0,0" 
-                  SelectedItem="{Binding Path=SelectedSyncJob}">
+                  SelectedItem="{Binding Path=SelectedJob}">
             <ListView.Resources>
                 <Style TargetType="{x:Type ListViewItem}">
                     <!--<Setter Property="extensions:MouseDoubleClick.Command" 
@@ -89,7 +89,7 @@
                         </Setter.Value>
                     </Setter>
                     <Setter Property="extensions:MouseDoubleClick.Command" 
-                            Value="{Binding Path=(viewModels:SyncJobViewModel.ViewSyncJobCommand)}" />
+                            Value="{Binding Path=(viewModels:SyncJobViewModel.ShowJobCommand)}" />
                     <Style.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter Property="Background" Value="#e8e8e8" />

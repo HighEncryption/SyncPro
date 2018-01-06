@@ -3,7 +3,6 @@
     using System;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
-    using System.ComponentModel;
     using System.Data.Entity;
     using System.Diagnostics;
     using System.Linq;
@@ -15,10 +14,7 @@
     using SyncPro.Data;
     using SyncPro.Runtime;
     using SyncPro.UI.Converters;
-    using SyncPro.UI.Framework;
     using SyncPro.UI.Framework.MVVM;
-    using SyncPro.UI.Navigation;
-    using SyncPro.UI.Navigation.ViewModels;
 
     public enum SyncJobChangesDisplayMode
     {
@@ -26,35 +22,23 @@
         AllFiles,
     }
 
-    public class SyncJobViewModel : ViewModelBase, IRequestClose
+    public class SyncJobViewModel : JobViewModel
     {
-        public SyncJob SyncJob { get; }
+        public SyncJob SyncJob => (SyncJob) this.Job;
         private bool loadFromHistory;
-
-        public ICommand CloseWindowCommand { get; }
-
-        public ICommand ViewSyncJobCommand { get; }
 
         public ICommand BeginSyncJobCommand { get; }
 
-        public ICommand CancelSyncJobCommand { get; }
-
-        public SyncRelationshipViewModel SyncRelationship { get; }
-
         public SyncJobViewModel(SyncJob syncJob, SyncRelationshipViewModel relationshipViewModel, bool loadFromHistory)
+            : base(syncJob, relationshipViewModel)
         {
-            this.SyncJob = syncJob;
-            this.SyncRelationship = relationshipViewModel;
             this.loadFromHistory = loadFromHistory;
 
-            this.SyncJob.SyncStarted += this.SyncJobOnSyncStarted;
-            this.SyncJob.SyncFinished += this.SyncJobOnSyncFinished;
+            this.SyncJob.Started += this.SyncJobOnSyncStarted;
+            this.SyncJob.Finished += this.SyncJobOnSyncFinished;
             this.SyncJob.ProgressChanged += this.SyncJobOnProgressChanged;
 
-            this.CloseWindowCommand = new DelegatedCommand(o => this.HandleClose(false));
-            this.ViewSyncJobCommand = new DelegatedCommand(o => this.ViewSyncJob());
             this.BeginSyncJobCommand = new DelegatedCommand(o => this.BeginSyncJob());
-            this.CancelSyncJobCommand = new DelegatedCommand(o => this.CancelSyncJob());
 
             this.ChangeMetricsList = new List<ChangeMetrics>()
             {
@@ -174,41 +158,9 @@
             }
         }
 
-        private void ViewSyncJob()
-        {
-            // Find the navigation tree item for this relationship
-            SyncRelationshipNodeViewModel relatonshipNavItem =
-                App.Current.MainWindowsViewModel.NavigationItems.OfType<SyncRelationshipNodeViewModel>().FirstOrDefault(
-                    n => n.Item == this.SyncRelationship);
-
-            Debug.Assert(relatonshipNavItem != null, "relatonshipNavItem != null");
-
-            SyncHistoryNodeViewModel syncHistoryNode =
-                relatonshipNavItem.Children.OfType<SyncHistoryNodeViewModel>().First();
-
-            // Check if a Sync History item is already present under this relationship for this history
-            foreach (SyncJobNodeViewModel syncJobNodeViewModel in syncHistoryNode.Children.OfType<SyncJobNodeViewModel>())
-            {
-                var panelViewModel = syncJobNodeViewModel.Item as SyncJobPanelViewModel;
-                if (panelViewModel != null && panelViewModel.SyncJob == this)
-                {
-                    syncJobNodeViewModel.IsSelected = true;
-                    return;
-                }
-            }
-        }
-
         private void BeginSyncJob()
         {
             this.SyncJob.Start(SyncTriggerType.Manual);
-        }
-
-        private void CancelSyncJob()
-        {
-            if (this.SyncJob.HasStarted)
-            {
-                this.SyncJob.Cancel();
-            }
         }
 
         private void SetStatusDescription()
@@ -293,50 +245,40 @@
         {
             App.Current.Dispatcher.Invoke(() =>
             {
-                this.Stage = syncJobProgressInfo.Stage;
-
                 if (syncJobProgressInfo.Message != null)
                 {
                     this.SyncProgressCurrentText = syncJobProgressInfo.Message;
                 }
 
-                if (syncJobProgressInfo.Stage == SyncJobStage.Sync)
+                if (double.IsInfinity(syncJobProgressInfo.ProgressValue))
                 {
-                    if (double.IsInfinity(syncJobProgressInfo.ProgressValue))
+                }
+                else
+                {
+                    this.ShowDiscreteProgress = true;
+
+                    this.ProgressValue = syncJobProgressInfo.ProgressValue;
+                    this.SyncProgressCurrentText = syncJobProgressInfo.ProgressValue.ToString("P0") + " complete";
+
+                    this.BytesCompleted = syncJobProgressInfo.BytesCompleted;
+                    this.BytesRemaining = syncJobProgressInfo.BytesTotal - syncJobProgressInfo.BytesCompleted;
+
+                    this.FilesCompleted = syncJobProgressInfo.FilesCompleted;
+                    this.FilesRemaining = syncJobProgressInfo.FilesTotal - syncJobProgressInfo.FilesCompleted;
+
+                    this.TimeElapsed = DateTime.Now.Subtract(this.StartTime);
+
+                    if (syncJobProgressInfo.BytesPerSecond > 0)
                     {
+                        this.TimeRemaining = TimeSpan.FromSeconds(
+                            this.BytesRemaining / syncJobProgressInfo.BytesPerSecond);
                     }
                     else
                     {
-                        this.ShowDiscreteProgress = true;
-
-                        this.ProgressValue = syncJobProgressInfo.ProgressValue;
-                        this.SyncProgressCurrentText = syncJobProgressInfo.ProgressValue.ToString("P0") + " complete";
-
-                        this.BytesCompleted = syncJobProgressInfo.BytesCompleted;
-                        this.BytesRemaining = syncJobProgressInfo.BytesTotal - syncJobProgressInfo.BytesCompleted;
-
-                        this.FilesCompleted = syncJobProgressInfo.FilesCompleted;
-                        this.FilesRemaining = syncJobProgressInfo.FilesTotal - syncJobProgressInfo.FilesCompleted;
-
-                        this.TimeElapsed = DateTime.Now.Subtract(this.StartTime);
-
-                        if (syncJobProgressInfo.BytesPerSecond > 0)
-                        {
-                            this.TimeRemaining = TimeSpan.FromSeconds(
-                                this.BytesRemaining / syncJobProgressInfo.BytesPerSecond);
-                        }
-                        else
-                        {
-                            this.TimeRemaining = TimeSpan.Zero;
-                        }
-
-                        this.Throughput = FileSizeConverter.Convert(syncJobProgressInfo.BytesPerSecond, 2) + " per second";
+                        this.TimeRemaining = TimeSpan.Zero;
                     }
-                }
-                else if (syncJobProgressInfo.Stage == SyncJobStage.Analyze)
-                {
-                    this.AnalyzeStatusString =
-                        string.Format("Analyzing. Found {0} changes", syncJobProgressInfo.FilesTotal);
+
+                    this.Throughput = FileSizeConverter.Convert(syncJobProgressInfo.BytesPerSecond, 2) + " per second";
                 }
 
                 if (!this.EntryUpdatesTreeList.Any() && syncJobProgressInfo.UpdateInfo != null)
@@ -352,8 +294,6 @@
                     this.EntryUpdatesTreeList.Add(rootNode);
                 }
 
-                // 10/26: Why did we care about the stage??
-                //if (syncJobProgressInfo.Stage == SyncJobStage.Sync && syncJobProgressInfo.UpdateInfo != null)
                 if (syncJobProgressInfo.UpdateInfo != null)
                 {
                     IList<string> pathStack = syncJobProgressInfo.UpdateInfo.RelativePath.Split('\\').ToList();
@@ -414,29 +354,6 @@
             }
         }
 
-        private void HandleClose(bool dialogResult)
-        {
-            this.RequestClose?.Invoke(this, new RequestCloseEventArgs(dialogResult));
-        }
-
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private DateTime startTime;
-
-        public DateTime StartTime
-        {
-            get { return this.startTime; }
-            set { this.SetProperty(ref this.startTime, value); }
-        }
-
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private DateTime endTime;
-
-        public DateTime EndTime
-        {
-            get { return this.endTime; }
-            set { this.SetProperty(ref this.endTime, value); }
-        }
-
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private TimeSpan duration;
 
@@ -444,15 +361,6 @@
         {
             get { return this.duration; }
             set { this.SetProperty(ref this.duration, value); }
-        }
-
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private SyncJobStage stage;
-
-        public SyncJobStage Stage
-        {
-            get { return this.stage; }
-            set { this.SetProperty(ref this.stage, value); }
         }
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -566,15 +474,6 @@
             set { this.SetProperty(ref this.statusDescription, value); }
         }
 
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private string analyzeStatusString;
-
-        public string AnalyzeStatusString
-        {
-            get { return this.analyzeStatusString; }
-            set { this.SetProperty(ref this.analyzeStatusString, value); }
-        }
-
         public List<ChangeMetrics> ChangeMetricsList { get; }
 
         public long BytesToCopy { get; set; }
@@ -623,24 +522,5 @@
             pathStack.RemoveAt(0);
             this.InsertTreeViewNode(entry, childNode, pathStack);
         }
-
-        #region IRequestClose
-
-        public event RequestCloseEventHandler RequestClose;
-
-        public void WindowClosing(CancelEventArgs e)
-        {
-            if (this.MustClose)
-            {
-                // We are being forced to close, so don't show the confirmation message.
-                e.Cancel = false;
-            }
-        }
-
-        public bool MustClose { get; set; }
-
-        public bool IsAnalyzeOnly => this.SyncJob.AnalyzeOnly;
-
-        #endregion IRequestClose
     }
 }

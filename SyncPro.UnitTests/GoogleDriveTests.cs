@@ -232,7 +232,7 @@
 
             SyncJob run1 = new SyncJob(newRelationship);
 
-            run1.SyncFinished += (sender, args) => { evt.Set(); };
+            run1.Finished += (sender, args) => { evt.Set(); };
             run1.Start(SyncTriggerType.Manual);
 
             // 10min max wait time

@@ -1,0 +1,58 @@
+﻿<UserControl x:Class="SyncPro.UI.Controls.SyncJobStatusView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:viewModels="clr-namespace:SyncPro.UI.ViewModels"
+             xmlns:converters="clr-namespace:SyncPro.UI.Converters"
+             mc:Ignorable="d" 
+             d:DataContext="{d:DesignInstance viewModels:SyncJobViewModel}">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <converters:FileSizeConverter x:Key="LocalFileSizeConverter" FormatType="2" />
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        
+        <DockPanel LastChildFill="True" MinHeight="17">
+            <TextBlock DockPanel.Dock="Left" Width="200" 
+                       Visibility="{Binding Path=ShowDiscreteProgress, Converter={StaticResource BooleanToVisibilityCollapsed}}">
+                <Run Text="{Binding Path=TimeElapsed, StringFormat={}{0:hh}:{0:mm}:{0:ss}}" FontSize="13" FontFamily="Segoe UI" FontWeight="Normal" />
+                <Run Text="elapsed" />
+            </TextBlock>
+            <TextBlock DockPanel.Dock="Right" Width="200" TextAlignment="Right"
+                       Visibility="{Binding Path=ShowDiscreteProgress, Converter={StaticResource BooleanToVisibilityCollapsed}}">
+                <Run Text="{Binding Path=TimeRemaining, StringFormat={}{0:hh}:{0:mm}:{0:ss}}" FontSize="13" FontFamily="Segoe UI" FontWeight="Normal" />
+                <Run Text="remaining" />
+            </TextBlock>
+        </DockPanel>
+
+        <ProgressBar Grid.Row="1" Height="8" Value="{Binding Path=ProgressValue}" Minimum="0" Maximum="1" />
+
+        <DockPanel Grid.Row="2" LastChildFill="True" MinHeight="17">
+            <TextBlock DockPanel.Dock="Left" Width="200" 
+                       Visibility="{Binding Path=ShowDiscreteProgress, Converter={StaticResource BooleanToVisibilityCollapsed}}">
+                <Run Text="{Binding Path=FilesCompleted}" FontSize="13" FontFamily="Segoe UI" FontWeight="Normal" />
+                <Run Text="files /" />
+                <Run Text="{Binding Path=BytesCompleted, Converter={StaticResource LocalFileSizeConverter}}" FontSize="13"
+                     FontFamily="Segoe UI" FontWeight="Normal" />
+                <Run Text="complete" />
+            </TextBlock>
+            <TextBlock DockPanel.Dock="Right" Width="200" TextAlignment="Right"
+                       Visibility="{Binding Path=ShowDiscreteProgress, Converter={StaticResource BooleanToVisibilityCollapsed}}">
+                <Run Text="{Binding Path=FilesRemaining}" FontSize="13" FontFamily="Segoe UI" FontWeight="Normal" />
+                <Run Text="files /" />
+                <Run Text="{Binding Path=BytesRemaining, Converter={StaticResource LocalFileSizeConverter}}" FontSize="13"
+                     FontFamily="Segoe UI" FontWeight="Normal" />
+                <Run Text="remaining" />
+            </TextBlock>
+            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Bottom" Text="{Binding Path=Throughput}" />
+        </DockPanel>
+    </Grid>
+</UserControl>

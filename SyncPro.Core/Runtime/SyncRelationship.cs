@@ -568,7 +568,7 @@
 
         public async Task RestoreFilesAsync(IEnumerable<SyncEntry> syncEntries, string restorePath)
         {
-            if (this.ActiveSyncJob != null)
+            if (this.ActiveJob != null)
             {
                 return;
             }
@@ -589,30 +589,29 @@
 
         private void SyncSchedulerHandleAdapterItemChangeNotification(object sender, ItemChangedEventArgs e)
         {
-            if (this.ActiveSyncJob != null)
+            if (this.ActiveJob != null)
             {
                 return;
             }
 
-            this.BeginSyncJob(SyncTriggerType.Continuous, false, null);
+            //this.BeginSyncJob(SyncTriggerType.Continuous, null);
+            //this.BeginAnalyzeJob()
         }
 
         private static readonly TimeSpan SyncSchedulerDelay = TimeSpan.FromMinutes(1);
         private Task syncSchedulerTask;
         private CancellationTokenSource syncSchedulerCancellationTokenSource;
 
-        private SyncJob activeSyncJob;
+        private JobBase activeJob;
 
-        public SyncJob ActiveSyncJob
+        public JobBase ActiveJob
         {
-            get { return this.activeSyncJob; }
-            private set { this.SetProperty(ref this.activeSyncJob, value); }
+            get { return this.activeJob; }
+            internal set { this.SetProperty(ref this.activeJob, value); }
         }
 
-        public SyncJob ActiveAnalyzeJob { get; set; }
-
-        public event EventHandler<SyncJob> SyncJobStarted;
-        public event EventHandler<SyncJob> SyncJobFinished;
+        public event EventHandler<JobStartedEventArgs> JobStarted;
+        public event EventHandler<JobFinishedEventArgs> JobFinished;
 
         private SyncRelationshipState state;
 
@@ -630,42 +629,63 @@
             set { this.SetProperty(ref this.errorMessage, value); }
         }
 
-        public SyncJob BeginSyncJob(
+        public AnalyzeJob BeginAnalyzeJob(bool startJob)
+        {
+            if (this.ActiveJob != null)
+            {
+                throw new InvalidOperationException("An ActiveJob is already present.");
+            }
+
+            AnalyzeJob newJob = new AnalyzeJob(this);
+
+            newJob.Started += this.JobStarted;
+            newJob.Finished += this.JobFinished;
+
+            if (startJob)
+            {
+                newJob.Start();
+            }
+
+            return newJob;
+        }
+
+        public JobBase BeginSyncJob(
             SyncTriggerType syncTriggerType, 
-            bool analyzeOnly, 
             AnalyzeRelationshipResult previousResult)
         {
-            if (this.ActiveSyncJob != null)
+            if (this.ActiveJob != null)
             {
-                return null;
+                throw new InvalidOperationException("An ActiveJob is already present.");
             }
 
-            this.ActiveSyncJob = new SyncJob(this)
+            if (previousResult == null)
             {
-                AnalyzeOnly = analyzeOnly,
-                AnalyzeResult = previousResult
-            };
+                AnalyzeJob newAnalyzeJob = new AnalyzeJob(this);
 
-            if (analyzeOnly)
-            {
-                this.ActiveAnalyzeJob = this.ActiveSyncJob;
+                newAnalyzeJob.ContinuationJob = new SyncJob(this, newAnalyzeJob.Result)
+                {
+                    TriggerType = syncTriggerType
+                };
+
+                newAnalyzeJob.Started += this.JobStarted;
+                newAnalyzeJob.Finished += this.JobFinished;
+
+                newAnalyzeJob.ContinuationJob.Started += this.JobStarted;
+                newAnalyzeJob.ContinuationJob.Finished += this.JobFinished;
+
+                newAnalyzeJob.Start();
+
+                return newAnalyzeJob;
             }
 
-            this.ActiveSyncJob.SyncStarted += (sender, args) =>
-            {
-                this.SyncJobStarted?.Invoke(this, this.ActiveSyncJob); 
-            };
+            SyncJob newJob = new SyncJob(this, previousResult);
 
-            this.ActiveSyncJob.SyncFinished += (sender, args) =>
-            {
-                SyncJob syncJob = this.ActiveSyncJob;
-                this.ActiveSyncJob = null;
-                this.SyncJobFinished?.Invoke(this, syncJob);
-            };
+            newJob.Started += this.JobStarted;
+            newJob.Finished += this.JobFinished;
 
-            this.ActiveSyncJob.Start(syncTriggerType);
+            newJob.Start(syncTriggerType);
 
-            return this.ActiveSyncJob;
+            return newJob;
         }
 
         public IList<SyncJob> GetSyncJobHistory()
@@ -693,4 +713,25 @@
             Directory.Delete(this.RelationshipRootPath, true);
         }
     }
+
+    public class JobStartedEventArgs : EventArgs
+    {
+        public JobBase Job { get; set; }
+
+        public JobStartedEventArgs(JobBase job)
+        {
+            this.Job = job;
+        }
+    }
+
+    public class JobFinishedEventArgs : EventArgs
+    {
+        public JobBase Job { get; set; }
+
+        public JobFinishedEventArgs(JobBase job)
+        {
+            this.Job = job;
+        }
+    }
+
 }

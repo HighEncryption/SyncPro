@@ -32,25 +32,22 @@ namespace SyncPro.UI.Navigation.MenuCommands
 
             // Check if an Analyze item is already present under this relationship
             NavigationNodeViewModel analyzeItem =
-                relatonshipNavItem.Children.OfType<AnalyzeResultsNodeViewModel>().FirstOrDefault();
+                relatonshipNavItem.Children.OfType<AnalyzeJobNodeViewModel>().FirstOrDefault();
 
             // An analyze item is not present, so add a new one.
             if (analyzeItem == null)
             {
-                SyncJobPanelViewModel viewModel = new SyncJobPanelViewModel(this.relationship)
-                {
-                    IsAnalyzeOnlyMode = true
-                };
+                AnalyzeJobPanelViewModel viewModel = new AnalyzeJobPanelViewModel(this.relationship);
 
-                analyzeItem = new AnalyzeResultsNodeViewModel(relatonshipNavItem, viewModel);
+                analyzeItem = new AnalyzeJobNodeViewModel(relatonshipNavItem, viewModel);
                 relatonshipNavItem.Children.Add(analyzeItem);
             }
 
             analyzeItem.IsSelected = true;
-            SyncJobPanelViewModel syncJobViewModel = (SyncJobPanelViewModel) analyzeItem.Item;
-            if (syncJobViewModel.BeginAnalyzeCommand.CanExecute(null))
+            AnalyzeJobPanelViewModel analyzeJobViewModel = (AnalyzeJobPanelViewModel) analyzeItem.Item;
+            if (analyzeJobViewModel.BeginAnalyzeCommand.CanExecute(null))
             {
-                syncJobViewModel.BeginAnalyzeCommand.Execute(null);
+                analyzeJobViewModel.BeginAnalyzeCommand.Execute(null);
             }
         }
     }

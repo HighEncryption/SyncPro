@@ -2,14 +2,11 @@
 {
     using SyncPro.UI.Navigation.MenuCommands;
 
-    public class AnalyzeResultsNodeViewModel : NavigationNodeViewModel
+    public class AnalyzeJobNodeViewModel : NavigationNodeViewModel
     {
-        private readonly SyncJobPanelViewModel viewModel;
-
-        public AnalyzeResultsNodeViewModel(NavigationNodeViewModel parent, SyncJobPanelViewModel viewModel)
+        public AnalyzeJobNodeViewModel(NavigationNodeViewModel parent, AnalyzeJobPanelViewModel viewModel)
             : base(parent, viewModel) 
         {
-            this.viewModel = viewModel;
             this.Name = "Analyze";
             this.IconImageSource = "/SyncPro.UI;component/Resources/Graphics/select_invert_16.png";
 

@@ -19,7 +19,7 @@
         {
             SyncRelationship relationship = CmdletCommon.GetSyncRelationship(this.RelationshipId);
 
-            if (this.SyncJobId == 0 && relationship.ActiveSyncJob == null)
+            if (this.SyncJobId == 0 && relationship.ActiveJob == null)
             {
                 
             }

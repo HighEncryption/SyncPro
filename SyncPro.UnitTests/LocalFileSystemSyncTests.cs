@@ -7,6 +7,7 @@
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     using SyncPro.Adapters;
+    using SyncPro.Runtime;
 
     [TestClass]
     public class LocalFileSystemSyncTests
@@ -28,7 +29,6 @@
 
             testWrapper
                 .CreateSyncJob()
-                .Set(r => r.AnalyzeOnly = true)
                 .RunToCompletion()
                 .VerifyAnalyzeSuccess()
                 .VerifyResultContainsAllFiles();
@@ -156,7 +156,7 @@
                 .VerifyDatabaseHashes();
 
             // Verify that only the created timestamp change was detected
-            var changedSyncEntry = syncJob.CurrentSyncJob.AnalyzeResult.AdapterResults[1].EntryResults[0];
+            var changedSyncEntry = ((SyncJob)syncJob.CurrentJob).AnalyzeResult.AdapterResults[1].EntryResults[0];
             Assert.AreEqual(changedSyncEntry.Flags, SyncEntryChangedFlags.CreatedTimestamp);
 
             // Verify that the timestamp was copied
@@ -204,7 +204,7 @@
                 .VerifyDatabaseHashes();
 
             // Verify that only the created timestamp change was detected
-            var changedSyncEntry = syncJob.CurrentSyncJob.AnalyzeResult.AdapterResults[1].EntryResults[0];
+            var changedSyncEntry = ((SyncJob)syncJob.CurrentJob).AnalyzeResult.AdapterResults[1].EntryResults[0];
             Assert.AreEqual(changedSyncEntry.Flags, SyncEntryChangedFlags.ModifiedTimestamp);
 
             // Verify that the timestamp was copied

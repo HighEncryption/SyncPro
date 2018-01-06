@@ -120,7 +120,7 @@ namespace SyncPro.UnitTests
             ManualResetEvent evt = new ManualResetEvent(false);
 
             SyncJob run1 = new SyncJob(newRelationship);
-            run1.SyncFinished += (sender, args) => { evt.Set(); };
+            run1.Finished += (sender, args) => { evt.Set(); };
             run1.Start(SyncTriggerType.Manual);
 
             evt.WaitOne();
@@ -451,16 +451,13 @@ namespace SyncPro.UnitTests
 
             ManualResetEvent evt = new ManualResetEvent(false);
 
-            SyncJob run1 = new SyncJob(newRelationship)
-            {
-                AnalyzeOnly = true
-            };
+            AnalyzeJob run1 = new AnalyzeJob(newRelationship);
 
-            run1.SyncFinished += (sender, args) => { evt.Set(); };
-            run1.Start(SyncTriggerType.Manual);
+            run1.Finished += (sender, args) => { evt.Set(); };
+            bool finished = run1.Start().Wait(60000);
 
             // 10min max wait time
-            if (evt.WaitOne(600000) == false)
+            if (!finished)
             {
                 Assert.Fail("Timeout");
             }
@@ -541,7 +538,7 @@ namespace SyncPro.UnitTests
 
             SyncJob run1 = new SyncJob(newRelationship);
 
-            run1.SyncFinished += (sender, args) => { evt.Set(); };
+            run1.Finished += (sender, args) => { evt.Set(); };
             run1.Start(SyncTriggerType.Manual);
 
             // 10min max wait time
@@ -628,7 +625,7 @@ namespace SyncPro.UnitTests
 
             SyncJob run1 = new SyncJob(newRelationship);
 
-            run1.SyncFinished += (sender, args) => { evt.Set(); };
+            run1.Finished += (sender, args) => { evt.Set(); };
             run1.Start(SyncTriggerType.Manual);
 
             // 10min max wait time

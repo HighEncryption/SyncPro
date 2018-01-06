@@ -17,6 +17,7 @@
 
     <converters:ObjectToVisibilityConverter x:Key="ObjectToVisibility" />
     <converters:ObjectToVisibilityConverter x:Key="ObjectToVisibilityCollapsed" CollapsedWhenFalse="True" />
+    <converters:ObjectToVisibilityConverter x:Key="ObjectToVisibilityCollapsedReversed" CollapsedWhenFalse="True" ReverseValue="True" />
 
     <converters:EnumToBooleanConverter x:Key="EnumToBoolean" />
 
@@ -29,7 +30,7 @@
 
     <converters:ByteArrayToString x:Key="ByteArrayToString" />
 
-    <converters:SyncJobStageToVisiblityConverter x:Key="SyncJobStageToVisiblity" />
+    <!--<converters:SyncJobStageToVisiblityConverter x:Key="SyncJobStageToVisiblity" />-->
     
     <converters:NullImageConverter x:Key="NullImageConverter" />
 

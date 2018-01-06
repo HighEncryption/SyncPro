@@ -29,19 +29,9 @@
     }
 
     /// <summary>
-    /// Enumeration of the stages of a sync job
-    /// </summary>
-    public enum SyncJobStage
-    {
-        Undefined,
-        Analyze,
-        Sync
-    }
-
-    /// <summary>
     /// Contains the core logic for synchronizing (copying) files between two adapters.
     /// </summary>
-    public class SyncJob
+    public class SyncJob : JobBase
     {
         /// <summary>
         /// The buffer size used for copying data between adapters (currently 64k).
@@ -56,10 +46,6 @@
 
         private long bytesCompleted;
 
-        private Task syncTask;
-
-        private CancellationTokenSource cancellationTokenSource;
-
         private Stopwatch syncProgressUpdateStopwatch;
 
         private X509Certificate2 encryptionCertificate;
@@ -70,71 +56,16 @@
         public int Id { get; set; }
 
         /// <summary>
-        /// The datetime when the synchronization process was started
+        /// The analysis result indicating the items that are to be synchronized. 
         /// </summary>
-        public DateTime StartTime { get; private set; }
-
-        /// <summary>
-        /// The datetime when the synchronization process finished
-        /// </summary>
-        public DateTime? EndTime { get; private set; }
-
-        /// <summary>
-        /// The analysis result indicating the items that are to be synchronized. If this property is set
-        /// prior to starting the sync job, the items specified in the analyze result will be used to 
-        /// determine what is synchronized. If this property is not set, the analysis will be done as
-        /// a part of the sync job, and those items will be synchronized.
-        /// </summary>
-        public AnalyzeRelationshipResult AnalyzeResult { get; set; }
-
-        /// <summary>
-        /// Indicates whether the sync job has started
-        /// </summary>
-        public bool HasStarted => this.StartTime != DateTime.MinValue;
-
-        /// <summary>
-        /// Indicates whether the sync job has finished
-        /// </summary>
-        public bool HasFinished => this.StartTime != DateTime.MinValue;
-
-        /// <summary>
-        /// The total number of files synchronized
-        /// </summary>
-        public int FilesTotal { get; private set; }
-
-        /// <summary>
-        /// The total number of bytes synchronized
-        /// </summary>
-        public long BytesTotal { get; private set; }
+        public AnalyzeRelationshipResult AnalyzeResult { get; }
 
         /// <summary>
         /// The result of the sync job
         /// </summary>
         public SyncJobResult SyncResult { get; private set; }
 
-        /// <summary>
-        /// Indicates whether this sync job is for analysis only (meaning that no items will 
-        /// be synchronized).
-        /// </summary>
-        public bool AnalyzeOnly
-        {
-            get { return this.analyzeOnly; }
-            set
-            {
-                if (this.HasStarted)
-                {
-                    throw new InvalidOperationException("The sync has already started.");
-                }
-
-                this.analyzeOnly = value;
-            }
-        }
-
         public event EventHandler<SyncJobProgressInfo> ProgressChanged;
-
-        public event EventHandler SyncStarted;
-
-        public event EventHandler SyncFinished;
 
         private readonly Queue<Tuple<DateTime, long>> throughputCalculationCache = new Queue<Tuple<DateTime, long>>();
 
@@ -172,104 +103,77 @@
         /// </summary>
         /// <param name="relationship">The relationship to be synchonized</param>
         public SyncJob(SyncRelationship relationship)
+            : this(relationship, null)
+        {
+        }
+
+        private SyncJob(SyncRelationship relationship, DateTime startTime, DateTime? endTime)
+            : base(relationship, startTime, endTime)
+        {
+        }
+
+        /// <summary>
+        /// Create a new <see cref="SyncJob"/>
+        /// </summary>
+        /// <param name="relationship">The relationship to be synchonized</param>
+        /// <param name="result">The analyze result containing the file to synchronize.</param>
+        public SyncJob(SyncRelationship relationship, AnalyzeRelationshipResult result)
+            : base(relationship)
         {
             this.relationship = relationship;
+            this.AnalyzeResult = result;
         }
 
         public void Start(SyncTriggerType triggerType)
         {
-            if (this.AnalyzeOnly)
+            if (this.AnalyzeResult == null)
             {
-                // If this is an analyze-only job, clear out any pre-existing results
-                this.AnalyzeResult = null;
+                throw new InvalidOperationException("No analyze result to synchronize");
             }
 
-            this.cancellationTokenSource = new CancellationTokenSource();
             this.TriggerType = triggerType;
 
-            this.syncTask = Task.Run(this.RunMainThread, this.cancellationTokenSource.Token);
-            this.syncTask.ContinueWith(this.MainThreadComplete).ConfigureAwait(false);
+            this.StartTask();
         }
 
-        private bool analyzeOnly;
-
-        /// <summary>
-        /// The main processing method for the sync job.
-        /// </summary>
-        /// <returns>Async task</returns>
-        private async Task RunMainThread()
+        protected override async Task ExecuteTask()
         {
-            this.StartTime = DateTime.Now;
-            this.relationship.State = SyncRelationshipState.Running;
-
             // Create a new sync history entry (except for analyze-only runs)
             this.CreateNewSyncJobHistory();
 
-            // Raise event that the sync has started
-            this.SyncStarted?.Invoke(this, new EventArgs());
-
-            // If there is no analyze result, then this is a new sync job. Create the SyncAnalyzer to process
-            // the entries that need to be synchronzied.
-            if (this.AnalyzeResult == null)
+            try
             {
-                SyncAnalyzer syncAnalyzer = new SyncAnalyzer(this.relationship, this.cancellationTokenSource.Token);
-
-                syncAnalyzer.ChangeDetected += (sender, info) =>
+                if (this.AnalyzeResult.IsUpToDate)
                 {
-                    this.ProgressChanged?.Invoke(this, info);
-                };
+                    this.SyncResult = SyncJobResult.NotRun;
+                }
+                else
+                {
+                    // Run actual synchronization of entries
+                    await this.SyncInternalAsync().ConfigureAwait(false);
+                }
 
-                this.AnalyzeResult = await syncAnalyzer.AnalyzeChangesAsync().ConfigureAwait(false);
+                // If sync was run successfully commit the tracked changes for each adapter
+                if (this.SyncResult == SyncJobResult.Success)
+                {
+                    await this.AnalyzeResult.CommitTrackedChangesAsync().ConfigureAwait(false);
+                }
+
+                // If a sync job was requested but not needed because all of the files are already up to date, commit change
+                // if needed (because the delta token was refreshed).
+                if (this.AnalyzeResult.IsUpToDate)
+                {
+                    await this.AnalyzeResult.CommitTrackedChangesAsync().ConfigureAwait(false);
+                }
             }
-
-            // If this is an analyze-only job, or if there is nothing to synchronize, dont attempt to synchronize
-            if (this.AnalyzeOnly || this.AnalyzeResult.IsUpToDate)
+            finally
             {
-                this.EndTime = DateTime.Now;
-                this.SyncResult = SyncJobResult.NotRun;
+                this.SaveSyncJobHistory();
             }
-            else
-            {
-                // Run actual synchronization of entries
-                await this.SyncInternalAsync().ConfigureAwait(false);
-            }
-
-            /*
-             * The sync job is now complete (if run) or it was not run.
-             */
-
-            // If sync was run successfully commit the tracked changes for each adapter
-            if (this.SyncResult == SyncJobResult.Success)
-            {
-                await this.AnalyzeResult.CommitTrackedChangesAsync().ConfigureAwait(false);
-            }
-
-            // If a sync job was requested but not needed because all of the files are already up to date, commit change
-            // if needed (because the delta token was refreshed).
-            if (!this.AnalyzeOnly && this.AnalyzeResult.IsUpToDate)
-            {
-                await this.AnalyzeResult.CommitTrackedChangesAsync().ConfigureAwait(false);
-            }
-
-            // If this is an AnalyzeOnly job and no changes were found, commit tracked changes (if needed). In a case 
-            // where the delta token has expired but no changes were made, we can save the new delta token.
-            if (this.AnalyzeOnly && this.SyncResult == SyncJobResult.NotRun && this.AnalyzeResult.IsUpToDate)
-            {
-                await this.AnalyzeResult.CommitTrackedChangesAsync().ConfigureAwait(false);
-            }
-
-            this.SaveSyncJobHistory();
-
-            this.SyncFinished?.Invoke(this, new EventArgs());
         }
 
         private void SaveSyncJobHistory()
         {
-            if (this.AnalyzeOnly)
-            {
-                return;
-            }
-
             using (var db = this.relationship.GetDatabase())
             {
                 SyncHistoryData historyData = db.History.First(h => h.Id == this.syncHistoryId);
@@ -285,13 +189,6 @@
 
         private void CreateNewSyncJobHistory()
         {
-            // If this is a full sync job (not just an analyze job), create a history entry. We dont create history
-            // entries for analyze-only job.
-            if (this.AnalyzeOnly)
-            {
-                return;
-            }
-
             // Create a history entry for this job in the database
             using (var db = this.relationship.GetDatabase())
             {
@@ -309,20 +206,7 @@
             }
         }
 
-        private void MainThreadComplete(Task task)
-        {
-            this.relationship.State = SyncRelationshipState.Idle;
-        }
-
-        public SyncTriggerType TriggerType { get; private set; }
-
-        /// <summary>
-        /// Asynchronously cancel the sync job
-        /// </summary>
-        public void Cancel()
-        {
-            this.cancellationTokenSource.Cancel();
-        }
+        public SyncTriggerType TriggerType { get; set; }
 
         /// <summary>
         /// Synchronzied changes previously determined by the SyncAnalyzer.
@@ -409,9 +293,7 @@
             // out the final values for files and bytes.
             this.RaiseSyncProgressChanged(null);
 
-            this.EndTime = DateTime.UtcNow;
-
-            if (this.cancellationTokenSource.Token.IsCancellationRequested)
+            if (this.CancellationToken.IsCancellationRequested)
             {
                 this.SyncResult = SyncJobResult.Cancelled;
             }
@@ -444,7 +326,7 @@
         {
             foreach (EntryUpdateInfo entryUpdateInfo in updateList)
             {
-                if (this.cancellationTokenSource.Token.IsCancellationRequested)
+                if (this.CancellationToken.IsCancellationRequested)
                 {
                     return true;
                 }
@@ -555,7 +437,7 @@
 
             foreach (EntryUpdateInfo entryUpdateInfo in updateList)
             {
-                if (this.cancellationTokenSource.Token.IsCancellationRequested)
+                if (this.CancellationToken.IsCancellationRequested)
                 {
                     return true;
                 }
@@ -1059,7 +941,7 @@
                             }
 
                             // We don't (yet) have enough tokens, so wait for a short duration and try again
-                            await Task.Delay(10, this.cancellationTokenSource.Token).ConfigureAwait(false);
+                            await Task.Delay(10, this.CancellationToken).ConfigureAwait(false);
                         }
                     }
 
@@ -1163,11 +1045,9 @@
 
         public static SyncJob FromHistoryEntry(SyncRelationship relationship, SyncHistoryData history)
         {
-            SyncJob job = new SyncJob(relationship)
+            SyncJob job = new SyncJob(relationship, history.Start, history.End)
             {
                 Id = history.Id,
-                StartTime = history.Start,
-                EndTime = history.End,
                 FilesTotal = history.TotalFiles,
                 BytesTotal = history.TotalBytes,
                 SyncResult = history.Result

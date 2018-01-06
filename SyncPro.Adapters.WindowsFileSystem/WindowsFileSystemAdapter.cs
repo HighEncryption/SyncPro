@@ -111,12 +111,6 @@
                 fullPath = Path.Combine(this.Config.RootDirectory, entry.GetRelativePath(db, this.PathSeparator));
             }
 
-            if (entry.Type == SyncEntryType.File && 
-                this.Relationship.EncryptionMode == EncryptionMode.Encrypt)
-            {
-                fullPath += ".sef";
-            }
-
             if (isWrite)
             {
                 return File.Open(fullPath, FileMode.OpenOrCreate, FileAccess.ReadWrite);

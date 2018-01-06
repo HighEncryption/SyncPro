@@ -40,7 +40,7 @@
         {
             SyncJobPanelViewModel syncJobPanel = new SyncJobPanelViewModel(this.relationship)
             {
-                SyncJob = syncJobViewModel
+                SyncJobViewModel = syncJobViewModel
             };
 
             this.Children.Add(new SyncJobNodeViewModel(this, syncJobPanel));

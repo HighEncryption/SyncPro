@@ -6,7 +6,6 @@ namespace SyncPro.Runtime
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
-    using System.Threading;
     using System.Threading.Tasks;
 
     using SyncPro.Adapters;
@@ -14,28 +13,32 @@ namespace SyncPro.Runtime
     using SyncPro.Data;
     using SyncPro.Tracing;
 
-    public class SyncAnalyzer
+    public class AnalyzeJob : JobBase
     {
-        private readonly SyncRelationship relationship;
-        private readonly CancellationToken cancellationToken;
         private readonly AnalyzeRelationshipResult analyzeResult;
 
-        public EventHandler<SyncJobProgressInfo> ChangeDetected;
+        public EventHandler<AnalyzeJobProgressInfo> ChangeDetected;
 
-        public SyncAnalyzer(SyncRelationship relationship, CancellationToken cancellationToken)
+        public AnalyzeRelationshipResult Result => this.analyzeResult;
+
+        public AnalyzeJob(SyncRelationship relationship)
+            : base(relationship)
         {
-            this.relationship = relationship;
-            this.cancellationToken = cancellationToken;
             this.analyzeResult = new AnalyzeRelationshipResult();
         }
 
-        public async Task<AnalyzeRelationshipResult> AnalyzeChangesAsync()
+        public Task Start()
+        {
+            return this.StartTask();
+        }
+
+        protected override async Task ExecuteTask()
         {
             List<Task> updateTasks = new List<Task>();
 
             // For each adapter (where changes can origiante from), start a task to analyze the change for that
             // adapter. This will allow multiple adapters to be examined in parallel.
-            foreach (AdapterBase adapter in this.relationship.Adapters.Where(a => a.Configuration.IsOriginator))
+            foreach (AdapterBase adapter in this.Relationship.Adapters.Where(a => a.Configuration.IsOriginator))
             {
                 this.analyzeResult.AdapterResults.Add(adapter.Configuration.Id, new AnalyzeAdapterResult());
                 updateTasks.Add(this.AnalyzeChangesFromAdapter(adapter));
@@ -50,8 +53,6 @@ namespace SyncPro.Runtime
             });
 
             this.CalculateUnchangedEntryCounts();
-
-            return this.analyzeResult;
         }
 
         private void CalculateUnchangedEntryCounts()
@@ -83,7 +84,7 @@ namespace SyncPro.Runtime
                 }
             }
 
-            using (SyncDatabase db = this.relationship.GetDatabase())
+            using (SyncDatabase db = this.Relationship.GetDatabase())
             {
                 foreach (SyncEntry syncEntry in db.Entries)
                 {
@@ -99,7 +100,7 @@ namespace SyncPro.Runtime
                             break;
                         case SyncEntryType.File:
                             this.analyzeResult.UnchangedFileCount++;
-                            this.analyzeResult.UnchangedFileBytes += syncEntry.GetSize(this.relationship, SyncEntryPropertyLocation.Source);
+                            this.analyzeResult.UnchangedFileBytes += syncEntry.GetSize(this.Relationship, SyncEntryPropertyLocation.Source);
                             break;
                         default:
                             throw new ArgumentOutOfRangeException();
@@ -120,7 +121,7 @@ namespace SyncPro.Runtime
 
             try
             {
-                using (SyncDatabase db = this.relationship.GetDatabase())
+                using (SyncDatabase db = this.Relationship.GetDatabase())
                 {
                     SyncEntry rootIndexEntry = db.Entries.FirstOrDefault(e => e.Id == adapter.Configuration.RootIndexEntryId);
 
@@ -189,7 +190,7 @@ namespace SyncPro.Runtime
             // the queue of changes.
             Queue<IChangeTrackedAdapterItem> pendingChanges = new Queue<IChangeTrackedAdapterItem>(trackedChange.Changes);
 
-            // TODO: This is a perfrect candidate for an event message that should use activity GUIDs.
+            // TODO: This is a perfect candidate for an event message that should use activity GUIDs.
             Logger.Debug("pendingChanges contains {0} items", pendingChanges.Count);
 
             // This field tracks the number of changes that are skipped. If the number of skipped changes exceeds the 
@@ -197,7 +198,7 @@ namespace SyncPro.Runtime
             int skipCount = 0;
             Dictionary<string, SyncEntry> knownSyncEntries = new Dictionary<string, SyncEntry>();
 
-            while (pendingChanges.Any() && !this.cancellationToken.IsCancellationRequested)
+            while (pendingChanges.Any() && !this.CancellationToken.IsCancellationRequested)
             {
                 IChangeTrackedAdapterItem changeAdapterItem = pendingChanges.Dequeue();
 
@@ -403,7 +404,7 @@ namespace SyncPro.Runtime
 
                 // Some providers can return information that normally isn't known until the item 
                 // is copied. Copy the values to the UpdateInfo object.
-                if (this.relationship.EncryptionMode == EncryptionMode.Decrypt)
+                if (this.Relationship.EncryptionMode == EncryptionMode.Decrypt)
                 {
                     logicalChild.UpdateInfo.EncryptedSizeNew = changeAdapterItem.Size;
                     logicalChild.UpdateInfo.EncryptedSha1HashNew = changeAdapterItem.Sha1Hash;
@@ -520,7 +521,7 @@ namespace SyncPro.Runtime
             // Loop through each of the items return by the adapter (eg files on disk)
             foreach (IAdapterItem adapterChild in adapterChildren)
             {
-                if (this.cancellationToken.IsCancellationRequested)
+                if (this.CancellationToken.IsCancellationRequested)
                 {
                     break;
                 }
@@ -610,7 +611,7 @@ namespace SyncPro.Runtime
                             logicalChild.UpdateInfo.PathNew = logicalChild.UpdateInfo.RelativePath;
                         }
 
-                        if (this.relationship.EncryptionMode == EncryptionMode.Decrypt)
+                        if (this.Relationship.EncryptionMode == EncryptionMode.Decrypt)
                         {
                             if (logicalChild.UpdateInfo.EncryptedSizeOld != adapterChild.Size)
                             {
@@ -679,7 +680,7 @@ namespace SyncPro.Runtime
                 foreach (
                     SyncEntry oldChild in logicalChildren.Where(e => e.State.HasFlag(SyncEntryState.IsDeleted) == false))
                 {
-                    if (this.cancellationToken.IsCancellationRequested)
+                    if (this.CancellationToken.IsCancellationRequested)
                     {
                         break;
                     }
@@ -743,7 +744,7 @@ namespace SyncPro.Runtime
             this.analyzeResult.AdapterResults[adapterId].EntryResults.Add(updateInfo);
             this.ChangeDetected?.Invoke(
                 this, 
-                new SyncJobProgressInfo(
+                new AnalyzeJobProgressInfo(
                     updateInfo, 
                     this.analyzeResult.AdapterResults[adapterId].EntryResults.Count,
                     0));

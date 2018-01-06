@@ -230,21 +230,12 @@
         #region Properties for sync progress display
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private bool isSyncActive;
+        private JobViewModel activeJob;
 
-        public bool IsSyncActive
+        public JobViewModel ActiveJob
         {
-            get { return this.isSyncActive; }
-            set { this.SetProperty(ref this.isSyncActive, value); }
-        }
-
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private SyncJobViewModel activeSyncJob;
-
-        public SyncJobViewModel ActiveSyncJob
-        {
-            get { return this.activeSyncJob; }
-            set { this.SetProperty(ref this.activeSyncJob, value); }
+            get { return this.activeJob; }
+            private set { this.SetProperty(ref this.activeJob, value); }
         }
 
         private ObservableCollection<ViewModelBase> errors;
@@ -256,9 +247,9 @@
 
         private void UpdateStatusDescription()
         {
-            if (this.ActiveSyncJob != null)
+            if (this.ActiveJob != null)
             {
-                if (this.ActiveSyncJob.IsAnalyzeOnly)
+                if (this.ActiveJob is AnalyzeJobViewModel)
                 {
                     this.SyncStatusDescription = "Analyze is running";
                 }
@@ -293,8 +284,8 @@
             this.InitializeBaseModelProperties();
 
             this.EditRelationshipCommand = new DelegatedCommand(this.EditRelationship, this.CanEditRelationship);
-            this.SyncNowCommand = new DelegatedCommand(this.SyncNow, this.CanSyncNow);
-            this.AnalyzeNowCommand = new DelegatedCommand(this.AnalyzeNow, this.CanSyncNow);
+            this.SyncNowCommand = new DelegatedCommand(o => this.StartSyncJob(SyncTriggerType.Manual), this.CanSyncNow);
+            this.AnalyzeNowCommand = new DelegatedCommand(o => this.StartAnalyzeJob(o), this.CanSyncNow);
             this.DeleteRelationshipCommand = new DelegatedCommand(this.DeleteRelationship, this.CanDeleteRelationship);
 
             if (loadContext)
@@ -304,29 +295,47 @@
 
             this.UpdateStatusDescription();
 
-            this.BaseModel.SyncJobStarted += (sender, run) =>
+            this.BaseModel.JobStarted += (sender, args) =>
             {
-                if (this.ActiveSyncJob != null && this.ActiveSyncJob.SyncJob == run)
+                if (this.ActiveJob != null && this.ActiveJob.Job == args.Job)
                 {
                     return;
                 }
 
-                this.ActiveSyncJob = new SyncJobViewModel(run, this, false);
-                this.IsSyncActive = true;
-            };
-
-            this.BaseModel.SyncJobFinished += (sender, job) =>
-            {
-                // If a sync job finished, it should match the current sync job view model
-                Debug.Assert(this.ActiveSyncJob.SyncJob == job, "this.ActiveSyncJob.SyncJob == job");
-
-                if (!this.ActiveSyncJob.IsAnalyzeOnly)
+                SyncJob syncJob = args.Job as SyncJob;
+                if (syncJob != null)
                 {
-                    App.DispatcherInvoke(() => { this.SyncJobHistory.Insert(0, this.ActiveSyncJob); });
+                    this.ActiveJob = new SyncJobViewModel(syncJob, this, false);
                 }
 
-                this.ActiveSyncJob = null;
-                this.IsSyncActive = false;
+                AnalyzeJob analyzeJob = args.Job as AnalyzeJob;
+                if (analyzeJob != null)
+                {
+                    this.ActiveJob = new AnalyzeJobViewModel(analyzeJob, this);
+                }
+
+                RestoreJob restoreJob = args.Job as RestoreJob;
+                if (restoreJob != null)
+                {
+                    this.ActiveJob = new RestoreJobViewModel(restoreJob, this, false);
+                }
+
+                this.UpdateStatusDescription();
+            };
+
+            this.BaseModel.JobFinished += (sender, args) =>
+            {
+                // If a sync job finished, it should match the current sync job view model
+                Debug.Assert(this.ActiveJob.Job == args.Job, "this.ActiveJob.Job == args.Job");
+
+                if (this.ActiveJob.Job is SyncJob || this.ActiveJob.Job is RestoreJob)
+                {
+                    App.DispatcherInvoke(() => { this.SyncJobHistory.Insert(0, this.ActiveJob); });
+                }
+
+                this.ActiveJob = null;
+
+                this.UpdateStatusDescription();
             };
 
             this.BaseModel.PropertyChanged += (sender, args) =>
@@ -367,20 +376,20 @@
             }
         }
 
-        private ObservableCollection<SyncJobViewModel> syncJobHistory;
+        private ObservableCollection<JobViewModel> syncJobHistory;
 
-        public ObservableCollection<SyncJobViewModel> SyncJobHistory
-            => this.syncJobHistory ?? (this.syncJobHistory = new ObservableCollection<SyncJobViewModel>());
+        public ObservableCollection<JobViewModel> SyncJobHistory
+            => this.syncJobHistory ?? (this.syncJobHistory = new ObservableCollection<JobViewModel>());
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private SyncJobViewModel selectedSyncJob;
+        private JobViewModel selectedJob;
 
-        public SyncJobViewModel SelectedSyncJob
+        public JobViewModel SelectedJob
         {
-            get { return this.selectedSyncJob; }
+            get { return this.selectedJob; }
             set
             {
-                if (this.SetProperty(ref this.selectedSyncJob, value))
+                if (this.SetProperty(ref this.selectedJob, value))
                 {
                     NavigationNodeViewModel selectedNavItem =
                         App.Current.MainWindowsViewModel.SelectedNavigationItem;
@@ -398,7 +407,7 @@
                         return;
                     }
 
-                    selectedNavItem.MenuCommands.Add(new ViewSyncJobMenuCommand(this, value));
+                    selectedNavItem.MenuCommands.Add(new ViewJobMenuCommand(value));
                 }
             }
         }
@@ -415,27 +424,28 @@
 
         private bool CanEditRelationship(object obj)
         {
-            return this.ActiveSyncJob == null;
+            return this.ActiveJob == null;
+        }
+
+        public AnalyzeJob StartAnalyzeJob(object obj)
+        {
+            bool startJob = true;
+            if (obj is bool)
+            {
+                startJob = (bool) obj;
+            }
+
+            return this.BaseModel.BeginAnalyzeJob(startJob);
         }
 
         private bool CanSyncNow(object obj)
         {
-            return this.ActiveSyncJob == null;
+            return this.ActiveJob == null;
         }
 
-        private void SyncNow(object obj)
+        public void StartSyncJob(SyncTriggerType triggerType)
         {
-            this.StartSyncJob(SyncTriggerType.Manual, false);
-        }
-
-        public SyncJobViewModel StartSyncJob(SyncTriggerType triggerType, bool analyzeOnly)
-        {
-            var run = this.BaseModel.BeginSyncJob(triggerType, analyzeOnly, null);
-
-            this.ActiveSyncJob = new SyncJobViewModel(run, this, false);
-            this.IsSyncActive = true;
-
-            return this.ActiveSyncJob;
+            this.BaseModel.BeginSyncJob(triggerType, null);
         }
 
         /// <summary>
@@ -444,7 +454,7 @@
         /// <param name="previousResult">The previously gathered set of changes to be synced</param>
         public void StartSyncJob(AnalyzeRelationshipResult previousResult)
         {
-            this.BaseModel.BeginSyncJob(SyncTriggerType.Manual, false, previousResult);
+            this.BaseModel.BeginSyncJob(SyncTriggerType.Manual, previousResult);
         }
 
         private void DeleteRelationship(object obj)
@@ -468,19 +478,9 @@
             this.BaseModel.Delete();
         }
 
-        public void ClearActiveAnalyzeJob()
-        {
-            this.BaseModel.ActiveAnalyzeJob = null;
-        }
-
         private bool CanDeleteRelationship(object obj)
         {
-            return !this.IsSyncActive;
-        }
-
-        private void AnalyzeNow(object obj)
-        {
-            this.BaseModel.BeginSyncJob(SyncTriggerType.Manual, true, null);
+            return this.ActiveJob != null;
         }
 
         public SyncDatabase GetDatabase()
