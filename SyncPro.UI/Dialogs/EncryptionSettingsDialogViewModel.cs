@@ -56,6 +56,7 @@
             get { return this.createNewCertificate; }
             set { this.SetProperty(ref this.createNewCertificate, value); }
         }
+
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private bool loadExistingCertificate;
 

@@ -41,7 +41,7 @@ namespace SyncPro.UI.ViewModels
             this.SyncRelationship = relationship;
 
             this.ShowJobCommand = new DelegatedCommand(o => this.ShowJob());
-            this.CancelJobCommand = new DelegatedCommand(o => this.CancelJob());
+            this.CancelJobCommand = new DelegatedCommand(o => this.CancelJob(), o => this.CanCancelJob());
         }
 
         public JobBase Job { get; }
@@ -72,6 +72,11 @@ namespace SyncPro.UI.ViewModels
             }
         }
 
+        private bool CanCancelJob()
+        {
+            return this.Job.HasStarted && !this.Job.HasFinished;
+        }
+
         private void CancelJob()
         {
             if (this.Job.HasStarted)
@@ -79,7 +84,5 @@ namespace SyncPro.UI.ViewModels
                 this.Job.Cancel();
             }
         }
-
-
     }
 }

@@ -7,6 +7,7 @@ namespace SyncPro.UI.ViewModels
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using System.Windows.Input;
 
     using SyncPro.Adapters;
     using SyncPro.Data;
@@ -40,6 +41,8 @@ namespace SyncPro.UI.ViewModels
                 {
                     if (!this.startedProcessing)
                     {
+                        App.DispatcherInvoke(CommandManager.InvalidateRequerySuggested);
+
                         this.StartInternal();
                         this.startedProcessing = true;
                     }
@@ -80,8 +83,9 @@ namespace SyncPro.UI.ViewModels
             this.ChangeMetricsList[2].Unchanged = this.AnalyzeJob.AnalyzeResult.UnchangedFileBytes;
 
             this.metadataUpdateCancellationToken.Cancel();
-        }
 
+            App.DispatcherInvoke(CommandManager.InvalidateRequerySuggested);
+        }
 
         /// <summary>
         /// During an active sync job, this methods is invoked on progress changed (aka when a change is detected).

@@ -286,7 +286,7 @@
                 AdapterBase adapter = (AdapterBase)Activator.CreateInstance(
                     registration.AdapterType,
                     relationship,
-                    config);
+                    adapterConfig);
 
                 relationship.Adapters.Add(adapter);
 

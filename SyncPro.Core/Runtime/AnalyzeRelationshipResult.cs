@@ -25,6 +25,11 @@ namespace SyncPro.Runtime
         public bool IsComplete { get; set; }
 
         /// <summary>
+        /// Gets or sets the job sync state
+        /// </summary>
+        public JobResult SyncJobResult { get; set; }
+
+        /// <summary>
         /// Indicates that there are not changed needed for any of the adapters in this sync relationship.
         /// </summary>
         public bool IsUpToDate
@@ -67,6 +72,8 @@ namespace SyncPro.Runtime
             this.Id = Guid.NewGuid();
             this.AdapterResults = new Dictionary<int, AnalyzeAdapterResult>();
             this.TrackedChanges = new Dictionary<AdapterBase, TrackedChange>();
+
+            this.SyncJobResult = JobResult.Undefined;
         }
 
         public async Task CommitTrackedChangesAsync()

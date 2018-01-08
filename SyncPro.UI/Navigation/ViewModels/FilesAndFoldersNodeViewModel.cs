@@ -7,6 +7,7 @@ namespace SyncPro.UI.Navigation.ViewModels
     using System.Threading.Tasks;
 
     using SyncPro.Data;
+    using SyncPro.Runtime;
     using SyncPro.UI.Navigation.MenuCommands;
     using SyncPro.UI.ViewModels;
 
@@ -66,6 +67,24 @@ namespace SyncPro.UI.Navigation.ViewModels
             this.IconImageSource = "/SyncPro.UI;component/Resources/Graphics/folder_open_16.png";
 
             this.MenuCommands.Add(new RestoreItemMenuCommand(this, this.syncRelationship));
+
+            this.syncRelationship.JobFinished += this.SyncRelationshipJobFinished;
+        }
+
+        private void SyncRelationshipJobFinished(object sender, JobFinishedEventArgs e)
+        {
+            SyncJob job = e.Job as SyncJob;
+            if (job == null)
+            {
+                return;
+            }
+
+            if (job.JobResult == JobResult.NotRun)
+            {
+                return;
+            }
+
+            this.ReloadChildren();
         }
 
         protected override void LoadChildren()
@@ -98,10 +117,7 @@ namespace SyncPro.UI.Navigation.ViewModels
                     });
                 }
 
-                if (!this.Children.Any())
-                {
-                    App.DispatcherInvoke(() => { this.RaisePropertyChanged(nameof(this.Children)); });
-                }
+                App.DispatcherInvoke(() => { this.RaisePropertyChanged(nameof(this.Children)); });
             });
         }
     }

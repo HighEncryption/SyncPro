@@ -31,10 +31,16 @@ namespace SyncPro.UI.RelationshipEditor
         {
             EncryptionSettingsDialogViewModel dialogViewModel = new EncryptionSettingsDialogViewModel
             {
-                IsCreateMode = this.EditorViewModel.IsCreateMode,
-                IsEncryptionEnabled = this.EditorViewModel.Relationship.EncryptionMode != EncryptionMode.None,
-                CreateNewCertificate = this.EditorViewModel.Relationship.EncryptionCreateCertificate
+                IsCreateMode = this.EditorViewModel.IsCreateMode
             };
+
+            if (this.EditorViewModel.IsEditMode)
+            {
+                dialogViewModel.IsEncryptionEnabled = 
+                    this.EditorViewModel.Relationship.EncryptionMode != EncryptionMode.None;
+                dialogViewModel.CreateNewCertificate = 
+                    this.EditorViewModel.Relationship.EncryptionCreateCertificate;
+            }
 
             EncryptionSettingsDialog dialog = new EncryptionSettingsDialog
             {

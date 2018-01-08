@@ -123,6 +123,11 @@
                 throw new InvalidOperationException("TriggerType cannot be Undefined");
             }
 
+            if (this.AnalyzeResult.SyncJobResult == JobResult.Success)
+            {
+                return;
+            }
+
             // Create a new sync history entry (except for analyze-only runs)
             this.CreateNewSyncJobHistory();
 
@@ -137,6 +142,8 @@
                     // Run actual synchronization of entries
                     await this.SyncInternalAsync().ConfigureAwait(false);
                 }
+
+                this.AnalyzeResult.SyncJobResult = this.JobResult;
 
                 // If sync was run successfully commit the tracked changes for each adapter
                 if (this.JobResult == JobResult.Success)
@@ -624,7 +631,7 @@
 
         private async Task<bool> ProcessEntryAsync(
             EntryUpdateInfo entryUpdateInfo,
-            AdapterBase adapter, // TODO: Rename to destinationAdapter
+            AdapterBase destinationAdapter,
             ThrottlingManager throttlingManager,
             SyncDatabase db)
         {
@@ -638,14 +645,14 @@
                 if (entryUpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.NewDirectory))
                 {
                     Logger.Debug("Creating item without content");
-                    await adapter.CreateItemAsync(entryUpdateInfo.Entry).ConfigureAwait(false);
+                    await destinationAdapter.CreateItemAsync(entryUpdateInfo.Entry).ConfigureAwait(false);
                 }
                 else
                 {
                     FileCopyHelper fileCopyHelper = new FileCopyHelper(
                         this.Relationship,
                         entryUpdateInfo.OriginatingAdapter,
-                        adapter,
+                        destinationAdapter,
                         entryUpdateInfo,
                         throttlingManager,
                         this.encryptionCertificate,
@@ -662,7 +669,7 @@
                 // Delete the file on the adapter (the actual file). The entry will NOT be deleted from the
                 // database as a part of this method.
                 Logger.Debug("Deleting item using adapter");
-                adapter.DeleteItem(entryUpdateInfo.Entry);
+                destinationAdapter.DeleteItem(entryUpdateInfo.Entry);
             }
             else if ((entryUpdateInfo.Flags & SyncEntryChangedFlags.IsUpdated) != 0 ||
                      (entryUpdateInfo.Flags & SyncEntryChangedFlags.Renamed) != 0)
@@ -674,7 +681,7 @@
                     FileCopyHelper fileCopyHelper = new FileCopyHelper(
                         this.Relationship,
                         entryUpdateInfo.OriginatingAdapter,
-                        adapter,
+                        destinationAdapter,
                         entryUpdateInfo,
                         throttlingManager,
                         this.encryptionCertificate,
@@ -688,7 +695,7 @@
                 // The item was either renamed or the metadata was updated. Either way, this will be handled
                 // by the UpdateItem call to the adapter.
                 Logger.Debug("Updating item using adapter");
-                adapter.UpdateItem(entryUpdateInfo, entryUpdateInfo.Flags);
+                destinationAdapter.UpdateItem(entryUpdateInfo, entryUpdateInfo.Flags);
             }
             else
             {

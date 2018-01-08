@@ -54,7 +54,7 @@ namespace SyncPro.Runtime
         /// <summary>
         /// Indicates whether the job has finished
         /// </summary>
-        public bool HasFinished => this.StartTime != DateTime.MinValue;
+        public bool HasFinished => this.EndTime != null;
 
         public JobBase ContinuationJob { get; set; }
 

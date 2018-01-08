@@ -323,22 +323,22 @@ namespace SyncPro.Runtime
                         logicalChild.GetRelativePath(db, "/"));
 
                     // Set all of the previous metadata values to those from the sync entry
-                    logicalChild.UpdateInfo.SetOldMetadataFromSyncEntry();
+                    logicalChild.UpdateInfo.SetNewMetadataFromSyncEntry();
 
                     // Set the new timestamps according to what the adapter returns
-                    if (logicalChild.UpdateInfo.CreationDateTimeUtcOld != changeAdapterItem.CreationTimeUtc)
+                    if (logicalChild.UpdateInfo.CreationDateTimeUtcNew != changeAdapterItem.CreationTimeUtc)
                     {
-                        logicalChild.UpdateInfo.CreationDateTimeUtcNew = changeAdapterItem.CreationTimeUtc;
+                        logicalChild.UpdateInfo.CreationDateTimeUtcOld = changeAdapterItem.CreationTimeUtc;
                     }
 
-                    if (logicalChild.UpdateInfo.ModifiedDateTimeUtcOld != changeAdapterItem.ModifiedTimeUtc)
+                    if (logicalChild.UpdateInfo.ModifiedDateTimeUtcNew != changeAdapterItem.ModifiedTimeUtc)
                     {
-                        logicalChild.UpdateInfo.ModifiedDateTimeUtcNew = changeAdapterItem.ModifiedTimeUtc;
+                        logicalChild.UpdateInfo.ModifiedDateTimeUtcOld = changeAdapterItem.ModifiedTimeUtc;
                     }
 
                     if (string.CompareOrdinal(logicalChild.UpdateInfo.RelativePath, logicalChild.UpdateInfo.PathOld) != 0)
                     {
-                        logicalChild.UpdateInfo.PathNew = logicalChild.UpdateInfo.RelativePath;
+                        logicalChild.UpdateInfo.PathOld = logicalChild.UpdateInfo.RelativePath;
                     }
 
                     // Raise change notification so that the UI can be updated in "real time" rather than waiting for 

@@ -114,6 +114,13 @@ namespace SyncPro.UI.Navigation
         {
         }
 
+        public void ReloadChildren()
+        {
+            this.isChildLoadingStarted = false;
+
+            App.DispatcherInvoke(this.LoadChildrenInternal);
+        }
+
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private bool isExpanderVisible;
 

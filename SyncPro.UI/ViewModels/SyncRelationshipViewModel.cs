@@ -243,6 +243,8 @@
         public ObservableCollection<ViewModelBase> Errors
             => this.errors ?? (this.errors = new ObservableCollection<ViewModelBase>());
 
+        public event EventHandler<JobFinishedEventArgs> JobFinished;
+
         #endregion
 
         private void UpdateStatusDescription()
@@ -337,9 +339,14 @@
                     App.DispatcherInvoke(() => { this.SyncJobHistory.Insert(0, this.ActiveJob); });
                 }
 
-                this.ActiveJob = null;
+                if (this.ActiveJob.Job is SyncJob)
+                {
+                    this.UpdateStatusDescription();
+                }
 
-                this.UpdateStatusDescription();
+                this.JobFinished?.Invoke(sender, args);
+
+                this.ActiveJob = null;
             };
 
             this.BaseModel.PropertyChanged += (sender, args) =>

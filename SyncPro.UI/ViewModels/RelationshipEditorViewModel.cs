@@ -8,6 +8,7 @@
     using System.Windows;
     using System.Windows.Input;
 
+    using SyncPro.Runtime;
     using SyncPro.Tracing;
     using SyncPro.UI.Framework;
     using SyncPro.UI.Framework.MVVM;
@@ -231,7 +232,11 @@
             // If we are actually creating the relationship, create it an return.
             if (this.SaveOnExit)
             {
-                // TODO: Ensure that this happens on a background thread?
+                // Set the relationship state to Initializing before starting the commit or adding it to the
+                // main list of relationships. This way it will show up as 'Initializing' in the dashboard as
+                // soon as it is added.
+                this.Relationship.GetSyncRelationship().State = SyncRelationshipState.Initializing;
+
                 Task.Run(async () =>
                 {
                     await this.CommitRelationshipAsync().ConfigureAwait(false);
