@@ -134,8 +134,8 @@
                 {
                     Console.WriteLine("Id: " + adapter.Configuration.Id);
                     Console.WriteLine("AdapterTypeId: " + adapter.Configuration.AdapterTypeId);
-                    Console.WriteLine("AdapterTypeName: " + 
-                        AdapterFactory.GetTypeFromAdapterTypeId(adapter.Configuration.AdapterTypeId).Name);
+                    Console.WriteLine("AdapterTypeName: " +
+                        AdapterRegistry.GetRegistrationByTypeId(adapter.Configuration.AdapterTypeId).AdapterType.Name);
                     Console.WriteLine("IsOriginator: " + adapter.Configuration.IsOriginator);
                     Console.WriteLine("Flags: " + 
                         string.Join(",", StringExtensions.GetSetFlagNames<Data.AdapterFlags>(adapter.Configuration.Flags)));
@@ -231,10 +231,12 @@
             }
             else
             {
-                Type adapterType = AdapterFactory.GetTypeFromAdapterTypeId(adapter.Configuration.AdapterTypeId);
+                AdapterRegistration registration = 
+                    AdapterRegistry.GetRegistrationByTypeId(adapter.Configuration.AdapterTypeId);
+
                 throw new Exception(
                     string.Format("Cannot extract token from adapter with type {0} ({1})",
-                        adapterType.Name, adapter.Configuration.AdapterTypeId));
+                        registration.AdapterType.Name, adapter.Configuration.AdapterTypeId));
             }
         }
 
@@ -264,10 +266,12 @@
             }
             else
             {
-                Type adapterType = AdapterFactory.GetTypeFromAdapterTypeId(adapter.Configuration.AdapterTypeId);
+                AdapterRegistration registration = 
+                    AdapterRegistry.GetRegistrationByTypeId(adapter.Configuration.AdapterTypeId);
+
                 throw new Exception(
                     string.Format("Cannot set token from adapter with type {0} ({1})",
-                        adapterType.Name, adapter.Configuration.AdapterTypeId));
+                        registration.AdapterType.Name, adapter.Configuration.AdapterTypeId));
             }
         }
 

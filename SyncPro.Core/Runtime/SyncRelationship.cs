@@ -273,8 +273,21 @@
             // Get the adapters from the configuration for this relationship
             foreach (AdapterConfiguration adapterConfig in config.Adapters)
             {
+                // Get the adapter registration information for this type of adapter
+                AdapterRegistration registration = 
+                    AdapterRegistry.GetRegistrationByTypeId(adapterConfig.AdapterTypeId);
+
+                if (registration == null)
+                {
+                    throw new Exception("No adapter registration found with TypeId " + adapterConfig.AdapterTypeId);
+                }
+
                 // Create the adapter object based on its config from the database
-                AdapterBase adapter = AdapterFactory.CreateFromConfig(adapterConfig, relationship);
+                AdapterBase adapter = (AdapterBase)Activator.CreateInstance(
+                    registration.AdapterType,
+                    relationship,
+                    config);
+
                 relationship.Adapters.Add(adapter);
 
                 // Load adapter-specific configuration settings
@@ -599,6 +612,15 @@
         {
             get { return this.activeJob; }
             internal set { this.SetProperty(ref this.activeJob, value); }
+        }
+
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private AnalyzeJob activeAnalyzeJob;
+
+        public AnalyzeJob ActiveAnalyzeJob
+        {
+            get { return this.activeAnalyzeJob; }
+            set { this.SetProperty(ref this.activeAnalyzeJob, value); }
         }
 
         public event EventHandler<JobStartedEventArgs> JobStarted;

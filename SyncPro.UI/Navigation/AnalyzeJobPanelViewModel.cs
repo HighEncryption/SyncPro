@@ -54,6 +54,11 @@ namespace SyncPro.UI.Navigation
             this.AnalyzeJobViewModel.CancelJobCommand.Execute(obj);
         }
 
+        public void Closing()
+        {
+            this.Relationship.GetSyncRelationship().ActiveAnalyzeJob = null;
+        }
+
         private void BeginSync(object obj)
         {
             // This will re-use the result from the analyze phase (if present) so that what is synced exactly 

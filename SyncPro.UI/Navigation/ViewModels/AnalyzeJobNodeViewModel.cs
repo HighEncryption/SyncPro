@@ -16,5 +16,10 @@
             this.MenuCommands.Add(new SynchronzieNowMenuCommand(viewModel));
             this.MenuCommands.Add(new CancelOperationMenuCommand(viewModel));
         }
+
+        public override void Closing()
+        {
+            ((AnalyzeJobPanelViewModel) this.Item).Closing();
+        }
     }
 }

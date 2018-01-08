@@ -82,6 +82,10 @@ namespace SyncPro.UI.Navigation
         {
         }
 
+        public virtual void Closing()
+        {
+        }
+
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private bool isSelected;
 

@@ -439,7 +439,11 @@
                 startJob = (bool) obj;
             }
 
-            return this.BaseModel.BeginAnalyzeJob(startJob);
+            var newAnalyzeJob = this.BaseModel.BeginAnalyzeJob(startJob);
+
+            this.BaseModel.ActiveAnalyzeJob = newAnalyzeJob;
+
+            return newAnalyzeJob;
         }
 
         private bool CanSyncNow(object obj)

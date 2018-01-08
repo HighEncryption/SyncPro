@@ -1,7 +1,6 @@
-﻿using System;
-
-namespace SyncPro.Adapters
+﻿namespace SyncPro.Adapters
 {
+    using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
@@ -11,29 +10,31 @@ namespace SyncPro.Adapters
     using SyncPro.Data;
     using SyncPro.Runtime;
 
-    public class SyncEntryChangedEventArgs
-    {
-        public SyncEntryChangedEventArgs(EntryUpdateInfo updateInfo)
-        {
-            this.UpdateInfo = updateInfo;
-        }
-
-        public EntryUpdateInfo UpdateInfo { get; set; }
-    }
-
     /// <summary>
     /// Base class for all adapters.
     /// </summary>
     public abstract class AdapterBase : NotifyPropertyChangedSlim
     {
+        /// <summary>
+        /// Gets the relationship that the adapter belongs to.
+        /// </summary>
         public SyncRelationship Relationship { get; }
 
+        /// <summary>
+        /// Gets the persisted configuration for this adapter
+        /// </summary>
         public AdapterConfiguration Configuration { get; protected set; }
 
+        /// <summary>
+        /// Indicates whether the adapter is in a Faulted state.
+        /// </summary>
         public bool IsFaulted => this.FaultInformation != null;
 
         private AdapterFaultInformation faultInformation;
 
+        /// <summary>
+        /// Gets the fault information for the adapter.
+        /// </summary>
         public AdapterFaultInformation FaultInformation
         {
             get { return this.faultInformation; }
@@ -46,6 +47,9 @@ namespace SyncPro.Adapters
             }
         }
 
+        /// <summary>
+        /// Gets the <see cref="SyncEntry"/> that represents the root of the adapter's item tree.
+        /// </summary>
         public SyncEntry GetRootSyncEntry()
         {
             using (var db = this.Relationship.GetDatabase())
@@ -79,11 +83,9 @@ namespace SyncPro.Adapters
             return Task.FromResult(default(object));
         }
 
-        ///// <summary>
-        ///// Gets the human-readable display string for this adapter.
-        ///// </summary>
-        //public abstract string GetDisplayString();
-
+        /// <summary>
+        /// Gets the <see cref="IAdapterItem"/> that represents the root of the adapter's item tree.
+        /// </summary>
         public abstract Task<IAdapterItem> GetRootFolder();
 
         /// <summary>
@@ -97,12 +99,37 @@ namespace SyncPro.Adapters
         public abstract Task CreateItemAsync(SyncEntry entry);
 
         /// <summary>
-        /// Get the stream for the contents of the item
+        /// Get a stream for reading the contents of an item
         /// </summary>
         public abstract Stream GetReadStreamForEntry(SyncEntry entry);
 
+        /// <summary>
+        /// Get a stream for writing the contents of an item
+        /// </summary>
         public abstract Stream GetWriteStreamForEntry(SyncEntry entry, long length);
 
+        /// <summary>
+        /// Finish the writing of a stream for an item.
+        /// </summary>
+        /// <param name="stream">The stream used to write to the item</param>
+        /// <param name="updateInfo">The <see cref="EntryUpdateInfo"/> identifying the item being written</param>
+        /// <remarks>
+        /// The purpose of this method is to allow the adapter to perform any finalization/cleanup of an entry
+        /// after the contents of the entry have been written but before the stream itself has been closed. This
+        /// can be useful in situations where the adapter need to write additional data to the stream prior to 
+        /// closing it, and so that these writes to not need to occur as a part of the stream's disposure.
+        /// </remarks>
+        public abstract void FinalizeItemWrite(Stream stream, EntryUpdateInfo updateInfo);
+
+        /// <summary>
+        /// Update the metadata (creation timestamp modified timestamp, etc) of an item
+        /// </summary>
+        /// <param name="updateInfo">The <see cref="EntryUpdateInfo"/> containing the values to be written</param>
+        /// <param name="changeFlags">The flags indicating which values need to be written</param>
+        /// <remarks>
+        /// After updating each of the metadata properties, the method MUST also set the value on the updateInfo.Entry
+        /// object to record that the value as been written.
+        /// </remarks>
         public abstract void UpdateItem(EntryUpdateInfo updateInfo, SyncEntryChangedFlags changeFlags);
 
         /// <summary>
@@ -144,8 +171,6 @@ namespace SyncPro.Adapters
             this.Configuration = configuration;
         }
 
-        //public abstract byte[] GetUniqueId(SyncEntry entry);
-
         public static byte[] HexToBytes(string input)
         {
             if (string.IsNullOrEmpty(input))
@@ -179,8 +204,6 @@ namespace SyncPro.Adapters
         {
             return this is IChangeTracking;
         }
-
-        public abstract void FinalizeItemWrite(Stream stream, EntryUpdateInfo updateInfo);
     }
 
     public class EntryUpdateResult
@@ -192,114 +215,13 @@ namespace SyncPro.Adapters
         public DateTime ModifiedTime { get; set; }
     }
 
-    public sealed class AdapterFactory
+    public class SyncEntryChangedEventArgs
     {
-        public static AdapterBase CreateFromConfig(AdapterConfiguration config, SyncRelationship relationship)
+        public SyncEntryChangedEventArgs(EntryUpdateInfo updateInfo)
         {
-            //if (config.AdapterTypeId == WindowsFileSystemAdapter.TargetTypeId)
-            //{
-            //    return new WindowsFileSystemAdapter(
-            //        relationship, 
-            //        (WindowsFileSystemAdapterConfiguration)config);
-            //}
-
-            //if (config.AdapterTypeId == OneDriveAdapter.TargetTypeId)
-            //{
-            //    return new OneDriveAdapter(
-            //        relationship, 
-            //        (OneDriveAdapterConfiguration)config);
-            //}
-
-            AdapterRegistration registration = AdapterRegistry.GetRegistrationByTypeId(config.AdapterTypeId);
-
-            if (registration == null)
-            {
-                throw new Exception("No adapter registration found with TypeId " + config.AdapterTypeId);
-            }
-
-            return (AdapterBase) Activator.CreateInstance(
-                registration.AdapterType,
-                relationship,
-                config);
-
-            //if (config.AdapterTypeId == BackblazeB2Adapter.TargetTypeId)
-            //{
-            //    return new BackblazeB2Adapter(
-            //        relationship, 
-            //        (BackblazeB2AdapterConfiguration)config);
-            //}
-
-            //throw new NotImplementedException("Unknown adapter type " + config.AdapterTypeId);
+            this.UpdateInfo = updateInfo;
         }
 
-        public static Type GetTypeFromAdapterTypeId(Guid typeId)
-        {
-            //if (typeId == WindowsFileSystemAdapter.TargetTypeId)
-            //{
-            //    return typeof(WindowsFileSystemAdapter);
-            //}
-
-            //if (typeId == OneDriveAdapter.TargetTypeId)
-            //{
-            //    return typeof(OneDriveAdapter);
-            //}
-
-            //if (typeId == GoogleDriveAdapter.TargetTypeId)
-            //{
-            //    return typeof(GoogleDriveAdapter);
-            //}
-
-            AdapterRegistration registration = AdapterRegistry.GetRegistrationByTypeId(typeId);
-
-            return registration?.AdapterType;
-        }
-    }
-
-    public static class AdapterRegistry
-    {
-        private static readonly List<AdapterRegistration> Registrations;
-
-        static AdapterRegistry()
-        {
-            Registrations = new List<AdapterRegistration>();
-        }
-
-        public static AdapterRegistration GetRegistrationByTypeId(Guid typeId)
-        {
-            return Registrations.FirstOrDefault(r => r.TypeId == typeId);
-        }
-
-        public static void RegisterAdapter(
-            Guid typeId,
-            Type adapterType,
-            Type adapterConfigurationType)
-        {
-            if (Registrations.Any(r => r.TypeId == typeId))
-            {
-                return;
-            }
-
-            Registrations.Add(
-                new AdapterRegistration(typeId, adapterType, adapterConfigurationType));
-        }
-    }
-
-    public class AdapterRegistration
-    {
-        internal AdapterRegistration(
-            Guid typeId,
-            Type adapterType,
-            Type adapterConfigurationType)
-        {
-            this.TypeId = typeId;
-            this.AdapterType = adapterType;
-            this.AdapterConfigurationType = adapterConfigurationType;
-        }
-
-        public Guid TypeId { get; }
-
-        public Type AdapterType { get; }
-
-        public Type AdapterConfigurationType { get; }
+        public EntryUpdateInfo UpdateInfo { get; set; }
     }
 }

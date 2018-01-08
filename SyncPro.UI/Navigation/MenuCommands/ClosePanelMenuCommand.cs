@@ -21,6 +21,8 @@ namespace SyncPro.UI.Navigation.MenuCommands
 
         protected override void InvokeCommand(object obj)
         {
+            this.viewModel.Closing();
+
             this.viewModel.Parent.Children.Remove(this.viewModel);
         }
     }

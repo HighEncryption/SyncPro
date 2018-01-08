@@ -69,13 +69,18 @@
   <ItemGroup>
     <Compile Include="Adapters\AdapterFaultInformation.cs" />
     <Compile Include="Adapters\AdapterItem.cs" />
+    <Compile Include="Adapters\AdapterRegistration.cs" />
+    <Compile Include="Adapters\AdapterRegistry.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="Runtime\AnalyzeJobProgressInfo.cs" />
     <Compile Include="Runtime\EncryptedFileHeader.cs" />
     <Compile Include="Runtime\EncryptionManager.cs" />
     <Compile Include="Runtime\EntryProcessingSorter.cs" />
+    <Compile Include="Runtime\FileCopyHelper.cs" />
     <Compile Include="Runtime\JobBase.cs" />
     <Compile Include="Runtime\RestoreJob.cs" />
+    <Compile Include="Adapters\RestoreOnlyWindowsFileSystemAdapter.cs" />
+    <Compile Include="Adapters\RestoreOnlyWindowsFileSystemAdapterConfiguration.cs" />
     <Compile Include="Utility\SecureStringConverter.cs" />
     <Compile Include="Utility\SecureStringToProtectedDataConverter.cs" />
     <Compile Include="Adapters\IChangeTracking.cs" />

@@ -19,13 +19,12 @@
         {
             SyncRelationship relationship = CmdletCommon.GetSyncRelationship(this.RelationshipId);
 
-            AnalyzeJob job = relationship.ActiveJob as AnalyzeJob;
-            if (job == null)
+            if (relationship.ActiveAnalyzeJob == null)
             {
                 throw new ItemNotFoundException("There is no active analyze job for this relationship");
             }
 
-            var psRun = new PSAnalyzeJob(job);
+            var psRun = new PSAnalyzeJob(relationship.ActiveAnalyzeJob);
 
             this.WriteObject(psRun);
         }

@@ -132,13 +132,23 @@
             if ((changeFlags & SyncEntryChangedFlags.CreatedTimestamp) != 0)
             {
                 Pre.Assert(updateInfo.CreationDateTimeUtcNew != null, "updateInfo.CreationDateTimeUtcNew != null");
+
+                // Write the new created timestamp to the file/folder
                 fileSystemInfo.CreationTimeUtc = updateInfo.CreationDateTimeUtcNew.Value;
+
+                // Update the SyncEntry to record that this is now the "current" value of CreationDateTimeUtcNew
+                updateInfo.Entry.CreationDateTimeUtc = updateInfo.CreationDateTimeUtcNew.Value;
             }
 
             if ((changeFlags & SyncEntryChangedFlags.ModifiedTimestamp) != 0)
             {
                 Pre.Assert(updateInfo.ModifiedDateTimeUtcNew != null, "updateInfo.ModifiedDateTimeUtcNew != null");
+
+                // Write the new modified timestamp to the file/folder
                 fileSystemInfo.LastWriteTimeUtc = updateInfo.ModifiedDateTimeUtcNew.Value;
+
+                // Update the SyncEntry to record that this is now the "current" value of ModifiedDateTimeUtcNew
+                updateInfo.Entry.ModifiedDateTimeUtc = updateInfo.ModifiedDateTimeUtcNew.Value;
             }
         }
 
