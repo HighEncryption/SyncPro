@@ -13,7 +13,7 @@
     using System.Windows.Interop;
 
     using SyncPro.Adapters.GoogleDrive;
-    using SyncPro.UI.Controls;
+    using SyncPro.UI.Dialogs;
     using SyncPro.UI.FolderBrowser;
     using SyncPro.UI.Framework.MVVM;
 

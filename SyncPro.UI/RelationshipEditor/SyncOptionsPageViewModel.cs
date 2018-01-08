@@ -4,7 +4,7 @@ namespace SyncPro.UI.RelationshipEditor
     using System.Windows.Input;
 
     using SyncPro.Configuration;
-    using SyncPro.UI.Controls;
+    using SyncPro.UI.Dialogs;
     using SyncPro.UI.Framework.MVVM;
     using SyncPro.UI.ViewModels;
 

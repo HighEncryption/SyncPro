@@ -27,11 +27,6 @@ namespace SyncPro.Runtime
             this.analyzeResult = new AnalyzeRelationshipResult();
         }
 
-        public Task Start()
-        {
-            return this.StartTask();
-        }
-
         protected override async Task ExecuteTask()
         {
             List<Task> updateTasks = new List<Task>();

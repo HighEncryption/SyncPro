@@ -215,12 +215,7 @@ namespace SyncPro.UnitTests
 
         public TestRunWrapper<TSource, TDestination> RunToCompletion()
         {
-            AnalyzeJob analyzeJob = this.CurrentJob as AnalyzeJob;
-            analyzeJob?.Start();
-
-            SyncJob syncJob = this.CurrentJob as SyncJob;
-            syncJob?.Start(SyncTriggerType.Manual);
-
+            this.CurrentJob.Start();
             this.CurrentJob.WaitForCompletion();
 
             return this;

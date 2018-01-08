@@ -1,4 +1,4 @@
-﻿namespace SyncPro.UI.ViewModels
+﻿namespace SyncPro.UI.Dialogs
 {
     using System.ComponentModel;
     using System.Diagnostics;

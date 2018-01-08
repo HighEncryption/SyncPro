@@ -30,6 +30,11 @@ namespace SyncPro.UnitTests
         [ClassInitialize]
         public static void ClassInitialize(TestContext testContext)
         {
+            if (!GlobalTestSettings.RunNetworkTests)
+            {
+                return;
+            }
+
             accountInfoFilePath = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),
                 "BackblazeB2AccountInfo.json");
@@ -70,6 +75,11 @@ namespace SyncPro.UnitTests
 
         private static BackblazeB2Client CreateClient()
         {
+            if (!GlobalTestSettings.RunNetworkTests)
+            {
+                Assert.Inconclusive(GlobalTestSettings.NetworkTestsDisabledMessage);
+            }
+
             BackblazeB2Client client = new BackblazeB2Client(
                 accountInfo.AccountId,
                 accountInfo.ApplicationKey,
@@ -90,6 +100,11 @@ namespace SyncPro.UnitTests
         [TestMethod]
         public void BasicSyncLocalToB2()
         {
+            if (!GlobalTestSettings.RunNetworkTests)
+            {
+                Assert.Inconclusive(GlobalTestSettings.NetworkTestsDisabledMessage);
+            }
+
             byte[] data = Encoding.UTF8.GetBytes("Hello World!");
             string hashString;
 

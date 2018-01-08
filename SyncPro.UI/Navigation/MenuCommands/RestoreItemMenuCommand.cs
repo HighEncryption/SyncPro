@@ -3,8 +3,8 @@ namespace SyncPro.UI.Navigation.MenuCommands
     using System;
     using System.ComponentModel;
     using System.Linq;
-    using System.Windows.Forms;
 
+    using SyncPro.UI.Dialogs;
     using SyncPro.UI.Navigation.ViewModels;
     using SyncPro.UI.ViewModels;
 
@@ -12,6 +12,12 @@ namespace SyncPro.UI.Navigation.MenuCommands
     {
         private readonly IFolderNodeViewModel nodeViewModel;
         private readonly SyncRelationshipViewModel relationship;
+
+        private const string headerRestoreFile = "Restore File";
+        private const string headerRestoreFiles = "Restore Files";
+        private const string headerRestoreFolder = "Restore Folder";
+
+        private string dialogHeader;
 
         public RestoreItemMenuCommand(IFolderNodeViewModel nodeViewModel, SyncRelationshipViewModel relationship)
             : base("RESTORE FILE", "/SyncPro.UI;component/Resources/Graphics/install_16.png")
@@ -26,20 +32,22 @@ namespace SyncPro.UI.Navigation.MenuCommands
             if (this.nodeViewModel.SelectedChildEntries == null ||
                 !this.nodeViewModel.SelectedChildEntries.Any())
             {
-                this.Header = "RESTORE FILE";
+                this.dialogHeader = headerRestoreFile;
             }
             else if (this.nodeViewModel.SelectedChildEntries.Count > 1)
             {
-                this.Header = "RESTORE FILES";
+                this.dialogHeader = headerRestoreFiles;
             }
             else if (this.nodeViewModel.SelectedChildEntries.First().IsDirectory)
             {
-                this.Header = "RESTORE FOLDER";
+                this.dialogHeader = headerRestoreFolder;
             }
             else
             {
-                this.Header = "RESTORE FILE";
+                this.dialogHeader = headerRestoreFile;
             }
+
+            this.Header = this.dialogHeader.ToUpperInvariant();
         }
 
         protected override bool CanInvokeCommand(object obj)
@@ -50,20 +58,28 @@ namespace SyncPro.UI.Navigation.MenuCommands
 
         protected override void InvokeCommand(object obj)
         {
-            using (var dialog = new System.Windows.Forms.FolderBrowserDialog())
+            var destAdapter = this.relationship.SyncSourceAdapter;
+
+            RestoreItemsDialogViewModel dialogViewModel = new RestoreItemsDialogViewModel()
             {
-                dialog.Description = "Select the folder where items will be restored to.";
-                System.Windows.Forms.DialogResult result = dialog.ShowDialog();
+                DialogHeader = this.dialogHeader,
+                DialogDescription = string.Format(
+                    "Items will be restored from {0} ({1}) to the location selected below.",
+                    destAdapter.DestinationPath,
+                    destAdapter.DisplayName)
+            };
 
-                if (result != DialogResult.OK)
-                {
-                    return;
-                }
+            RestoreItemsDialog dialog = new RestoreItemsDialog
+            {
+                DataContext = dialogViewModel
+            };
 
+            if (dialog.ShowDialog() == true)
+            {
 #pragma warning disable 4014
                 this.relationship.RestoreFilesAsync(
                     this.nodeViewModel.SelectedChildEntries,
-                    dialog.SelectedPath);
+                    dialogViewModel.RestoreBrowsePath);
 #pragma warning restore 4014
             }
         }

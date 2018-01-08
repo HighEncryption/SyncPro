@@ -1,14 +1,13 @@
-﻿<mvvm:RequestCloseWindow x:Class="SyncPro.UI.Controls.BackblazeCredentialDialog"
+﻿<mvvm:RequestCloseWindow x:Class="SyncPro.UI.Dialogs.CreateBackblazeBucketDialog"
                          xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                          xmlns:mvvm="clr-namespace:SyncPro.UI.Framework.MVVM"
                          xmlns:viewModels="clr-namespace:SyncPro.UI.Navigation.ViewModels"
-                         mc:Ignorable="d" ResizeMode="NoResize"
-                         Title="Backblaze Credentials" 
-                         Height="200" Width="500" 
-                         d:DataContext="{d:DesignInstance viewModels:BackblazeCredentialDialogViewModel}">
+                         mc:Ignorable="d"
+                         Title="CreateBackblazeBucketDialog" Height="300" Width="500"
+                         d:DataContext="{d:DesignInstance viewModels:CreateBackblazeBucketDialogViewModel}">
     <mvvm:RequestCloseWindow.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -24,9 +23,6 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <TextBlock Margin="0,0,0,12" 
-                   Text="Enter your Backblaze Account ID and Application Key below." />
-
         <Grid Grid.Row="1" VerticalAlignment="Top">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
@@ -35,17 +31,34 @@
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="8" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-            
-            <TextBlock Grid.Column="0" Grid.Row="0" Text="Account ID" VerticalAlignment="Center" />
-            <TextBox Grid.Column="2" Grid.Row="0" Width="200" HorizontalAlignment="Left"
-                     Height="26" Text="{Binding Path=AccountId}" />
 
-            <TextBlock Grid.Column="0" Grid.Row="2" Text="Application Key" VerticalAlignment="Center" />
-            <PasswordBox Grid.Column="2" Grid.Row="2" Height="26" PasswordChanged="OnPasswordChanged"
-                         VerticalContentAlignment="Center"/>
+            <TextBlock Grid.ColumnSpan="3" Margin="0,0,0,8" TextWrapping="Wrap"
+                       Text="Enter the name for the new bucket. The name must be between 6 and 5 characters, and cannot already exist (in any account). The name can only consist of letters, numbers, and hyphens ('-')." />
+
+            <TextBlock Grid.Column="0" Grid.Row="1" Text="Bucket Name" VerticalAlignment="Center" />
+            <TextBox Grid.Column="2" Grid.Row="1" Width="300" HorizontalAlignment="Left"
+                     Height="26" Text="{Binding Path=BucketName}" />
+
+            <TextBlock Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="2" 
+                       Margin="0,16,0,8" TextWrapping="Wrap"
+                       Text="Select the visibility of the bucket. Public buckets can be ready by anyone. Private buckets require authentication." />
+
+            <TextBlock Grid.Column="0" Grid.Row="3" Text="Visibility" VerticalAlignment="Top"
+                       Margin="0,4,0,0"/>
+            <StackPanel Grid.Column="2" Grid.Row="3" Margin="0,4,0,0">
+                <RadioButton VerticalContentAlignment="Center" 
+                             IsChecked="{Binding Path=BucketType, Converter={StaticResource EnumStringToBoolean}, ConverterParameter=allPrivate}">
+                    <TextBlock Text="Private"/>
+                </RadioButton>
+                <RadioButton VerticalContentAlignment="Center"
+                             IsChecked="{Binding Path=BucketType, Converter={StaticResource EnumStringToBoolean}, ConverterParameter=allPublic}">
+                    <TextBlock Text="Public" />
+                </RadioButton>
+            </StackPanel>
         </Grid>
 
         <Border Grid.Row="2" Background="{StaticResource WindowBackgroundBrush}"

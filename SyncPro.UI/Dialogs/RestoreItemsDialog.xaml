@@ -1,0 +1,118 @@
+﻿<mvvm:RequestCloseWindow x:Class="SyncPro.UI.Dialogs.RestoreItemsDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:SyncPro.UI.Dialogs"
+        xmlns:mvvm="clr-namespace:SyncPro.UI.Framework.MVVM"
+        mc:Ignorable="d"
+        ResizeMode="NoResize"
+        Title="Encryption Settings" 
+        Icon="/Resources/Graphics/SyncProIcon.ico"
+        Height="350" Width="600" 
+        d:DataContext="{d:DesignInstance local:RestoreItemsDialogViewModel}">
+    <mvvm:RequestCloseWindow.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Converters.xaml" />
+                <ResourceDictionary Source="/WindowStyles.xaml" />
+                <ResourceDictionary Source="/RelationshipEditor/StyleResources.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <Style TargetType="TextBlock" BasedOn="{StaticResource ItemHeaderStyleCore}" x:Key="RadioButtonItemTextStyle">
+                <Setter Property="HorizontalAlignment" Value="Left" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+        </ResourceDictionary>
+    </mvvm:RequestCloseWindow.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Margin="24,0">
+            <TextBlock FontSize="16" 
+                       FontWeight="SemiBold" 
+                       Foreground="#1F48A8"
+                       Margin="0,8"
+                       HorizontalAlignment="Center" 
+                       Text="{Binding Path=DialogHeader}" />
+
+            <TextBlock Margin="0,0,0,12" 
+                       TextWrapping="Wrap"
+                       Text="{Binding Path=DialogDescription}" />
+        </StackPanel>
+
+        <Grid Grid.Row="1" VerticalAlignment="Stretch" Margin="24,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="0" />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!--<TextBlock Grid.Column="0" Grid.Row="0"
+                       Text="Location" 
+                       VerticalAlignment="Top" 
+                       Style="{StaticResource ItemHeaderStyle}" />-->
+
+            <StackPanel Grid.Column="2" Grid.Row="0" 
+                        Margin="0,4,0,0">
+                <TextBlock TextWrapping="Wrap"
+                           Margin="0,0,0,6"
+                           Text="Select where the selected items will be restored."/>
+
+                <RadioButton VerticalContentAlignment="Top"
+                             Margin="0,0,0,4"
+                             IsChecked="{Binding Path=RestoreToSource}">
+                    <StackPanel Margin="2">
+                        <TextBlock Style="{StaticResource RadioButtonItemTextStyle}"
+                                   Text="Restore to source location" />
+                        <TextBlock TextWrapping="Wrap"
+                                   Margin="0,6,0,0"
+                                   Text="Items will copied from the destination and replace the files at the source. The source files will be overwritten." />
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton VerticalContentAlignment="Top" 
+                             IsChecked="{Binding Path=RestoreToNewLocation}">
+                    <StackPanel Margin="2">
+                        <TextBlock Style="{StaticResource RadioButtonItemTextStyle}"
+                                   Text="Restore to new location" />
+                        <TextBlock TextWrapping="Wrap"
+                                   Margin="0,6,0,0"
+                                   Text="Items will be copied from the destination to the path on the location computer specified below." />
+                        <StackPanel Orientation="Horizontal"
+                                    Margin="0,12,0,0">
+                            <TextBox Style="{StaticResource ItemTextBoxStyle}"
+                                     Text="{Binding Path=RestoreBrowsePath}" IsReadOnly="True" />
+
+                            <Button Style="{StaticResource ItemButtonStyle}"
+                                    Margin="8,0,0,0"
+                                    Command="{Binding Path=RestoreBrowseCommand}">
+                                <TextBlock Text="Browse..." />
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </RadioButton>
+            </StackPanel>
+        </Grid>
+
+        <Border Grid.Row="3" Background="{StaticResource WindowBackgroundBrush}"
+                BorderThickness="0,1,0,0" BorderBrush="#606060">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Width="80" Height="24" Margin="6" Command="{Binding Path=OKCommand}">
+                    <TextBlock Text="OK" />
+                </Button>
+                <Button Width="80" Height="24" Margin="6" Command="{Binding Path=CancelCommand}">
+                    <TextBlock Text="Cancel" />
+                </Button>
+            </StackPanel>
+        </Border>
+    </Grid>
+</mvvm:RequestCloseWindow>

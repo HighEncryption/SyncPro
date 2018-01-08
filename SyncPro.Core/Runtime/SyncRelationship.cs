@@ -566,15 +566,6 @@
             }
         }
 
-        public async Task RestoreFilesAsync(IEnumerable<SyncEntry> syncEntries, string restorePath)
-        {
-            if (this.ActiveJob != null)
-            {
-                return;
-            }
-
-        }
-
         private async Task SyncSchedulerScheduledMainThread()
         {
             while (!this.syncSchedulerCancellationTokenSource.Token.IsCancellationRequested)
@@ -678,14 +669,37 @@
                 return newAnalyzeJob;
             }
 
-            SyncJob newJob = new SyncJob(this, previousResult);
+            SyncJob newJob = new SyncJob(this, previousResult)
+            {
+                TriggerType = syncTriggerType
+            };
 
             newJob.Started += this.JobStarted;
             newJob.Finished += this.JobFinished;
 
-            newJob.Start(syncTriggerType);
+            newJob.Start();
 
             return newJob;
+        }
+
+        public RestoreJob BeginRestoreJob(IList<SyncEntry> syncEntries, string restorePath)
+        {
+            if (this.ActiveJob != null)
+            {
+                throw new InvalidOperationException("An ActiveJob is already present.");
+            }
+
+            RestoreJob restoreJob = new RestoreJob(
+                this,
+                syncEntries,
+                restorePath);
+
+            restoreJob.Started += this.JobStarted;
+            restoreJob.Finished += this.JobFinished;
+
+            restoreJob.Start();
+
+            return restoreJob;
         }
 
         public IList<SyncJob> GetSyncJobHistory()

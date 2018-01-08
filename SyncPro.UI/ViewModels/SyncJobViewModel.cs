@@ -38,6 +38,8 @@
             this.SyncJob.Finished += this.SyncJobOnSyncFinished;
             this.SyncJob.ProgressChanged += this.SyncJobOnProgressChanged;
 
+            this.SyncJob.TriggerType = SyncTriggerType.Manual;
+
             this.BeginSyncJobCommand = new DelegatedCommand(o => this.BeginSyncJob());
 
             this.ChangeMetricsList = new List<ChangeMetrics>()
@@ -160,7 +162,7 @@
 
         private void BeginSyncJob()
         {
-            this.SyncJob.Start(SyncTriggerType.Manual);
+            this.SyncJob.Start();
         }
 
         private void SetStatusDescription()

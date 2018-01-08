@@ -1,6 +1,5 @@
-﻿namespace SyncPro.UI.Controls
+﻿namespace SyncPro.UI.Dialogs
 {
-    using System;
     using System.Windows;
     using System.Windows.Controls;
 

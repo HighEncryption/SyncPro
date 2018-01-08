@@ -28,6 +28,11 @@
         [ClassInitialize]
         public static void ClassInitialize(TestContext testContext)
         {
+            if (!GlobalTestSettings.RunNetworkTests)
+            {
+                return;
+            }
+
             string tokenFilePath = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),
                 "GoogleDriveTestingToken.json");
@@ -79,6 +84,11 @@
         [TestMethod]
         public void BasicSyncLocalToGoogleDrive()
         {
+            if (!GlobalTestSettings.RunNetworkTests)
+            {
+                Assert.Inconclusive(GlobalTestSettings.NetworkTestsDisabledMessage);
+            }
+
             TokenResponse currentToken = this.GetCurrentToken();
 
             using (GoogleDriveClient client = new GoogleDriveClient(currentToken))
@@ -171,6 +181,11 @@
         [TestMethod]
         public void BasicSyncDownloadOnly()
         {
+            if (!GlobalTestSettings.RunNetworkTests)
+            {
+                Assert.Inconclusive(GlobalTestSettings.NetworkTestsDisabledMessage);
+            }
+
             string testRootPath = Path.Combine(this.TestContext.TestLogsDir, this.TestContext.TestName);
             Directory.CreateDirectory(testRootPath);
 

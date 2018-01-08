@@ -72,6 +72,7 @@
     <Compile Include="CredentialHelper.cs" />
     <Compile Include="EncryptionTests.cs" />
     <Compile Include="EntryProcessingSorterTests.cs" />
+    <Compile Include="GlobalTestSettings.cs" />
     <Compile Include="GoogleDriveTests.cs" />
     <Compile Include="JsonSerializationTests.cs" />
     <Compile Include="LocalFileSystemSyncTests.cs" />

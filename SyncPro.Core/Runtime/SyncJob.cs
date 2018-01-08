@@ -3,15 +3,12 @@
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
-    using System.IO;
     using System.Linq;
-    using System.Security.Cryptography;
     using System.Security.Cryptography.X509Certificates;
     using System.Threading;
     using System.Threading.Tasks;
 
     using SyncPro.Adapters;
-    using SyncPro.Configuration;
     using SyncPro.Data;
     using SyncPro.Tracing;
 
@@ -20,10 +17,10 @@
     /// </summary>
     public class SyncJob : JobBase
     {
-        /// <summary>
-        /// The buffer size used for copying data between adapters (currently 64k).
-        /// </summary>
-        private const int transferBufferSize = 0x10000;
+        ///// <summary>
+        ///// The buffer size used for copying data between adapters (currently 64k).
+        ///// </summary>
+        //private const int transferBufferSize = 0x10000;
 
         private readonly SyncRelationship relationship;
 
@@ -53,10 +50,12 @@
 
         private readonly object progressLock = new object();
 
-        private void RaiseSyncProgressChanged(EntryUpdateInfo updateInfo)
+        private void RaiseSyncProgressChanged(EntryUpdateInfo updateInfo, long bytesCopied)
         {
             lock (this.progressLock)
             {
+                this.bytesCompleted += bytesCopied;
+
                 this.throughputCalculationCache.Enqueue(
                     new Tuple<DateTime, long>(
                         DateTime.Now,
@@ -111,20 +110,18 @@
             this.AnalyzeResult = result;
         }
 
-        public void Start(SyncTriggerType triggerType)
+        protected override async Task ExecuteTask()
         {
             if (this.AnalyzeResult == null)
             {
                 throw new InvalidOperationException("No analyze result to synchronize");
             }
 
-            this.TriggerType = triggerType;
+            if (this.TriggerType == SyncTriggerType.Undefined)
+            {
+                throw new InvalidOperationException("TriggerType cannot be Undefined");
+            }
 
-            this.StartTask();
-        }
-
-        protected override async Task ExecuteTask()
-        {
             // Create a new sync history entry (except for analyze-only runs)
             this.CreateNewSyncJobHistory();
 
@@ -278,7 +275,7 @@
 
             // Invoke the ProgressChanged event one final time with a null EntryUpdateInfo object to flush
             // out the final values for files and bytes.
-            this.RaiseSyncProgressChanged(null);
+            this.RaiseSyncProgressChanged(null, 0);
 
             if (this.CancellationToken.IsCancellationRequested)
             {
@@ -306,6 +303,7 @@
             }
         }
 
+        /*
         private async Task<bool> SyncInteralWithoutPoolingAsync(
             ThrottlingManager throttlingManager,
             SyncDatabase db,
@@ -410,6 +408,7 @@
 
             return false;
         }
+        */
 
         private async Task<bool> SyncInteralWithPoolingAsync(
             ThrottlingManager throttlingManager,
@@ -615,6 +614,11 @@
             }
         }
 
+        private void CopyProgressChanged(CopyProgressInfo obj)
+        {
+            this.RaiseSyncProgressChanged(obj.EntryUpdateInfo, obj.BytesCopied);
+        }
+
         private async Task<bool> ProcessEntryAsync(
             EntryUpdateInfo entryUpdateInfo,
             AdapterBase adapter, // TODO: Rename to destinationAdapter
@@ -635,13 +639,24 @@
                 }
                 else
                 {
+                    FileCopyHelper fileCopyHelper = new FileCopyHelper(
+                        this.Relationship,
+                        entryUpdateInfo.OriginatingAdapter,
+                        adapter,
+                        entryUpdateInfo,
+                        throttlingManager,
+                        this.encryptionCertificate,
+                        this.CancellationToken,
+                        this.CopyProgressChanged);
+
                     Logger.Debug("Creating item with content");
-                    await this.CopyFileAsync(
-                            entryUpdateInfo.OriginatingAdapter,
-                            adapter,
-                            entryUpdateInfo,
-                            throttlingManager)
-                        .ConfigureAwait(false);
+                    await fileCopyHelper.CopyFileAsync().ConfigureAwait(false);
+                    //await this.CopyFileAsync(
+                    //        entryUpdateInfo.OriginatingAdapter,
+                    //        adapter,
+                    //        entryUpdateInfo,
+                    //        throttlingManager)
+                    //    .ConfigureAwait(false);
                 }
             }
             else if ((entryUpdateInfo.Flags & SyncEntryChangedFlags.Deleted) != 0)
@@ -659,13 +674,25 @@
                 // the file contents.
                 if (entryUpdateInfo.Entry.Type == SyncEntryType.File)
                 {
+                    FileCopyHelper fileCopyHelper = new FileCopyHelper(
+                        this.Relationship,
+                        entryUpdateInfo.OriginatingAdapter,
+                        adapter,
+                        entryUpdateInfo,
+                        throttlingManager,
+                        this.encryptionCertificate,
+                        this.CancellationToken,
+                        this.CopyProgressChanged);
+
                     Logger.Debug("Copying file contents to existing item");
-                    await this.CopyFileAsync(
-                            entryUpdateInfo.OriginatingAdapter,
-                            adapter,
-                            entryUpdateInfo,
-                            throttlingManager)
-                        .ConfigureAwait(false);
+                    await fileCopyHelper.CopyFileAsync().ConfigureAwait(false);
+                    //Logger.Debug("Copying file contents to existing item");
+                    //await this.CopyFileAsync(
+                    //        entryUpdateInfo.OriginatingAdapter,
+                    //        adapter,
+                    //        entryUpdateInfo,
+                    //        throttlingManager)
+                    //    .ConfigureAwait(false);
                 }
 
                 // The item was either renamed or the metadata was updated. Either way, this will be handled
@@ -734,6 +761,7 @@
             return true;
         }
 
+        /*
         /// <summary>
         /// Copy a file from the source adapter to the destination adapter
         /// </summary>
@@ -1029,6 +1057,7 @@
                 md5?.Dispose();
             }
         }
+        */
 
         public static SyncJob FromHistoryEntry(SyncRelationship relationship, SyncHistoryData history)
         {

@@ -9,7 +9,7 @@ namespace OneDriveTokenHelper
     using SyncPro;
     using SyncPro.Adapters.MicrosoftOneDrive;
     using SyncPro.OAuth;
-    using SyncPro.UI.Controls;
+    using SyncPro.UI.Dialogs;
 
     public static class TokenProvider
     {

@@ -31,6 +31,11 @@ namespace SyncPro.UnitTests
         [ClassInitialize]
         public static void ClassInitialize(TestContext testContext)
         {
+            if (!GlobalTestSettings.RunNetworkTests)
+            {
+                return;
+            }
+
             string tokenFilePath = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),
                 "OneDriveTestingToken.json");
@@ -91,6 +96,11 @@ namespace SyncPro.UnitTests
         [TestMethod]
         public void BasicSyncLocalToOneDrive()
         {
+            if (!GlobalTestSettings.RunNetworkTests)
+            {
+                Assert.Inconclusive(GlobalTestSettings.NetworkTestsDisabledMessage);
+            }
+
             string testRootPath = Path.Combine(this.TestContext.TestLogsDir, this.TestContext.TestName);
             Directory.CreateDirectory(testRootPath);
 
@@ -181,6 +191,11 @@ namespace SyncPro.UnitTests
         [TestMethod]
         public void OneDriveFileUploadMultipleFragments()
         {
+            if (!GlobalTestSettings.RunNetworkTests)
+            {
+                Assert.Inconclusive(GlobalTestSettings.NetworkTestsDisabledMessage);
+            }
+
             int fragmentSize = 327680; // 320k
             int payloadSize = 819200; // 2.5 fragments
 
@@ -211,6 +226,11 @@ namespace SyncPro.UnitTests
         [TestMethod]
         public void OneDriveFileUploadSingleFragment()
         {
+            if (!GlobalTestSettings.RunNetworkTests)
+            {
+                Assert.Inconclusive(GlobalTestSettings.NetworkTestsDisabledMessage);
+            }
+
             int fragmentSize = OneDriveFileUploadStream.DefaultFragmentSize; // 10M
             int payloadSize = 524288; // < 1 fragments
 
@@ -241,6 +261,11 @@ namespace SyncPro.UnitTests
         [TestMethod]
         public void OneDriveFileUploadMultipleWrites()
         {
+            if (!GlobalTestSettings.RunNetworkTests)
+            {
+                Assert.Inconclusive(GlobalTestSettings.NetworkTestsDisabledMessage);
+            }
+
             int fragmentSize = 327680; // 320k
             int payloadSize = 819200; // 2.5 fragments
 
@@ -275,6 +300,11 @@ namespace SyncPro.UnitTests
         [ExpectedException(typeof(OneDriveException), "More data was written to the stream than is allowed by the file.")]
         public void OneDriveFileUploadTooMuchData()
         {
+            if (!GlobalTestSettings.RunNetworkTests)
+            {
+                Assert.Inconclusive(GlobalTestSettings.NetworkTestsDisabledMessage);
+            }
+
             int payloadSize = 262144; // 256k
 
             TokenResponse currentToken = this.GetCurrentToken();
@@ -305,6 +335,11 @@ namespace SyncPro.UnitTests
         [TestMethod]
         public void OneDriveFileUploadNotEnoughData()
         {
+            if (!GlobalTestSettings.RunNetworkTests)
+            {
+                Assert.Inconclusive(GlobalTestSettings.NetworkTestsDisabledMessage);
+            }
+
             int payloadSize = 262144; // 256k
 
             TokenResponse currentToken = this.GetCurrentToken();
@@ -337,6 +372,11 @@ namespace SyncPro.UnitTests
         [TestMethod]
         public void OneDriveEmptyFileUploadTest()
         {
+            if (!GlobalTestSettings.RunNetworkTests)
+            {
+                Assert.Inconclusive(GlobalTestSettings.NetworkTestsDisabledMessage);
+            }
+
             TokenResponse currentToken = this.GetCurrentToken();
 
             using (OneDriveClient client = new OneDriveClient(currentToken))
@@ -357,6 +397,11 @@ namespace SyncPro.UnitTests
         [TestMethod]
         public void OneDrive1ByteFileUploadTest()
         {
+            if (!GlobalTestSettings.RunNetworkTests)
+            {
+                Assert.Inconclusive(GlobalTestSettings.NetworkTestsDisabledMessage);
+            }
+
             int fragmentSize = 327680; // 320k
             int payloadSize = 1;
 
@@ -383,6 +428,11 @@ namespace SyncPro.UnitTests
         [TestMethod]
         public void OneDriveFileDownloadTest()
         {
+            if (!GlobalTestSettings.RunNetworkTests)
+            {
+                Assert.Inconclusive(GlobalTestSettings.NetworkTestsDisabledMessage);
+            }
+
             TokenResponse currentToken = this.GetCurrentToken();
 
             using (OneDriveClient client = new OneDriveClient(currentToken))
@@ -418,6 +468,11 @@ namespace SyncPro.UnitTests
         [TestMethod]
         public void BasicAnalyzeOnly()
         {
+            if (!GlobalTestSettings.RunNetworkTests)
+            {
+                Assert.Inconclusive(GlobalTestSettings.NetworkTestsDisabledMessage);
+            }
+
             string testRootPath = Path.Combine(this.TestContext.TestLogsDir, this.TestContext.TestName);
             Directory.CreateDirectory(testRootPath);
 
@@ -480,6 +535,11 @@ namespace SyncPro.UnitTests
         [TestMethod]
         public void BasicSyncDownloadOnly()
         {
+            if (!GlobalTestSettings.RunNetworkTests)
+            {
+                Assert.Inconclusive(GlobalTestSettings.NetworkTestsDisabledMessage);
+            }
+
             string testRootPath = Path.Combine(this.TestContext.TestLogsDir, this.TestContext.TestName);
             Directory.CreateDirectory(testRootPath);
 
@@ -587,6 +647,11 @@ namespace SyncPro.UnitTests
         [TestMethod]
         public void BasicSyncUploadOnly()
         {
+            if (!GlobalTestSettings.RunNetworkTests)
+            {
+                Assert.Inconclusive(GlobalTestSettings.NetworkTestsDisabledMessage);
+            }
+
             string testRootPath = Path.Combine(this.TestContext.TestLogsDir, this.TestContext.TestName);
             Directory.CreateDirectory(testRootPath);
 

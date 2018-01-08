@@ -80,7 +80,7 @@ namespace SyncPro.Runtime
             }
         }
 
-        protected Task StartTask()
+        public Task Start()
         {
             this.cancellationTokenSource = new CancellationTokenSource();
 
@@ -106,7 +106,7 @@ namespace SyncPro.Runtime
 
             this.Finished?.Invoke(this, new JobFinishedEventArgs(this));
 
-            this.ContinuationJob?.StartTask();
+            this.ContinuationJob?.Start();
         }
 
         protected abstract Task ExecuteTask();

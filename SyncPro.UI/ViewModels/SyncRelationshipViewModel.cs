@@ -452,6 +452,11 @@
             this.BaseModel.BeginSyncJob(triggerType, null);
         }
 
+        public void RestoreFilesAsync(IList<SyncEntryViewModel> syncEntries, string restorePath)
+        {
+            this.BaseModel.BeginRestoreJob(syncEntries.Select(e => e.SyncEntry).ToList(), restorePath);
+        }
+
         /// <summary>
         /// Start a new manually triggered sync job to actually sync files, using a previously gathered set of changes.
         /// </summary>
@@ -597,13 +602,6 @@
 
             stopwatch.Stop();
             Logger.Debug("Finished CalculateRelationshipMetadataAsync. Duration=" + stopwatch.Elapsed);
-        }
-
-        public async Task RestoreFilesAsync(IList<SyncEntryViewModel> syncEntries, string restorePath)
-        {
-            await this.BaseModel
-                .RestoreFilesAsync(syncEntries.Select(e => e.SyncEntry), restorePath)
-                .ConfigureAwait(false);
         }
     }
 }

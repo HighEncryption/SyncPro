@@ -1,4 +1,4 @@
-﻿namespace SyncPro.UI.Controls
+﻿namespace SyncPro.UI.Dialogs
 {
     /// <summary>
     /// Interaction logic for BrowserAuthenticationWindow.xaml

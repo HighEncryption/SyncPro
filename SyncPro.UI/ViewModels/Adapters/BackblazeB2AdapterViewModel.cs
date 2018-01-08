@@ -12,7 +12,7 @@ namespace SyncPro.UI.ViewModels.Adapters
     using SyncPro.Adapters;
     using SyncPro.Adapters.BackblazeB2;
     using SyncPro.Adapters.BackblazeB2.DataModel;
-    using SyncPro.UI.Controls;
+    using SyncPro.UI.Dialogs;
     using SyncPro.UI.Framework.MVVM;
     using SyncPro.UI.Navigation.ViewModels;
 

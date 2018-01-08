@@ -1,4 +1,4 @@
-﻿<Window x:Class="SyncPro.UI.Controls.BrowserAuthenticationWindow"
+﻿<Window x:Class="SyncPro.UI.Dialogs.BrowserAuthenticationWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Height="900" Width="500">
