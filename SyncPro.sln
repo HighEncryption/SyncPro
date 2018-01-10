@@ -36,6 +36,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SyncPro.Adapters.WindowsFil
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SyncPro.Certificates", "SyncPro.Certificates\SyncPro.Certificates.csproj", "{11FEBC64-EE05-4095-BD49-9FC7FABCC1DF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SyncProLogViewer", "SyncProLogViewer\SyncProLogViewer.csproj", "{F1F0285E-B3C3-4E05-9786-E775DE11F92C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -98,11 +100,16 @@ Global
 		{11FEBC64-EE05-4095-BD49-9FC7FABCC1DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{11FEBC64-EE05-4095-BD49-9FC7FABCC1DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{11FEBC64-EE05-4095-BD49-9FC7FABCC1DF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F1F0285E-B3C3-4E05-9786-E775DE11F92C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F1F0285E-B3C3-4E05-9786-E775DE11F92C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F1F0285E-B3C3-4E05-9786-E775DE11F92C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F1F0285E-B3C3-4E05-9786-E775DE11F92C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{A6727CD7-8703-432C-95A8-36666AFF583B} = {2B1F0A5A-D3DD-4A43-8DD7-3856B773B36A}
+		{F1F0285E-B3C3-4E05-9786-E775DE11F92C} = {2B1F0A5A-D3DD-4A43-8DD7-3856B773B36A}
 	EndGlobalSection
 EndGlobal

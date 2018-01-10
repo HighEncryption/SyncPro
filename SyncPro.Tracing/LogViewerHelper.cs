@@ -2,8 +2,8 @@
 {
     using System;
     using System.Diagnostics;
-
-    using Microsoft.Win32;
+    using System.IO;
+    using System.Reflection;
 
     public static class LogViewerHelper
     {
@@ -11,22 +11,29 @@
             string viewerArgs,
             bool closeOnProcessExit)
         {
-            using (var softwareKey = Registry.CurrentUser.OpenSubKey("Software"))
-            using (RegistryKey jsonLoggerKey = softwareKey.OpenSubKey("JsonLogger"))
+            string[] searchPaths =
             {
-                if (jsonLoggerKey == null)
+                ".",
+#if DEBUG
+                @"..\..\..\SyncProLogViewer\bin\Debug"
+#endif
+            };
+
+            string exePath = null;
+            string searchBase = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+
+            foreach (string searchPath in searchPaths)
+            {
+                string path = Path.Combine(searchBase, searchPath, "SyncProLogViewer.exe");
+                if (File.Exists(path))
                 {
-                    throw new Exception("The JsonLogger key was not found under HKEY_CURRENT_USER\\Software");
+                    exePath = path;
+                    break;
                 }
+            }
 
-                object objPath = jsonLoggerKey.GetValue("JsonLogViewerPath");
-                if (objPath == null)
-                {
-                    throw new Exception("The JsonLogViewerPath value was not found or was empty");
-                }
-
-                string path = Environment.ExpandEnvironmentVariables(Convert.ToString(objPath));
-
+            if (exePath != null)
+            {
                 string args = viewerArgs;
 
                 if (closeOnProcessExit)
@@ -34,7 +41,7 @@
                     args += string.Format(" /closeOnExit {0}", Process.GetCurrentProcess().Id);
                 }
 
-                using (Process process = Process.Start(path, args))
+                using (Process process = Process.Start(exePath, args))
                 {
                     if (process != null && process.HasExited)
                     {
