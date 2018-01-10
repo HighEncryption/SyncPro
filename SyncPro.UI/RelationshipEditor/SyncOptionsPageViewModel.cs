@@ -80,6 +80,13 @@ namespace SyncPro.UI.RelationshipEditor
                 return;
             }
 
+            if (this.SelectedScopeType == SyncScopeType.Bidirectional)
+            {
+                this.EncryptedSettingsStatus = "Encryption cannot be enabled with bidirectional sync.";
+                this.EncryptedSettingsStatusImportant = false;
+                return;
+            }
+
             if (this.IsEncryptionEnabled)
             {
                 if (this.CreateNewEncryptionCertificate)
@@ -150,6 +157,8 @@ namespace SyncPro.UI.RelationshipEditor
                         this.SyncScopeExplaination =
                             "New file, updates, and deletions will be copied from the source to the destination only. Changes made to the destination will not be copied to the source.";
                     }
+
+                    this.SetEncryptedSettingsStatus();
                 }
             }
         }

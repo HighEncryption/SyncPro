@@ -254,6 +254,7 @@
             if (lastSyncJob == null)
             {
                 this.SyncStatusDescription = "Never Synchronized";
+                this.LastSyncDisplayString = "Never Synchronized";
                 this.IsNeverSynchronized = true;
             }
             else

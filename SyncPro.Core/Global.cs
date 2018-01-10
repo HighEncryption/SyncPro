@@ -4,7 +4,6 @@
     using System.Collections.Generic;
     using System.IO;
     using System.Reflection;
-    using System.Text;
 
     using SyncPro.Runtime;
     using SyncPro.Tracing;
@@ -31,46 +30,14 @@
                 Directory.CreateDirectory(Global.AppDataRoot);
             }
 
-            InitializeLogging(Global.AppDataRoot, isTestMode);
+            if (isTestMode)
+            {
+                LogViewerHelper.LaunchLogViewer(null, true);
+            }
 
             Logger.GlobalInitComplete(
                 Assembly.GetExecutingAssembly().Location,
                 Global.AppDataRoot);
-        }
-
-        private static void InitializeLogging(string logDir, bool autoLaunchLogViewer)
-        {
-            //JsonLogWriter jsonLogWriter = new JsonLogWriter();
-            //jsonLogWriter.Initialize(logDir);
-            //Logger.AddLogWriter(jsonLogWriter);
-
-            //using (File.Create(jsonLogWriter.LogFilePath))
-            //{
-            //}
-
-            //if (autoLaunchLogViewer)
-            //{
-            //    PipeLogWriter pipeLogWriter = new PipeLogWriter();
-            //    pipeLogWriter.StartInitialize();
-
-            //    try
-            //    {
-            //        JsonLogViewerHelper.LaunchLogViewer(
-            //            "/pipe " + pipeLogWriter.PipeName,
-            //            true);
-
-            //        pipeLogWriter.FinishInitialize();
-
-            //        Logger.AddLogWriter(pipeLogWriter);
-            //    }
-            //    catch (Exception e)
-            //    {
-            //        pipeLogWriter.Dispose();
-
-            //        Logger.Error("Failed to start JsonLogViewer");
-            //        Logger.LogException(e);
-            //    }
-            //}
         }
 
         static Global()

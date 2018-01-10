@@ -72,7 +72,7 @@
         public const string OneDriveTokenEndpoint = "https://login.live.com/oauth20_token.srf";
         public const string OneDriveApiBaseAddress = "https://api.onedrive.com";
         public const string LiveApiBaseAddress = "https://apis.live.net";
-        public const string SyncProAppId = "000000004016B526";
+        public const string SyncProAppId = "00000000401FEC14";
         public const string DefaultReturnUri = "urn:ietf:wg:oauth:2.0:oob";
 
         private HttpClient oneDriveHttpClient;

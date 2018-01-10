@@ -75,8 +75,8 @@ namespace SyncPro.Runtime
 
             try
             {
-                // Assume the original size of the file will be the write size. If encryption is enabled, the value
-                // will be updated below.
+                // Assume the original size of the file will be the read and write size. If encryption is enabled, the 
+                // value will be updated below.
                 long readStreamLength = this.updateInfo.Entry.OriginalSize;
                 long writeStreamLength = this.updateInfo.Entry.OriginalSize;
 

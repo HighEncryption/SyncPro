@@ -59,10 +59,10 @@
                              IsChecked="{Binding Path=SelectedTriggering, Converter={StaticResource EnumToBoolean}, ConverterParameter=Manual}">
                     <TextBlock Style="{StaticResource RadioButtonItemTextStyle}" Text="Manual" />
                 </RadioButton>
-                <RadioButton VerticalContentAlignment="Center" Margin="16,0,0,0"
+                <!--<RadioButton VerticalContentAlignment="Center" Margin="16,0,0,0"
                              IsChecked="{Binding Path=SelectedTriggering, Converter={StaticResource EnumToBoolean}, ConverterParameter=DeviceInsertion}">
                     <TextBlock Style="{StaticResource RadioButtonItemTextStyle}" Text="Device" />
-                </RadioButton>
+                </RadioButton>-->
             </StackPanel>
 
             <TextBlock Grid.Column="1" Grid.Row="1" Text="{Binding Path=SelectedTriggeringMessage}" Margin="0,8,0,0" Width="450"
