@@ -70,6 +70,7 @@
 
                 <RadioButton VerticalContentAlignment="Top"
                              Margin="0,0,0,4"
+                             IsEnabled="False"
                              IsChecked="{Binding Path=RestoreToSource}">
                     <StackPanel Margin="2">
                         <TextBlock Style="{StaticResource RadioButtonItemTextStyle}"
@@ -90,7 +91,7 @@
                         <StackPanel Orientation="Horizontal"
                                     Margin="0,12,0,0">
                             <TextBox Style="{StaticResource ItemTextBoxStyle}"
-                                     Text="{Binding Path=RestoreBrowsePath}" IsReadOnly="True" />
+                                     Text="{Binding Path=RestoreBrowsePath}" />
 
                             <Button Style="{StaticResource ItemButtonStyle}"
                                     Margin="8,0,0,0"

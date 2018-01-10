@@ -48,31 +48,6 @@
         {
             return Path.Combine(Global.AppDataRoot, relationshipId.ToString("N"), "database.mdf");
         }
-
-        /// <summary>
-        /// Update an existing <see cref="SyncEntry"/> in the database with the properties values of the 
-        /// given <see cref="SyncEntry"/>
-        /// </summary>
-        /// <param name="syncEntry">The <see cref="SyncEntry"/> to copy from</param>
-        /// <returns>The updated <see cref="SyncEntry"/></returns>
-        public SyncEntry UpdateSyncEntry(SyncEntry syncEntry)
-        {
-            SyncEntry entry = this.Entries.Include(e => e.AdapterEntries).First(e => e.Id == syncEntry.Id);
-
-            entry.Name = syncEntry.Name;
-            entry.CreationDateTimeUtc = syncEntry.CreationDateTimeUtc;
-            entry.ModifiedDateTimeUtc = syncEntry.ModifiedDateTimeUtc;
-            entry.EntryLastUpdatedDateTimeUtc = syncEntry.EntryLastUpdatedDateTimeUtc;
-            entry.OriginalSha1Hash = syncEntry.OriginalSha1Hash;
-            entry.EncryptedSha1Hash = syncEntry.EncryptedSha1Hash;
-            entry.OriginalMd5Hash = syncEntry.OriginalMd5Hash;
-            entry.EncryptedMd5Hash = syncEntry.EncryptedMd5Hash;
-            entry.OriginalSize = syncEntry.OriginalSize;
-            entry.EncryptedSize = syncEntry.EncryptedSize;
-            entry.State = syncEntry.State;
-
-            return entry;
-        }
     }
 
     public class SyncDatabaseConfiguration : DbMigrationsConfiguration<SyncDatabase>

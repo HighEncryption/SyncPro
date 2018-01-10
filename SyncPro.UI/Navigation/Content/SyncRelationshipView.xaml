@@ -13,7 +13,8 @@
     </UserControl.Resources>
 
     <StackPanel>
-        <!--<StackPanel Background="#E23116 ">
+        <!--
+        <StackPanel Background="#E23116 ">
             <StackPanel.Style>
                 <Style TargetType="StackPanel">
                     <Setter Property="Visibility" Value="Collapsed"/>
@@ -28,11 +29,12 @@
             <StackPanel Margin="24,6">
                 <TextBlock Text="Error" Foreground="White" FontWeight="Bold" FontSize="16" Margin="0,0,0,2" />
                 <StackPanel IsItemsHost="True">
-                    <ItemsControl Items="{Binding Path=Errors}"></ItemsControl>
+                    <ItemsControl ItemsSource="{Binding Path=Errors}"></ItemsControl>
                 </StackPanel>
-                <TextBlock Text="{Binding Path=SyncRelationship.ErrorMessage}"  Foreground="White"/>
+                <TextBlock Text="{Binding Path=ErrorMessage}"  Foreground="White"/>
             </StackPanel>
-        </StackPanel>-->
+        </StackPanel>
+        -->
 
         <StackPanel Margin="24">
 
@@ -63,56 +65,6 @@
                         </DataTemplate>
                     </ContentControl.Resources>
                 </ContentControl>
-                <!--
-                <DockPanel LastChildFill="True" MinHeight="17"
-                           Visibility="{Binding Path=ActiveJob.Stage, Converter={StaticResource SyncJobStageToVisiblity}, ConverterParameter=Sync}">
-                    <TextBlock DockPanel.Dock="Left" Width="200" 
-                               Visibility="{Binding Path=ActiveJob.ShowDiscreteProgress, Converter={StaticResource BooleanToVisibilityCollapsed}}">
-                        <Run Text="{Binding Path=ActiveJob.TimeElapsed, StringFormat={}{0:hh}:{0:mm}:{0:ss}}" FontSize="13" FontFamily="Segoe UI" FontWeight="Normal" />
-                        <Run Text="elapsed" />
-                    </TextBlock>
-                    <TextBlock DockPanel.Dock="Right" Width="200" TextAlignment="Right"
-                               Visibility="{Binding Path=ActiveJob.ShowDiscreteProgress, Converter={StaticResource BooleanToVisibilityCollapsed}}">
-                        <Run Text="{Binding Path=ActiveJob.TimeRemaining, StringFormat={}{0:hh}:{0:mm}:{0:ss}}" FontSize="13" FontFamily="Segoe UI" FontWeight="Normal" />
-                        <Run Text="remaining" />
-                    </TextBlock>
-                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Bottom" 
-                               Text="{Binding Path=ActiveJob.SyncProgressCurrentText}"
-                               Visibility="{Binding Path=ActiveJob.Stage, Converter={StaticResource SyncJobStageToVisiblity}, ConverterParameter=Analyze}" />
-                </DockPanel>
-                <TextBlock Text="{Binding Path=ActiveJob.AnalyzeStatusString}"></TextBlock>
-                <ProgressBar Height="8" Value="{Binding Path=ActiveJob.ProgressValue}" Minimum="0" Maximum="1">
-                    <ProgressBar.Style>
-                        <Style TargetType="ProgressBar">
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding Path=ActiveJob.Stage}" Value="{x:Static runtime:SyncJobStage.Analyze}">
-                                    <Setter Property="IsIndeterminate" Value="True" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </ProgressBar.Style>
-                </ProgressBar>
-                <DockPanel LastChildFill="True" MinHeight="17"
-                           Visibility="{Binding Path=ActiveJob.Stage, Converter={StaticResource SyncJobStageToVisiblity}, ConverterParameter=Sync}">
-                    <TextBlock DockPanel.Dock="Left" Width="200" 
-                               Visibility="{Binding Path=ActiveJob.ShowDiscreteProgress, Converter={StaticResource BooleanToVisibilityCollapsed}}">
-                        <Run Text="{Binding Path=ActiveJob.FilesCompleted}" FontSize="13" FontFamily="Segoe UI" FontWeight="Normal" />
-                        <Run Text="files /" />
-                        <Run Text="{Binding Path=ActiveJob.BytesCompleted, Converter={StaticResource LocalFileSizeConverter}}" FontSize="13"
-                             FontFamily="Segoe UI" FontWeight="Normal" />
-                        <Run Text="complete" />
-                    </TextBlock>
-                    <TextBlock DockPanel.Dock="Right" Width="200" TextAlignment="Right"
-                               Visibility="{Binding Path=ActiveJob.ShowDiscreteProgress, Converter={StaticResource BooleanToVisibilityCollapsed}}">
-                        <Run Text="{Binding Path=ActiveJob.FilesRemaining}" FontSize="13" FontFamily="Segoe UI" FontWeight="Normal" />
-                        <Run Text="files /" />
-                        <Run Text="{Binding Path=ActiveJob.BytesRemaining, Converter={StaticResource LocalFileSizeConverter}}" FontSize="13"
-                             FontFamily="Segoe UI" FontWeight="Normal" />
-                        <Run Text="remaining" />
-                    </TextBlock>
-                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Bottom" Text="{Binding Path=ActiveJob.Throughput}" />
-                </DockPanel>
-                -->
             </StackPanel>
 
             <TextBlock Text="Last Synchronization" FontWeight="Bold" FontSize="16" Margin="0,0,0,2" 
@@ -133,6 +85,5 @@
             <TextBlock Text="{Binding Path=DatabaseSizeDisplayString}"
                        Margin="0,0,0,16" />
         </StackPanel>
-
     </StackPanel>
 </UserControl>

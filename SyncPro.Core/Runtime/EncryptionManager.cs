@@ -20,6 +20,9 @@ namespace SyncPro.Runtime
         /// </summary>
         public const int DefaultCspBlockSize = 128;
 
+        // An encrypted file will contain a 1k header plus one 16-byte block
+        private const int minimumEncryptedFileSize = 1040;
+
         private readonly X509Certificate2 encryptionCertificate;
         private readonly long sourceFileSize;
 
@@ -58,6 +61,8 @@ namespace SyncPro.Runtime
 
             this.sha1 = new SHA1Cng();
             this.md5 = new MD5Cng();
+
+            Pre.Assert(sourceFileSize >= minimumEncryptedFileSize, "sourceFileSize >= minimumEncryptedFileSize");
 
             this.Initialize();
         }
@@ -305,11 +310,15 @@ namespace SyncPro.Runtime
         /// <returns>The length of the encrypted data</returns>
         public static long CalculateDecryptedFileSize(long encryptedSize, out short padding)
         {
+            Pre.Assert(encryptedSize >= minimumEncryptedFileSize, "encryptedSize >= minimumEncryptedFileSize");
+
             const int BlockSizeInBytes = DefaultCspBlockSize / 8;
 
             // The encrypted data always has a length according to the following formula:
             //   encryptedSize = plainTextSize + blockSize - (plainText % blocksize)
             padding = (short)((encryptedSize - EncryptedFileHeader.HeaderSize) % BlockSizeInBytes);
+
+            Pre.Assert(padding >= 0, "padding >= 0");
 
             return encryptedSize - (EncryptedFileHeader.HeaderSize + BlockSizeInBytes);
         }

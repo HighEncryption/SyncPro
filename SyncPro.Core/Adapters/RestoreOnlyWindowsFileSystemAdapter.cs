@@ -38,9 +38,32 @@ namespace SyncPro.Adapters
             throw new NotImplementedException();
         }
 
-        public override Task CreateItemAsync(SyncEntry entry)
+        public override async Task CreateItemAsync(SyncEntry entry)
         {
-            throw new NotImplementedException();
+            await Task.Factory.StartNew(() => this.CreateItem(entry)).ConfigureAwait(false);
+        }
+
+        private void CreateItem(SyncEntry entry)
+        {
+            string fullPath;
+            using (var database = this.Relationship.GetDatabase())
+            {
+                fullPath = Path.Combine(this.Config.RootDirectory, entry.GetRelativePath(database, this.PathSeparator));
+            }
+
+            switch (entry.Type)
+            {
+                case SyncEntryType.Directory:
+                    Directory.CreateDirectory(fullPath);
+                    break;
+                case SyncEntryType.File:
+                    using (File.Create(fullPath))
+                    {
+                    }
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
 
         public override Stream GetReadStreamForEntry(SyncEntry entry)
@@ -91,7 +114,6 @@ namespace SyncPro.Adapters
 
         public override void FinalizeItemWrite(Stream stream, EntryUpdateInfo updateInfo)
         {
-            throw new NotImplementedException();
         }
     }
 }

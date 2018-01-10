@@ -81,6 +81,7 @@
     <Compile Include="Runtime\RestoreJob.cs" />
     <Compile Include="Adapters\RestoreOnlyWindowsFileSystemAdapter.cs" />
     <Compile Include="Adapters\RestoreOnlyWindowsFileSystemAdapterConfiguration.cs" />
+    <Compile Include="Runtime\RestoreJobProgressInfo.cs" />
     <Compile Include="Utility\SecureStringConverter.cs" />
     <Compile Include="Utility\SecureStringToProtectedDataConverter.cs" />
     <Compile Include="Adapters\IChangeTracking.cs" />

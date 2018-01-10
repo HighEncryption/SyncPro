@@ -70,6 +70,8 @@
             this.OKCommand = new DelegatedCommand(o => this.HandleClose(true), this.CanOkCommandExecute);
 
             this.RestoreBrowseCommand = new DelegatedCommand(this.BrowsePath);
+
+            this.RestoreToNewLocation = true;
         }
 
         private bool CanOkCommandExecute(object o)

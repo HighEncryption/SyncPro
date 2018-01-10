@@ -704,7 +704,7 @@
             return newJob;
         }
 
-        public RestoreJob BeginRestoreJob(IList<SyncEntry> syncEntries, string restorePath)
+        public RestoreJob BeginRestoreJob(List<SyncEntry> syncEntries, string restorePath)
         {
             if (this.ActiveJob != null)
             {

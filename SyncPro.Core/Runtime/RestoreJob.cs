@@ -4,19 +4,29 @@ namespace SyncPro.Runtime
     using System.Collections.Generic;
     using System.Linq;
     using System.Security.Cryptography.X509Certificates;
+    using System.Threading;
     using System.Threading.Tasks;
 
     using SyncPro.Adapters;
+    using SyncPro.Configuration;
     using SyncPro.Data;
     using SyncPro.Tracing;
 
     public class RestoreJob : JobBase
     {
-        private readonly IList<SyncEntry> syncEntries;
+        private readonly List<SyncEntry> syncEntries;
         private readonly string restorePath;
-        private X509Certificate2 encryptionCertificate;
 
-        public RestoreJob(SyncRelationship relationship, IList<SyncEntry> syncEntries, string restorePath) 
+        private readonly Queue<Tuple<DateTime, long>> throughputCalculationCache = new Queue<Tuple<DateTime, long>>();
+        private readonly object progressLock = new object();
+
+        private X509Certificate2 encryptionCertificate;
+        private long filesCompleted;
+        private long bytesCompleted;
+
+        public event EventHandler<RestoreJobProgressInfo> ProgressChanged;
+
+        public RestoreJob(SyncRelationship relationship, List<SyncEntry> syncEntries, string restorePath) 
             : base(relationship)
         {
             Pre.ThrowIfArgumentNull(relationship, nameof(relationship));
@@ -35,8 +45,6 @@ namespace SyncPro.Runtime
                 return;
             }
 
-            RestoreResult result = new RestoreResult();
-
             RestoreOnlyWindowsFileSystemAdapterConfiguration adapterConfig = new RestoreOnlyWindowsFileSystemAdapterConfiguration
             {
                 RootDirectory = this.restorePath
@@ -44,6 +52,20 @@ namespace SyncPro.Runtime
 
             RestoreOnlyWindowsFileSystemAdapter destAdapter =
                 new RestoreOnlyWindowsFileSystemAdapter(this.Relationship, adapterConfig);
+
+            List<EntryUpdateInfo> updatesToRestore = new List<EntryUpdateInfo>();
+
+            using (var db = this.Relationship.GetDatabase())
+            {
+                foreach (SyncEntry syncEntry in this.syncEntries)
+                {
+                    this.AddSyncEntriesRecursive(db, updatesToRestore, syncEntry, destAdapter);
+                }
+            }
+
+            updatesToRestore.Sort(new EntryProcessingSorter());
+
+            RestoreResult result = new RestoreResult();
 
             if (this.Relationship.EncryptionMode != Configuration.EncryptionMode.None)
             {
@@ -58,79 +80,99 @@ namespace SyncPro.Runtime
                 this.encryptionCertificate = cert[0];
             }
 
-            using (var db = this.Relationship.GetDatabase())
+            this.filesCompleted = 0;
+            this.bytesCompleted = 0;
+
+            foreach (EntryUpdateInfo entryUpdateInfo in updatesToRestore)
             {
-                foreach (SyncEntry syncEntry in this.syncEntries)
+                if (this.CancellationToken.IsCancellationRequested)
                 {
-                    if (this.CancellationToken.IsCancellationRequested)
-                    {
-                        result.Cancelled = true;
-                        return;
-                    }
+                    result.Cancelled = true;
+                    return;
+                }
 
-                    RestoreItemResult itemResult = new RestoreItemResult
-                    {
-                        Entry = syncEntry
-                    };
+                RestoreItemResult itemResult = new RestoreItemResult(entryUpdateInfo);
+                string message = string.Empty;
 
-                    string message = string.Empty;
+                try
+                {
+                    AdapterBase sourceAdapter = this.Relationship.Adapters.FirstOrDefault(
+                        a => a.Configuration.Flags != AdapterFlags.Originator);
 
-                    try
-                    {
-                        AdapterBase sourceAdapter = this.Relationship.Adapters.FirstOrDefault(
-                            a => a.Configuration.Flags != AdapterFlags.Originator);
+                    await this.RestoreFileAsync(
+                            entryUpdateInfo,
+                            sourceAdapter,
+                            destAdapter)
+                        .ConfigureAwait(false);
 
-                        await this.RestoreFileAsync(
-                                syncEntry,
-                                sourceAdapter,
-                                destAdapter,
-                                db)
-                            .ConfigureAwait(false);
+                    message = "The change was successfully synchronized";
+                }
+                catch (TaskCanceledException)
+                {
+                    result.Cancelled = true;
+                    Logger.Warning("Processing was cancelled");
 
-                        message = "The change was successfully synchronized";
-                    }
-                    catch (TaskCanceledException)
-                    {
-                        result.Cancelled = true;
-                        Logger.Warning("Processing was cancelled");
+                    message = "The change was cancelled during processing";
+                    itemResult.ErrorMessage = "Processing was cancelled";
+                    itemResult.State = EntryUpdateState.Failed;
+                }
+                catch (Exception exception)
+                {
+                    Logger.Warning(
+                        "Processing failed with {0}: {1}",
+                        exception.GetType().FullName,
+                        exception.Message);
 
-                        message = "The change was cancelled during processing";
-                        itemResult.ErrorMessage = "Processing was cancelled";
-                        itemResult.State = EntryUpdateState.Failed;
-                    }
-                    catch (Exception exception)
-                    {
-                        Logger.Warning(
-                            "Processing failed with {0}: {1}",
-                            exception.GetType().FullName,
-                            exception.Message);
+                    message = "An error occurred while synchronzing the changed.";
+                    itemResult.ErrorMessage = exception.Message;
+                    itemResult.State = EntryUpdateState.Failed;
+                }
+                finally
+                {
+                    Interlocked.Increment(ref this.filesCompleted);
 
-                        message = "An error occurred while synchronzing the changed.";
-                        itemResult.ErrorMessage = exception.Message;
-                        itemResult.State = EntryUpdateState.Failed;
-                    }
-                    finally
-                    {
-                        Logger.ChangeSynchronzied(
-                            Logger.BuildEventMessageWithProperties(
-                                message,
-                                new Dictionary<string, object>()));
-                    }
+                    Logger.ChangeSynchronzied(
+                        Logger.BuildEventMessageWithProperties(
+                            message,
+                            new Dictionary<string, object>()));
+                }
+            }
+        }
+
+        private void AddSyncEntriesRecursive(
+            SyncDatabase db,
+            List<EntryUpdateInfo> updatesToRestore,
+            SyncEntry syncEntry,
+            RestoreOnlyWindowsFileSystemAdapter destAdapter)
+        {
+            EntryUpdateInfo updateInfo = new EntryUpdateInfo(
+                syncEntry,
+                destAdapter,
+                SyncEntryChangedFlags.Restored,
+                syncEntry.GetRelativePath(db, "/"));
+
+            updatesToRestore.Add(updateInfo);
+
+            if (syncEntry.Type == SyncEntryType.Directory)
+            {
+                List<SyncEntry> childEntries = db.Entries.Where(e => e.ParentId == syncEntry.Id).ToList();
+                foreach (SyncEntry childEntry in childEntries)
+                {
+                    this.AddSyncEntriesRecursive(db, updatesToRestore, childEntry, destAdapter);
                 }
             }
         }
 
         private async Task RestoreFileAsync(
-            SyncEntry syncEntry,
+            EntryUpdateInfo updateInfo,
             AdapterBase fromAdapter,
-            AdapterBase toAdapter,
-            SyncDatabase db)
+            AdapterBase toAdapter)
         {
-            EntryUpdateInfo updateInfo = new EntryUpdateInfo(
-                syncEntry,
-                fromAdapter, 
-                SyncEntryChangedFlags.Restored,
-                syncEntry.GetRelativePath(db, "/"));
+            if (updateInfo.Entry.Type == SyncEntryType.Directory)
+            {
+                await toAdapter.CreateItemAsync(updateInfo.Entry).ConfigureAwait(false);
+                return;
+            }
 
             FileCopyHelper fileCopyHelper = new FileCopyHelper(
                 this.Relationship,
@@ -142,14 +184,48 @@ namespace SyncPro.Runtime
                 this.CancellationToken,
                 this.CopyProgressChanged);
 
+            if (this.Relationship.EncryptionMode == EncryptionMode.Encrypt)
+            {
+                fileCopyHelper.EncryptionMode = EncryptionMode.Decrypt;
+            }
+
+            fileCopyHelper.UpdateSyncEntry = false;
+
             Logger.Debug("Creating item with content");
             await fileCopyHelper.CopyFileAsync().ConfigureAwait(false);
-
         }
 
         private void CopyProgressChanged(CopyProgressInfo obj)
         {
-            throw new NotImplementedException();
+            lock (this.progressLock)
+            {
+                this.bytesCompleted += obj.BytesCopied;
+
+                this.throughputCalculationCache.Enqueue(
+                    new Tuple<DateTime, long>(
+                        DateTime.Now,
+                        this.bytesCompleted));
+
+                int bytesPerSecond = 0;
+                if (this.throughputCalculationCache.Count() > 10)
+                {
+                    Tuple<DateTime, long> oldest = this.throughputCalculationCache.Dequeue();
+
+                    TimeSpan delay = DateTime.Now - oldest.Item1;
+                    long bytes = this.bytesCompleted - oldest.Item2;
+
+                    bytesPerSecond = Convert.ToInt32(Math.Floor(bytes / delay.TotalSeconds));
+                }
+
+                this.ProgressChanged?.Invoke(
+                    this,
+                    new RestoreJobProgressInfo(
+                        this.FilesTotal,
+                        Convert.ToInt32(Interlocked.Read(ref this.filesCompleted)),
+                        this.BytesTotal,
+                        this.bytesCompleted,
+                        bytesPerSecond));
+            }
         }
     }
 
@@ -167,11 +243,16 @@ namespace SyncPro.Runtime
 
     public class RestoreItemResult
     {
-        public SyncEntry Entry { get; set; }
+        public EntryUpdateInfo EntryUpdateInfo { get; }
 
         public EntryUpdateState State { get; set; }
 
         public string ErrorMessage { get; set; }
+
+        public RestoreItemResult(EntryUpdateInfo info)
+        {
+            this.EntryUpdateInfo = info;
+        }
     }
 
     internal class CopyProgressInfo

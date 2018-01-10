@@ -32,6 +32,10 @@ namespace SyncPro.Runtime
         /// </summary>
         private const int transferBufferSize = 0x10000;
 
+        public EncryptionMode EncryptionMode { get; set; }
+
+        public bool UpdateSyncEntry { get; set; }
+
         public FileCopyHelper(
             SyncRelationship relationship,
             AdapterBase fromAdapter,
@@ -51,6 +55,10 @@ namespace SyncPro.Runtime
             this.cancellationToken = cancellationToken;
             this.progressChanged = progressChanged;
 
+            this.EncryptionMode = this.relationship.EncryptionMode;
+
+            this.UpdateSyncEntry = true;
+
             this.syncProgressUpdateStopwatch = new Stopwatch();
         }
 
@@ -69,27 +77,26 @@ namespace SyncPro.Runtime
             {
                 // Assume the original size of the file will be the write size. If encryption is enabled, the value
                 // will be updated below.
+                long readStreamLength = this.updateInfo.Entry.OriginalSize;
                 long writeStreamLength = this.updateInfo.Entry.OriginalSize;
 
-                if (this.relationship.EncryptionMode == EncryptionMode.Encrypt)
+                if (this.EncryptionMode == EncryptionMode.Encrypt)
                 {
                     short padding;
-                    writeStreamLength = EncryptionManager.CalculateEncryptedFileSize(
-                        this.updateInfo.Entry.OriginalSize,
-                        out padding);
+                    readStreamLength = this.updateInfo.Entry.OriginalSize;
+                    writeStreamLength = EncryptionManager.CalculateEncryptedFileSize(readStreamLength, out padding);
                 }
-                else if (this.relationship.EncryptionMode == EncryptionMode.Decrypt)
+                else if (this.EncryptionMode == EncryptionMode.Decrypt)
                 {
                     short padding;
-                    writeStreamLength = EncryptionManager.CalculateDecryptedFileSize(
-                        this.updateInfo.Entry.EncryptedSize,
-                        out padding);
+                    readStreamLength = this.updateInfo.Entry.EncryptedSize;
+                    writeStreamLength = EncryptionManager.CalculateDecryptedFileSize(readStreamLength, out padding);
                 }
 
                 fromStream = this.fromAdapter.GetReadStreamForEntry(this.updateInfo.Entry);
                 toStream = this.toAdapter.GetWriteStreamForEntry(this.updateInfo.Entry, writeStreamLength);
 
-                if (this.relationship.EncryptionMode != EncryptionMode.None)
+                if (this.EncryptionMode != EncryptionMode.None)
                 {
                     // Create a copy of the certificate from the original cert's handle. A unique copy is required
                     // because the encryption manager will dispose of the RSA CSP derived from the cert, and will 
@@ -97,14 +104,16 @@ namespace SyncPro.Runtime
                     X509Certificate2 certificate = new X509Certificate2(this.encryptionCertificate.Handle);
 
                     this.encryptionManager = new EncryptionManager(
-                        certificate, this.relationship.EncryptionMode,
-                        toStream, this.updateInfo.Entry.GetSize(this.relationship, SyncEntryPropertyLocation.Source));
+                        certificate, 
+                        this.EncryptionMode,
+                        toStream,
+                        readStreamLength);
                 }
 
                 TransferResult result = await this.TransferDataWithTransformsAsync(fromStream, toStream)
                     .ConfigureAwait(false);
 
-                if (this.relationship.EncryptionMode == EncryptionMode.Encrypt)
+                if (this.EncryptionMode == EncryptionMode.Encrypt)
                 {
                     // The file was encrytped, so we read the original file and wrote the encrypted file.
                     this.updateInfo.OriginalSizeNew = result.BytesRead;
@@ -116,15 +125,21 @@ namespace SyncPro.Runtime
                     this.updateInfo.EncryptedSha1HashNew = result.TransformedSha1Hash;
                     this.updateInfo.EncryptedMd5HashNew = result.TransformedMd5Hash;
 
-                    // Add the hash information to the entry that was copied
-                    this.updateInfo.Entry.OriginalSha1Hash = result.Sha1Hash;
-                    this.updateInfo.Entry.EncryptedSha1Hash = result.TransformedSha1Hash;
-                    this.updateInfo.Entry.OriginalMd5Hash = result.Md5Hash;
-                    this.updateInfo.Entry.EncryptedMd5Hash = result.TransformedMd5Hash;
+                    if (this.UpdateSyncEntry)
+                    {
+                        // Add the hash information to the entry that was copied
+                        this.updateInfo.Entry.OriginalSha1Hash = result.Sha1Hash;
+                        this.updateInfo.Entry.EncryptedSha1Hash = result.TransformedSha1Hash;
+                        this.updateInfo.Entry.OriginalMd5Hash = result.Md5Hash;
+                        this.updateInfo.Entry.EncryptedMd5Hash = result.TransformedMd5Hash;
+
+                        // Add the encrypted file size to the entry
+                        this.updateInfo.Entry.EncryptedSize = result.BytesWritten;
+                    }
                 }
-                else if (this.relationship.EncryptionMode == EncryptionMode.Decrypt)
+                else if (this.EncryptionMode == EncryptionMode.Decrypt)
                 {
-                    // The file was descrypted, so we read the encrypted file and wrote the original (unencrypted) file.
+                    // The file was decrypted, so we read the encrypted file and wrote the original (unencrypted) file.
                     this.updateInfo.EncryptedSizeNew = result.BytesRead;
                     this.updateInfo.OriginalSizeNew = result.BytesWritten;
 
@@ -134,11 +149,17 @@ namespace SyncPro.Runtime
                     this.updateInfo.OriginalSha1HashNew = result.TransformedSha1Hash;
                     this.updateInfo.OriginalMd5HashNew = result.TransformedMd5Hash;
 
-                    // Add the hash information to the entry that was copied
-                    this.updateInfo.Entry.OriginalSha1Hash = result.TransformedSha1Hash;
-                    this.updateInfo.Entry.EncryptedSha1Hash = result.Sha1Hash;
-                    this.updateInfo.Entry.OriginalMd5Hash = result.TransformedMd5Hash;
-                    this.updateInfo.Entry.EncryptedMd5Hash = result.Md5Hash;
+                    if (this.UpdateSyncEntry)
+                    {
+                        // Add the hash information to the entry that was copied
+                        this.updateInfo.Entry.OriginalSha1Hash = result.TransformedSha1Hash;
+                        this.updateInfo.Entry.EncryptedSha1Hash = result.Sha1Hash;
+                        this.updateInfo.Entry.OriginalMd5Hash = result.TransformedMd5Hash;
+                        this.updateInfo.Entry.EncryptedMd5Hash = result.Md5Hash;
+
+                        // Add the original file size to the entry
+                        this.updateInfo.Entry.OriginalSize = result.BytesWritten;
+                    }
                 }
                 else
                 {
@@ -148,8 +169,11 @@ namespace SyncPro.Runtime
                     this.updateInfo.OriginalSha1HashNew = result.Sha1Hash;
                     this.updateInfo.OriginalMd5HashNew = result.Md5Hash;
 
-                    this.updateInfo.Entry.OriginalSha1Hash = result.Sha1Hash;
-                    this.updateInfo.Entry.OriginalMd5Hash = result.Md5Hash;
+                    if (this.UpdateSyncEntry)
+                    {
+                        this.updateInfo.Entry.OriginalSha1Hash = result.Sha1Hash;
+                        this.updateInfo.Entry.OriginalMd5Hash = result.Md5Hash;
+                    }
                 }
             }
             finally
@@ -318,8 +342,8 @@ namespace SyncPro.Runtime
             }
             finally
             {
-                sha1.Dispose();
-                md5.Dispose();
+                sha1?.Dispose();
+                md5?.Dispose();
             }
         }
         private class TransferResult

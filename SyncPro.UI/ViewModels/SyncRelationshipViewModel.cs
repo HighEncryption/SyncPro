@@ -249,39 +249,35 @@
 
         private void UpdateStatusDescription()
         {
-            if (this.ActiveJob != null)
+            JobViewModel lastSyncJob = this.SyncJobHistory.OrderBy(h => h.StartTime).LastOrDefault();
+
+            if (lastSyncJob == null)
             {
-                if (this.ActiveJob is AnalyzeJobViewModel)
+                this.SyncStatusDescription = "Never Synchronized";
+                this.IsNeverSynchronized = true;
+            }
+            else
+            {
+                this.IsNeverSynchronized = false;
+                this.LastSyncDisplayString = lastSyncJob.StartTime.ToString("g");
+
+                if (lastSyncJob.Job.JobResult == JobResult.Warning)
                 {
-                    this.SyncStatusDescription = "Analyze is running";
+                    this.SyncStatusDescription = string.Format(
+                        "Last synchronized on {0} with warnings",
+                        lastSyncJob.StartTime);
+                }
+                else if (lastSyncJob.Job.JobResult == JobResult.Error)
+                {
+                    this.SyncStatusDescription = string.Format(
+                        "Last synchronized on {0} with errors",
+                        lastSyncJob.StartTime);
                 }
                 else
                 {
-                    this.SyncStatusDescription = "Sync Is Running";
+                    this.SyncStatusDescription = "Idle";
                 }
-
-                this.IsNeverSynchronized = false;
-                return;
             }
-
-            if (!this.SyncJobHistory.Any())
-            {
-                this.SyncStatusDescription = "Never Synchronized";
-                this.LastSyncDisplayString = "Never Synchronized";
-                this.IsNeverSynchronized = true;
-                return;
-            }
-
-            var history = this.SyncJobHistory
-                .Where(h => h.Job.JobResult == JobResult.Success || h.Job.JobResult == JobResult.Warning)
-                .OrderBy(h => h.StartTime);
-
-            this.LastSyncDisplayString = history.Last().EndTime.ToString("g");
-            this.SyncStatusDescription = "Idle";
-            this.IsNeverSynchronized = false;
-            this.NextSyncDisplayString = "Calculating...";
-            this.RelationshipSizeDisplayString= "Calculating...";
-            this.DatabaseSizeDisplayString = "Calculating...";
         }
 
         public SyncRelationshipViewModel(SyncRelationship relationship, bool loadContext) 
@@ -301,53 +297,8 @@
 
             this.UpdateStatusDescription();
 
-            this.BaseModel.JobStarted += (sender, args) =>
-            {
-                if (this.ActiveJob != null && this.ActiveJob.Job == args.Job)
-                {
-                    return;
-                }
-
-                SyncJob syncJob = args.Job as SyncJob;
-                if (syncJob != null)
-                {
-                    this.ActiveJob = new SyncJobViewModel(syncJob, this, false);
-                }
-
-                AnalyzeJob analyzeJob = args.Job as AnalyzeJob;
-                if (analyzeJob != null)
-                {
-                    this.ActiveJob = new AnalyzeJobViewModel(analyzeJob, this);
-                }
-
-                RestoreJob restoreJob = args.Job as RestoreJob;
-                if (restoreJob != null)
-                {
-                    this.ActiveJob = new RestoreJobViewModel(restoreJob, this, false);
-                }
-
-                this.UpdateStatusDescription();
-            };
-
-            this.BaseModel.JobFinished += (sender, args) =>
-            {
-                // If a sync job finished, it should match the current sync job view model
-                Debug.Assert(this.ActiveJob.Job == args.Job, "this.ActiveJob.Job == args.Job");
-
-                if (this.ActiveJob.Job is SyncJob || this.ActiveJob.Job is RestoreJob)
-                {
-                    App.DispatcherInvoke(() => { this.SyncJobHistory.Insert(0, this.ActiveJob); });
-                }
-
-                if (this.ActiveJob.Job is SyncJob)
-                {
-                    this.UpdateStatusDescription();
-                }
-
-                this.JobFinished?.Invoke(sender, args);
-
-                this.ActiveJob = null;
-            };
+            this.BaseModel.JobStarted += this.HandleJobStarted;
+            this.BaseModel.JobFinished += this.HandleJobFinished;
 
             this.BaseModel.PropertyChanged += (sender, args) =>
             {
@@ -357,6 +308,51 @@
                     this.RaisePropertyChanged(localPropertyName);
                 }
             };
+        }
+
+        private void HandleJobStarted(object sender, JobStartedEventArgs args)
+        {
+            if (this.ActiveJob != null && this.ActiveJob.Job == args.Job)
+            {
+                return;
+            }
+
+            SyncJob syncJob = args.Job as SyncJob;
+            if (syncJob != null)
+            {
+                this.ActiveJob = new SyncJobViewModel(syncJob, this, false);
+            }
+
+            AnalyzeJob analyzeJob = args.Job as AnalyzeJob;
+            if (analyzeJob != null)
+            {
+                this.ActiveJob = new AnalyzeJobViewModel(analyzeJob, this);
+            }
+
+            RestoreJob restoreJob = args.Job as RestoreJob;
+            if (restoreJob != null)
+            {
+                this.ActiveJob = new RestoreJobViewModel(restoreJob, this, false);
+            }
+
+            this.UpdateStatusDescription();
+        }
+
+        private void HandleJobFinished(object sender, JobFinishedEventArgs args)
+        {
+            // If a sync job finished, it should match the current sync job view model
+            Debug.Assert(this.ActiveJob.Job == args.Job, "this.ActiveJob.Job == args.Job");
+
+            if (this.ActiveJob.Job is SyncJob || this.ActiveJob.Job is RestoreJob)
+            {
+                App.DispatcherInvoke(() => { this.SyncJobHistory.Insert(0, this.ActiveJob); });
+            }
+
+            this.UpdateStatusDescription();
+
+            this.JobFinished?.Invoke(sender, args);
+
+            this.ActiveJob = null;
         }
 
         private void InitializeBaseModelProperties()
@@ -561,6 +557,10 @@
 
         public async Task CalculateRelationshipMetadataAsync()
         {
+            this.NextSyncDisplayString = "Calculating...";
+            this.RelationshipSizeDisplayString = "Calculating...";
+            this.DatabaseSizeDisplayString = "Calculating...";
+
             Stopwatch stopwatch = Stopwatch.StartNew();
 
             if (this.TriggerType == SyncTriggerType.Manual)
