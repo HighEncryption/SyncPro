@@ -557,7 +557,7 @@
 
         #region IChangeNotification Implementation
 
-        public event EventHandler<ItemChangedEventArgs> ItemChanged;
+        public event EventHandler<ItemsChangedEventArgs> ItemChanged;
 
         public bool IsChangeNotificationEnabled { get; private set; }
 
@@ -623,7 +623,7 @@
                 if (changes != null &&
                     !string.Equals(changes.State, this.Config.LatestDeltaToken, StringComparison.Ordinal))
                 {
-                    this.ItemChanged?.Invoke(this, new ItemChangedEventArgs());
+                    this.ItemChanged?.Invoke(this, new ItemsChangedEventArgs());
                 }
 
                 Logger.Debug("OneDriveAdapter.ChangeNotificationThreadMain delay for " + OneDriveChangeNotificationPollingInterval);

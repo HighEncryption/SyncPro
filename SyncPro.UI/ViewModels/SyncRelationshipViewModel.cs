@@ -573,8 +573,12 @@
                 IChangeNotification changeNotification =
                     (IChangeNotification) this.SyncSourceAdapter.AdapterBase;
 
-                this.NextSyncDisplayString =
-                    changeNotification.GetNextNotificationTime().ToString("dddd, MMMM dd, HH:mm:ss");
+                DateTime nextNotify = changeNotification.GetNextNotificationTime();
+
+                if (nextNotify != DateTime.MinValue)
+                {
+                    this.NextSyncDisplayString = nextNotify.ToString("dddd, MMMM dd, HH:mm:ss");
+                }
             }
             else
             {
