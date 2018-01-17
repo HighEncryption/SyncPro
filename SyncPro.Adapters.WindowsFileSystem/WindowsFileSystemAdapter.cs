@@ -4,14 +4,14 @@
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Threading;
     using System.Threading.Tasks;
 
-    using SyncPro.Configuration;
     using SyncPro.Data;
     using SyncPro.Runtime;
     using SyncPro.Tracing;
 
-    public class WindowsFileSystemAdapter : AdapterBase
+    public class WindowsFileSystemAdapter : AdapterBase, IChangeNotification, IDisposable
     {
         public static readonly Guid TargetTypeId = new Guid("b1755e86-381e-4e78-b47d-dbbfeee34585");
 
@@ -410,12 +410,140 @@
             : base(relationship, configuration)
         {
         }
-    }
 
-    public class WindowsFileSystemAdapterConfiguration : AdapterConfiguration
-    {
-        public override Guid AdapterTypeId => WindowsFileSystemAdapter.TargetTypeId;
+        #region IChangeNotification
 
-        public string RootDirectory { get; set; }
+        private bool isChangeNotificationEnabled;
+
+        private FileSystemWatcher fileSystemWatcher;
+
+        private List<ItemChange> pendingChanges = new List<ItemChange>();
+        private volatile object pendingChangeLock = new object();
+
+        public event EventHandler<ItemsChangedEventArgs> ItemChanged;
+        public bool IsChangeNotificationEnabled => this.isChangeNotificationEnabled;
+
+        private bool isDelayedNotificationActive;
+
+        private volatile object notificationDelayLock = new object();
+
+        private CancellationTokenSource delayedNotificationCancellation;
+        private void StartDelayedNotifiation()
+        {
+            // Check/lock/check before starting a new task
+            if (!this.isDelayedNotificationActive)
+            {
+                lock (this.notificationDelayLock)
+                {
+                    if (!this.isDelayedNotificationActive)
+                    {
+                        this.isDelayedNotificationActive = true;
+
+                        Task.Factory.StartNew(async () =>
+                        {
+                            try
+                            {
+                                await Task.Delay(TimeSpan.FromSeconds(5)).ConfigureAwait(false);
+                                this.NotifyOfPendingChanges();
+                            }
+                            finally
+                            {
+                                this.isDelayedNotificationActive = false;
+                            }
+                        }).ConfigureAwait(false);
+                    }
+                }
+            }
+        }
+
+        public void EnableChangeNotification(bool enabled)
+        {
+            if (!enabled)
+            {
+                if (!this.isChangeNotificationEnabled)
+                {
+                    return;
+                }
+
+                this.fileSystemWatcher?.Dispose();
+                this.fileSystemWatcher = null;
+
+                this.delayedNotificationCancellation?.Cancel();
+
+                // Flush out any pending changes that may have not processed yet
+                this.NotifyOfPendingChanges();
+
+                return;
+            }
+
+            if (this.isChangeNotificationEnabled)
+            {
+                throw new InvalidOperationException("Change notification is already enabled.");
+            }
+
+            this.isChangeNotificationEnabled = true;
+
+            this.delayedNotificationCancellation = new CancellationTokenSource();
+
+            this.fileSystemWatcher = new FileSystemWatcher(this.Config.RootDirectory);
+
+            this.fileSystemWatcher.Changed += this.FileSystemWatcherChangeHandler;
+            this.fileSystemWatcher.Created += this.FileSystemWatcherChangeHandler;
+            this.fileSystemWatcher.Deleted += this.FileSystemWatcherChangeHandler;
+            this.fileSystemWatcher.Renamed += this.FileSystemWatcherChangeHandler;
+            this.fileSystemWatcher.Error += this.FileSystemWatcherError;
+
+            this.fileSystemWatcher.IncludeSubdirectories = true;
+            this.fileSystemWatcher.EnableRaisingEvents = true;
+        }
+
+        private void FileSystemWatcherChangeHandler(object sender, FileSystemEventArgs e)
+        {
+            ItemChange itemChange = new ItemChange(e.FullPath, (ItemChangeType)e.ChangeType);
+
+            lock (this.pendingChangeLock)
+            {
+                this.pendingChanges.Add(itemChange);
+            }
+
+            this.StartDelayedNotifiation();
+        }
+
+        private void NotifyOfPendingChanges()
+        {
+            List<ItemChange> pendingChangesToProcess;
+
+            lock (this.pendingChangeLock)
+            {
+                pendingChangesToProcess = this.pendingChanges;
+                this.pendingChanges = new List<ItemChange>();
+            }
+
+            if (!pendingChangesToProcess.Any())
+            {
+                return;
+            }
+
+            this.ItemChanged?.Invoke(
+                this, 
+                new ItemsChangedEventArgs { Changes = pendingChangesToProcess });
+        }
+
+        private void FileSystemWatcherError(object sender, ErrorEventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
+        public DateTime GetNextNotificationTime()
+        {
+            return DateTime.MinValue;
+        }
+
+        #endregion
+
+        public void Dispose()
+        {
+            this.fileSystemWatcher?.Dispose();
+        }
     }
 }

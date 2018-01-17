@@ -1,7 +1,6 @@
 ﻿namespace SyncProLogViewer.ViewModels
 {
     using System;
-    using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Threading.Tasks;
     using System.Windows.Data;
@@ -28,7 +27,7 @@
                 {
                     Message = traceEvent.FormattedMessage,
                     Timestamp = traceEvent.TimeStamp,
-                    Level = TraceEventLevelConverter(traceEvent.Level),
+                    Level = TraceEventLevelConverter(traceEvent.Level, traceEvent.Channel),
                     ThreadId = traceEvent.ThreadID
                 });
 
@@ -36,8 +35,15 @@
             });
         }
 
-        private static string TraceEventLevelConverter(TraceEventLevel level)
+        private static string TraceEventLevelConverter(TraceEventLevel level, TraceEventChannel traceEventChannel)
         {
+
+            if (traceEventChannel == (TraceEventChannel) EventChannel.Debug
+                && level == TraceEventLevel.Verbose)
+            {
+                return "DEBUG";
+            }
+
             switch (level)
             {
                 case TraceEventLevel.Always:
@@ -62,13 +68,10 @@
         {
             this.Entries = new ObservableCollection<LogEntry>();
 
-            string[] cmdArgs = Environment.GetCommandLineArgs();
-            Dictionary<string, string> commandLineArgs = new Dictionary<string, string>();
-
             this.listener = new TraceEventSession("MyViewerSession");
-            this.listener.Source.Dynamic.All += DynamicOnAll;
+            this.listener.Source.Dynamic.All += this.DynamicOnAll;
 
-            var eventSourceGuid = TraceEventProviders.GetEventSourceGuidFromName(
+            Guid eventSourceGuid = TraceEventProviders.GetEventSourceGuidFromName(
                 "SyncPro-Tracing"); // Get the unique ID for the eventSouce. 
             this.listener.EnableProvider(eventSourceGuid);
 

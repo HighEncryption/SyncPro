@@ -30,11 +30,6 @@
                 Directory.CreateDirectory(Global.AppDataRoot);
             }
 
-            if (isTestMode)
-            {
-                LogViewerHelper.LaunchLogViewer(null, true);
-            }
-
             Logger.GlobalInitComplete(
                 Assembly.GetExecutingAssembly().Location,
                 Global.AppDataRoot);

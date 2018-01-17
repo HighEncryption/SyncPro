@@ -11,7 +11,7 @@ namespace SyncPro.Tracing
 
         [Event(
             EventIDs.LogCritical,
-            Channel = EventChannel.Operational,
+            Channel = EventChannel.Debug,
             Level = EventLevel.Critical, 
             Task = Tasks.General,
             Opcode = Opcodes.Critical,
@@ -24,7 +24,7 @@ namespace SyncPro.Tracing
 
         [Event(
             EventIDs.LogError,
-            Channel = EventChannel.Operational,
+            Channel = EventChannel.Debug,
             Level = EventLevel.Error, 
             Task = Tasks.General,
             Opcode = Opcodes.Error,
@@ -37,7 +37,7 @@ namespace SyncPro.Tracing
 
         [Event(
             EventIDs.LogWarning,
-            Channel = EventChannel.Operational,
+            Channel = EventChannel.Debug,
             Task = Tasks.General,
             Opcode = Opcodes.Warning,
             Level = EventLevel.Warning,
@@ -50,7 +50,7 @@ namespace SyncPro.Tracing
 
         [Event(
             EventIDs.LogInformational,
-            Channel = EventChannel.Operational,
+            Channel = EventChannel.Debug,
             Level = EventLevel.Informational,
             Opcode = Opcodes.Informational,
             Task = Tasks.General,
@@ -63,7 +63,7 @@ namespace SyncPro.Tracing
 
         [Event(
             EventIDs.LogVerbose,
-            Channel = EventChannel.Operational,
+            Channel = EventChannel.Debug,
             Level = EventLevel.Verbose,
             Opcode = Opcodes.Verbose,
             Task = Tasks.General,
@@ -76,7 +76,7 @@ namespace SyncPro.Tracing
 
         [Event(
             EventIDs.LogDebug,
-            Channel = EventChannel.Analytic,
+            Channel = EventChannel.Debug,
             Level = EventLevel.Verbose,
             Opcode = Opcodes.Debug,
             Task = Tasks.General,

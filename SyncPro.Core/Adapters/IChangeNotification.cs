@@ -14,21 +14,38 @@
         All = Renamed | Changed | Deleted | Created,
     }
 
-    public class SyncEntryChange
+    /// <summary>
+    /// Represents a change that has occurred to an item
+    /// </summary>
+    public class ItemChange
     {
+        /// <summary>
+        /// The full name (fully qualified name) of the item.
+        /// </summary>
         public string FullName { get; set; }
 
+        /// <summary>
+        /// The type of changes that occurred.
+        /// </summary>
         public ItemChangeType ChangeType { get; set; }
+
+        public ItemChange()
+        {
+        }
+
+        public ItemChange(string fullName, ItemChangeType changeType)
+        {
+            this.FullName = fullName;
+            this.ChangeType = changeType;
+        }
     }
 
-    public class ItemChangedEventArgs : EventArgs
+    /// <summary>
+    /// EventArgs for the ItemsChangedEventArgs event.
+    /// </summary>
+    public class ItemsChangedEventArgs : EventArgs
     {
-        public List<SyncEntryChange> Changes { get; }
-
-        public ItemChangedEventArgs()
-        {
-            this.Changes = new List<SyncEntryChange>();
-        }
+        public List<ItemChange> Changes { get; set; }
     }
 
     /// <summary>
@@ -37,12 +54,27 @@
     /// </summary>
     public interface IChangeNotification
     {
-        event EventHandler<ItemChangedEventArgs> ItemChanged;
+        /// <summary>
+        /// This event is raised when an adapter detects that items have changed, typically via an asynchronous 
+        /// notification from the underlying service.
+        /// </summary>
+        event EventHandler<ItemsChangedEventArgs> ItemChanged;
 
+        /// <summary>
+        /// Gets a value indicating whether change notification is currently enabled.
+        /// </summary>
         bool IsChangeNotificationEnabled { get; }
 
+        /// <summary>
+        /// Enabled or disables change notification
+        /// </summary>
+        /// <param name="enabled">Whether change notification is enabled.</param>
         void EnableChangeNotification(bool enabled);
 
+        /// <summary>
+        /// Gets the datetime of the next time when the adapter will be checked for changes.
+        /// </summary>
+        /// <returns>The next notification time</returns>
         DateTime GetNextNotificationTime();
     }
 }

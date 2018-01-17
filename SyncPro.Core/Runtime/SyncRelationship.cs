@@ -591,15 +591,15 @@
             }
         }
 
-        private void SyncSchedulerHandleAdapterItemChangeNotification(object sender, ItemChangedEventArgs e)
+        private void SyncSchedulerHandleAdapterItemChangeNotification(object sender, ItemsChangedEventArgs e)
         {
             if (this.ActiveJob != null)
             {
                 return;
             }
 
-            //this.BeginSyncJob(SyncTriggerType.Continuous, null);
-            //this.BeginAnalyzeJob()
+            // TODO: Use only the files listed from the event args
+            this.BeginSyncJob(SyncTriggerType.Continuous, null);
         }
 
         private static readonly TimeSpan SyncSchedulerDelay = TimeSpan.FromMinutes(1);
