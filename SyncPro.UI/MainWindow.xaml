@@ -16,6 +16,7 @@
                          MinHeight="500" Height="600"
                          MinWidth="800" Width="1070"
                          Title="{Binding Path=WindowTitle}"
+                         KeyDown="HandleKeyDown"
                          Icon="/Resources/Graphics/SyncProIcon.ico" 
                          Style="{DynamicResource ChromelessWindowStyle}"
                          d:DataContext="{d:DesignInstance viewModels:MainWindowViewModel}">

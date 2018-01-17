@@ -25,7 +25,14 @@
 
         public ICommand CloseWindowCommand { get; }
 
-        public string WindowTitle { get; set; }
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private string windowTitle;
+
+        public string WindowTitle
+        {
+            get { return this.windowTitle; }
+            set { this.SetProperty(ref this.windowTitle, value); }
+        }
 
         private ObservableCollection<ViewModelBase> syncRelationships;
 
@@ -129,7 +136,12 @@
             this.CloseWindowCommand = new DelegatedCommand(this.CloseWindow);
             this.BeginSearchCommand = new DelegatedCommand(this.BeginSearch);
 
-            this.WindowTitle = GetAssemblyVersionString();
+            this.UpdateWindowTitle();
+        }
+
+        public void UpdateWindowTitle()
+        {
+            this.WindowTitle = GetAssemblyVersionString() + (App.Current.TestMode ? " (Debug)" : null);
         }
 
         private static string GetAssemblyVersionString()

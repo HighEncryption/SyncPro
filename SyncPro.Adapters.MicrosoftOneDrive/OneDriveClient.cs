@@ -686,9 +686,11 @@
                 responseObject["expirationDateTime"].Value<DateTime>(),
                 length);
 
-            Logger.Verbose("Created OneDrive upload session for {0}/{1}", parentItemId, name);
-            Logger.Verbose("   expirationDateTime {0}", newSession.ExpirationDateTime);
-            Logger.Verbose("   uploadUrl {0}", newSession.UploadUrl);
+            Logger.Info(
+                "Created OneDrive upload session with parentItemId={0}, name={1}, expirationDateTime={2}",
+                parentItemId,
+                name,
+                newSession.ExpirationDateTime);
 
             this.uploadSessions.Add(newSession);
 

@@ -12,15 +12,16 @@
         <Grid.Resources>
             <ResourceDictionary>
                 <local:DateTimeFormatter x:Key="DateTimeFormatter" />
+                <local:LevelToColorConverter x:Key="LevelToColor" />
 
                 <Style TargetType="{x:Type ListViewItem}">
                     <Style.Triggers>
-                        <Trigger Property="ItemsControl.AlternationIndex"  Value="0">
+                        <!--<Trigger Property="ItemsControl.AlternationIndex"  Value="0">
                             <Setter Property="Background" Value="White" />
                         </Trigger>
                         <Trigger Property="ItemsControl.AlternationIndex"  Value="1">
                             <Setter Property="Background" Value="#dddddd" />
-                        </Trigger>
+                        </Trigger>-->
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter Property="Background" Value="#bbbbbb" />
                         </Trigger>
@@ -30,9 +31,10 @@
                         <Setter.Value>
                             <ControlTemplate TargetType="{x:Type ListViewItem}">
                                 <Border SnapsToDevicePixels="True"
+                                        TextElement.Foreground="{Binding Path=Level, Converter={StaticResource LevelToColor}, Mode=OneTime}"
                                         Background="{TemplateBinding Background}"
-                                        BorderThickness="0" 
-                                        BorderBrush="{TemplateBinding BorderBrush}" >
+                                        BorderThickness="0,0,0,1" 
+                                        BorderBrush="#bbbbbb" >
                                     <GridViewRowPresenter VerticalAlignment="{TemplateBinding VerticalContentAlignment}" 
                                                           SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
                                 </Border>
@@ -72,7 +74,7 @@
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
-                    <GridViewColumn Header="TID" Width="30" x:Name="col3">
+                    <GridViewColumn Header="TID" Width="50" x:Name="col3">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
                                 <TextBlock FontFamily="Consolas" FontStretch="Condensed" Text="{Binding ThreadId, Mode=OneTime}" />

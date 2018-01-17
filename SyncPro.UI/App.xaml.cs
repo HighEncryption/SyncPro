@@ -20,6 +20,7 @@
     using SyncPro.Adapters.WindowsFileSystem;
     using SyncPro.Runtime;
     using SyncPro.Tracing;
+    using SyncPro.UI.Framework;
     using SyncPro.UI.Framework.MVVM;
     using SyncPro.UI.Navigation;
     using SyncPro.UI.Navigation.ViewModels;
@@ -49,6 +50,22 @@
 
         public ICommand ShutdownApplicationCommand { get; }
 
+        private bool testMode;
+
+        public bool TestMode
+        {
+            get { return this.testMode; }
+            set
+            {
+                this.testMode = value;
+                this.MainWindowsViewModel.UpdateWindowTitle();
+                if (value)
+                {
+                    LogViewerHelper.LaunchLogViewer(null, false);
+                }
+            }
+        }
+
         public App()
         {
             this.InitializeComponent();
@@ -62,6 +79,10 @@
         {
             bool testMode = Keyboard.IsKeyDown(Key.LeftShift);
             Global.Initialize(testMode);
+            if (testMode)
+            {
+                LogViewerHelper.LaunchLogViewer(null, false);
+            }
 
             AdapterRegistry.RegisterAdapter(
                 BackblazeB2Adapter.TargetTypeId,
@@ -88,6 +109,7 @@
 
             App app = new App();
             Current = app;
+            Current.testMode = testMode;
 
             bool runInBackground = args.ContainsKey("runInBackground");
 

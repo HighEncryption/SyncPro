@@ -279,7 +279,7 @@
                 syncTimeStopwatch.Stop();
             }
 
-            Logger.Verbose("Total sync time: " + syncTimeStopwatch.Elapsed);
+            Logger.Info("Total sync time: " + syncTimeStopwatch.Elapsed);
 
             // Invoke the ProgressChanged event one final time with a null EntryUpdateInfo object to flush
             // out the final values for files and bytes.
@@ -614,7 +614,7 @@
             }
             catch (Exception e)
             {
-                Logger.Critical(
+                Logger.Info(
                     "Caught an exception while completing entry processing. " + e);
             }
             finally

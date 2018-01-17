@@ -9,21 +9,9 @@
     public static class Logger
     {
         [StringFormatMethod("message")]
-        public static void Critical(string message, params object[] args)
-        {
-            SyncProEventSource.Log.LogCritical(string.Format(message, args));
-        }
-
-        [StringFormatMethod("message")]
         public static void Error(string message, params object[] args)
         {
             SyncProEventSource.Log.LogError(string.Format(message, args));
-        }
-
-        [StringFormatMethod("message")]
-        public static void Info(string message, params object[] args)
-        {
-            SyncProEventSource.Log.LogInformational(string.Format(message, args));
         }
 
         [StringFormatMethod("message")]
@@ -33,9 +21,9 @@
         }
 
         [StringFormatMethod("message")]
-        public static void Verbose(string message, params object[] args)
+        public static void Info(string message, params object[] args)
         {
-            SyncProEventSource.Log.LogVerbose(string.Format(message, args));
+            SyncProEventSource.Log.LogInformational(string.Format(message, args));
         }
 
         [StringFormatMethod("message")]
