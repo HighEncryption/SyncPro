@@ -20,7 +20,6 @@
     using SyncPro.Adapters.WindowsFileSystem;
     using SyncPro.Runtime;
     using SyncPro.Tracing;
-    using SyncPro.UI.Framework;
     using SyncPro.UI.Framework.MVVM;
     using SyncPro.UI.Navigation;
     using SyncPro.UI.Navigation.ViewModels;

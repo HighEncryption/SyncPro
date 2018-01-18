@@ -158,9 +158,6 @@ namespace SyncPro.UnitTests
 
             using (BackblazeB2Client client = CreateClient())
             {
-                ListLargeUnfinishedFilesResponse unfinishedFiles = 
-                    client.GetUnfinishedLargeFiles(accountInfo.BucketId).Result;
-
                 StartLargeFileResponse startLargeFileResponse = 
                     client.StartLargeUpload(accountInfo.BucketId, filename).Result;
 

@@ -62,7 +62,10 @@ namespace SyncPro.Runtime
             this.sha1 = new SHA1Cng();
             this.md5 = new MD5Cng();
 
-            Pre.Assert(sourceFileSize >= minimumEncryptedFileSize, "sourceFileSize >= minimumEncryptedFileSize");
+            if (mode == EncryptionMode.Decrypt)
+            {
+                Pre.Assert(sourceFileSize >= minimumEncryptedFileSize, "sourceFileSize >= minimumEncryptedFileSize");
+            }
 
             this.Initialize();
         }
