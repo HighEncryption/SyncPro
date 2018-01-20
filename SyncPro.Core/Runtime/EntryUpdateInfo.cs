@@ -153,6 +153,8 @@
         /// </summary>
         public string PathNew { get; set; }
 
+        public string ExistingItemId { get; set; }
+
         #endregion
 
         public bool HasSyncEntryFlag(SyncEntryChangedFlags flag)
@@ -336,14 +338,9 @@
                 sb.Append("Restored,");
             }
 
-            if ((flags & SyncEntryChangedFlags.FileExists) != 0)
+            if ((flags & SyncEntryChangedFlags.DestinationExists) != 0)
             {
-                sb.Append("FileExists,");
-            }
-
-            if ((flags & SyncEntryChangedFlags.DirectoryExists) != 0)
-            {
-                sb.Append("DirectoryExists,");
+                sb.Append("DestinationExists,");
             }
 
             return sb.ToString(0, sb.Length - 1);

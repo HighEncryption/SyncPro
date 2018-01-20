@@ -639,10 +639,10 @@
                 // will create the item when setting the content.
                 if (entryUpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.NewDirectory))
                 {
-                    if (entryUpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.DirectoryExists))
+                    if (entryUpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.DestinationExists))
                     {
                         Logger.Debug("Directory already exists at destination.");
-                        //destinationAdapter.AddAdapterEntry(entryUpdateInfo.Entry, )
+                        destinationAdapter.AddAdapterEntry(entryUpdateInfo);
 
                         if (entryUpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.IsUpdated))
                         {
@@ -659,9 +659,10 @@
                 }
                 else
                 {
-                    if (entryUpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.FileExists))
+                    if (entryUpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.DestinationExists))
                     {
                         Logger.Debug("File already exists at destination.");
+                        destinationAdapter.AddAdapterEntry(entryUpdateInfo);
 
                         if (entryUpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.IsUpdated))
                         {

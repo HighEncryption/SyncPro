@@ -450,26 +450,14 @@ namespace SyncPro.Runtime
             {
                 message = "A new item was found";
 
-                if (logicalChild.UpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.FileExists))
+                if (logicalChild.UpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.DestinationExists))
                 {
-                    message += " An existing file was found in the destination that matched the source.";
-                }
-                else if (logicalChild.UpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.DirectoryExists))
-                {
-                    message += " An existing directory was found in the destination that matched the source.";
+                    message += " and the item was also found at the destination";
                 }
             }
             else if (logicalChild.UpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.IsUpdated))
             {
                 message = "The item was updated";
-            }
-            else if (logicalChild.UpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.FileExists))
-            {
-                message = "An existing file was found in the destination that matched the source.";
-            }
-            else if (logicalChild.UpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.DirectoryExists))
-            {
-                message = "An existing directory was found in the destination that matched the source.";
             }
             else
             {
@@ -820,10 +808,11 @@ namespace SyncPro.Runtime
             }
 
             SyncEntryChangedFlags newChangeFlags = sourceLogicalChild.UpdateInfo.Flags;
+            sourceLogicalChild.UpdateInfo.ExistingItemId = destAdapterChild.UniqueId;
 
             if (sourceLogicalChild.UpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.NewDirectory))
             {
-                newChangeFlags |= SyncEntryChangedFlags.DirectoryExists;
+                newChangeFlags |= SyncEntryChangedFlags.DestinationExists;
 
                 // The directory exists on the destination. Check if the metadata is incorrect.
                 if (!DateTimeEqual(sourceAdapterChild.CreationTimeUtc, destAdapterChild.CreationTimeUtc))
@@ -891,7 +880,7 @@ namespace SyncPro.Runtime
                 sourceLogicalChild.SetSha1Hash(this.Relationship, SyncEntryPropertyLocation.Destination, sourceSha1);
                 sourceLogicalChild.UpdateInfo.OriginalSha1HashNew = sourceSha1;
 
-                newChangeFlags |= SyncEntryChangedFlags.FileExists;
+                newChangeFlags |= SyncEntryChangedFlags.DestinationExists;
 
                 Logger.Debug(
                     "The SHA1 hash ({0}) matches source and destination copies of {1}. File copy will be skipped.",
@@ -914,7 +903,7 @@ namespace SyncPro.Runtime
                 sourceLogicalChild.SetMd5Hash(this.Relationship, SyncEntryPropertyLocation.Destination, sourceMd5);
                 sourceLogicalChild.UpdateInfo.OriginalMd5HashNew = sourceMd5;
 
-                newChangeFlags |= SyncEntryChangedFlags.FileExists;
+                newChangeFlags |= SyncEntryChangedFlags.DestinationExists;
 
                 Logger.Debug(
                     "The MD5 hash ({0}) matches source and destination copies of {1}. File copy will be skipped.",

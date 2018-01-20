@@ -131,8 +131,7 @@ namespace SyncPro.UI.ViewModels
         {
             if (info.Entry.Type == SyncEntryType.Directory)
             {
-                if (info.HasSyncEntryFlag(SyncEntryChangedFlags.NewDirectory) ||
-                    info.HasSyncEntryFlag(SyncEntryChangedFlags.DirectoryExists))
+                if (info.HasSyncEntryFlag(SyncEntryChangedFlags.NewDirectory))
                 {
                     this.ChangeMetricsList[1].Added++;
                 }
@@ -148,8 +147,7 @@ namespace SyncPro.UI.ViewModels
             }
             else
             {
-                if (info.HasSyncEntryFlag(SyncEntryChangedFlags.NewFile) ||
-                    info.HasSyncEntryFlag(SyncEntryChangedFlags.FileExists))
+                if (info.HasSyncEntryFlag(SyncEntryChangedFlags.NewFile))
                 {
                     this.ChangeMetricsList[0].Added++;
                     this.ChangeMetricsList[2].Added += info.Entry.GetSize(this.SyncRelationship.GetSyncRelationship(), SyncEntryPropertyLocation.Source);
@@ -175,6 +173,7 @@ namespace SyncPro.UI.ViewModels
                 }
             }
         }
+
         public long BytesToCopy { get; set; }
 
         private ObservableCollection<EntryUpdateInfoViewModel> entryUpdatesTreeList;

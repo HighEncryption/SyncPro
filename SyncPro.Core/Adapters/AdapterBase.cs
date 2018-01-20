@@ -196,6 +196,16 @@
             return bytes;
         }
 
+        public void AddAdapterEntry(EntryUpdateInfo updateInfo)
+        {
+            updateInfo.Entry.AdapterEntries.Add(new SyncEntryAdapterData()
+            {
+                SyncEntryId = updateInfo.Entry.Id,
+                AdapterId = this.Configuration.Id,
+                AdapterEntryId = updateInfo.ExistingItemId
+            });
+        }
+
         /// <summary>
         /// Indicates whether the <see cref="AdapterBase"/> supports change notification. See 
         /// <see cref="IChangeNotification"/> for more information on change notifiation.
