@@ -35,6 +35,8 @@
 
         public byte[] Sha1Hash { get; set; }
 
+        public byte[] Md5Hash { get; set; }
+
         /// <summary>
         /// The adapter item that is the parent of this item.
         /// </summary>

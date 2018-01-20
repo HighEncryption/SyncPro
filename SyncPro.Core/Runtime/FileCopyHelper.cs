@@ -191,11 +191,6 @@ namespace SyncPro.Runtime
             }
         }
 
-        public class MyClass
-        {
-            public int MyVar;
-        }
-
         /// <summary>
         /// Transfer data from the source stream to the destination stream. This method also performs the necessary
         /// data transforms (throttling, hashing, encrypting, etc) as the data is streamed. This allows a the 

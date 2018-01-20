@@ -456,6 +456,16 @@
                 properties);
         }
 
+        public override byte[] GetItemHash(HashType hashType, IAdapterItem adapterItem)
+        {
+            if (hashType == HashType.SHA1)
+            {
+                return adapterItem.Sha1Hash;
+            }
+
+            return null;
+        }
+
         /// <inheritdoc />
         public override void SaveConfiguration()
         {

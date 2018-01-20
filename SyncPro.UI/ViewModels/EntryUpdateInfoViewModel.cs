@@ -360,6 +360,16 @@
                 changes.Add("HD5 Hash Changed");
             }
 
+            if ((flags & SyncEntryChangedFlags.FileExists) == SyncEntryChangedFlags.FileExists)
+            {
+                changes.Add("File Exists");
+            }
+
+            if ((flags & SyncEntryChangedFlags.DirectoryExists) == SyncEntryChangedFlags.DirectoryExists)
+            {
+                changes.Add("Directory Exists");
+            }
+
             return changes;
         }
     }

@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Security.Cryptography;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -22,6 +23,9 @@
         {
             return TargetTypeId;
         }
+
+        public override AdapterLocality Locality =>
+            this.Config.RootDirectory.StartsWith(@"\\") ? AdapterLocality.LocalNetwork : AdapterLocality.LocalComputer;
 
         public override async Task<SyncEntry> CreateRootEntry()
         {
@@ -283,6 +287,47 @@
             }
 
             return this.CreateEntry(fileSystemItem.FileSystemInfo, parentEntry);
+        }
+
+        public override byte[] GetItemHash(HashType hashType, IAdapterItem adapterItem)
+        {
+            if (hashType == HashType.SHA1)
+            {
+                if (adapterItem.Sha1Hash != null)
+                {
+                    return adapterItem.Sha1Hash;
+                }
+
+                FileSystemFolder item = (FileSystemFolder) adapterItem;
+                string newPath = string.Join("\\", item.FullName.Split('\\').Skip(1));
+                string fullPath = Path.Combine(this.Config.RootDirectory, newPath);
+
+                using (SHA1Cng sha1 = new SHA1Cng())
+                using(var fileStream = File.OpenRead(fullPath))
+                {
+                    return sha1.ComputeHash(fileStream);
+                }
+            }
+
+            if (hashType == HashType.MD5)
+            {
+                if (adapterItem.Md5Hash != null)
+                {
+                    return adapterItem.Md5Hash;
+                }
+
+                FileSystemFolder item = (FileSystemFolder)adapterItem;
+                string newPath = string.Join("\\", item.FullName.Split('\\').Skip(1));
+                string fullPath = Path.Combine(this.Config.RootDirectory, newPath);
+
+                using (MD5Cng md5 = new MD5Cng())
+                using (var fileStream = File.OpenRead(fullPath))
+                {
+                    return md5.ComputeHash(fileStream);
+                }
+            }
+
+            throw new NotImplementedException("Unknown hash type");
         }
 
         public override void FinalizeItemWrite(Stream stream, EntryUpdateInfo updateInfo)

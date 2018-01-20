@@ -18,11 +18,6 @@
     /// </summary>
     public class SyncJob : JobBase
     {
-        ///// <summary>
-        ///// The buffer size used for copying data between adapters (currently 64k).
-        ///// </summary>
-        //private const int transferBufferSize = 0x10000;
-
         private readonly SyncRelationship relationship;
 
         private long filesCompleted;
@@ -644,23 +639,52 @@
                 // will create the item when setting the content.
                 if (entryUpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.NewDirectory))
                 {
-                    Logger.Debug("Creating item without content");
-                    await destinationAdapter.CreateItemAsync(entryUpdateInfo.Entry).ConfigureAwait(false);
+                    if (entryUpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.DirectoryExists))
+                    {
+                        Logger.Debug("Directory already exists at destination.");
+                        //destinationAdapter.AddAdapterEntry(entryUpdateInfo.Entry, )
+
+                        if (entryUpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.IsUpdated))
+                        {
+                            // The metadata for the item was updated, so update the item
+                            Logger.Debug("Updating existing item using adapter");
+                            destinationAdapter.UpdateItem(entryUpdateInfo, entryUpdateInfo.Flags);
+                        }
+                    }
+                    else
+                    {
+                        Logger.Debug("Creating new directory");
+                        await destinationAdapter.CreateItemAsync(entryUpdateInfo.Entry).ConfigureAwait(false);
+                    }
                 }
                 else
                 {
-                    FileCopyHelper fileCopyHelper = new FileCopyHelper(
-                        this.Relationship,
-                        entryUpdateInfo.OriginatingAdapter,
-                        destinationAdapter,
-                        entryUpdateInfo,
-                        throttlingManager,
-                        this.encryptionCertificate,
-                        this.CancellationToken,
-                        this.CopyProgressChanged);
+                    if (entryUpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.FileExists))
+                    {
+                        Logger.Debug("File already exists at destination.");
 
-                    Logger.Debug("Creating item with content");
-                    await fileCopyHelper.CopyFileAsync().ConfigureAwait(false);
+                        if (entryUpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.IsUpdated))
+                        {
+                            // The metadata for the item was updated, so update the item
+                            Logger.Debug("Updating existing item using adapter");
+                            destinationAdapter.UpdateItem(entryUpdateInfo, entryUpdateInfo.Flags);
+                        }
+                    }
+                    else
+                    {
+                        FileCopyHelper fileCopyHelper = new FileCopyHelper(
+                            this.Relationship,
+                            entryUpdateInfo.OriginatingAdapter,
+                            destinationAdapter,
+                            entryUpdateInfo,
+                            throttlingManager,
+                            this.encryptionCertificate,
+                            this.CancellationToken,
+                            this.CopyProgressChanged);
+
+                        Logger.Debug("Creating item with content");
+                        await fileCopyHelper.CopyFileAsync().ConfigureAwait(false);
+                    }
                 }
             }
             else if ((entryUpdateInfo.Flags & SyncEntryChangedFlags.Deleted) != 0)
@@ -704,7 +728,6 @@
 
             // The operation succeeded. Update state variables.
             entryUpdateInfo.State = EntryUpdateState.Succeeded;
-
             entryUpdateInfo.Entry.EntryLastUpdatedDateTimeUtc = DateTime.UtcNow;
 
             // We are about to add or update the entry, so clear the NotSynchronized bit from the status.
@@ -745,8 +768,6 @@
                 lock (this.dbLock)
                 {
                     db.Entry(entryUpdateInfo.Entry).State = EntityState.Modified;
-
-                    //db.UpdateSyncEntry(entryUpdateInfo.Entry);
                 }
             }
 

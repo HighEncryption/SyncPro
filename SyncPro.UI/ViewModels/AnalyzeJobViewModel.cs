@@ -131,7 +131,8 @@ namespace SyncPro.UI.ViewModels
         {
             if (info.Entry.Type == SyncEntryType.Directory)
             {
-                if (info.HasSyncEntryFlag(SyncEntryChangedFlags.NewDirectory))
+                if (info.HasSyncEntryFlag(SyncEntryChangedFlags.NewDirectory) ||
+                    info.HasSyncEntryFlag(SyncEntryChangedFlags.DirectoryExists))
                 {
                     this.ChangeMetricsList[1].Added++;
                 }
@@ -147,7 +148,8 @@ namespace SyncPro.UI.ViewModels
             }
             else
             {
-                if (info.HasSyncEntryFlag(SyncEntryChangedFlags.NewFile))
+                if (info.HasSyncEntryFlag(SyncEntryChangedFlags.NewFile) ||
+                    info.HasSyncEntryFlag(SyncEntryChangedFlags.FileExists))
                 {
                     this.ChangeMetricsList[0].Added++;
                     this.ChangeMetricsList[2].Added += info.Entry.GetSize(this.SyncRelationship.GetSyncRelationship(), SyncEntryPropertyLocation.Source);

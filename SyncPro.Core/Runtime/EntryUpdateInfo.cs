@@ -47,7 +47,7 @@
         /// <summary>
         /// Flags indicating the type of change to be applied (added/updated/deleted/etc).
         /// </summary>
-        public SyncEntryChangedFlags Flags { get; }
+        public SyncEntryChangedFlags Flags { get; private set; }
 
         /// <summary>
         /// The state of the change (whether it has been applied/succeeded).
@@ -158,6 +158,11 @@
         public bool HasSyncEntryFlag(SyncEntryChangedFlags flag)
         {
             return (this.Flags & flag) != 0;
+        }
+
+        internal void SetFlags(SyncEntryChangedFlags newFlags)
+        {
+            this.Flags = newFlags;
         }
 
         public EntryUpdateInfo(SyncEntry entry, AdapterBase originatingAdapter, SyncEntryChangedFlags flags, string relativePath)
@@ -329,6 +334,16 @@
             if ((flags & SyncEntryChangedFlags.Restored) != 0)
             {
                 sb.Append("Restored,");
+            }
+
+            if ((flags & SyncEntryChangedFlags.FileExists) != 0)
+            {
+                sb.Append("FileExists,");
+            }
+
+            if ((flags & SyncEntryChangedFlags.DirectoryExists) != 0)
+            {
+                sb.Append("DirectoryExists,");
             }
 
             return sb.ToString(0, sb.Length - 1);

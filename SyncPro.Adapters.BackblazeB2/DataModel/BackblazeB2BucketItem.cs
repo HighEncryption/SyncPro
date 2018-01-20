@@ -20,6 +20,8 @@ namespace SyncPro.Adapters.BackblazeB2.DataModel
 
         public byte[] Sha1Hash { get; set; }
 
+        public byte[] Md5Hash { get; set; }
+
         public IAdapterItem Parent { get; set; }
 
         public AdapterBase Adapter { get; set; }

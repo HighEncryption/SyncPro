@@ -265,6 +265,47 @@
             this.OriginalSha1Hash = value;
         }
 
+        public byte[] GetMd5Hash(SyncRelationship relationship, SyncEntryPropertyLocation location)
+        {
+            // When decrypting, the source will be encrypted
+            if (location == SyncEntryPropertyLocation.Source &&
+                relationship.EncryptionMode == EncryptionMode.Decrypt)
+            {
+                return this.EncryptedMd5Hash;
+            }
+
+            // When encrypting, the destination will be encrypted
+            if (location == SyncEntryPropertyLocation.Destination &&
+                relationship.EncryptionMode == EncryptionMode.Encrypt)
+            {
+                return this.EncryptedSha1Hash;
+            }
+
+            // For all other cases, use the original (unencrypted) value
+            return this.OriginalSha1Hash;
+        }
+
+        public void SetMd5Hash(SyncRelationship relationship, SyncEntryPropertyLocation location, byte[] value)
+        {
+            // When decrypting, the source will be encrypted
+            if (location == SyncEntryPropertyLocation.Source &&
+                relationship.EncryptionMode == EncryptionMode.Decrypt)
+            {
+                this.EncryptedMd5Hash = value;
+                return;
+            }
+
+            // When encrypting, the destination will be encrypted
+            if (location == SyncEntryPropertyLocation.Destination &&
+                relationship.EncryptionMode == EncryptionMode.Encrypt)
+            {
+                this.EncryptedMd5Hash = value;
+                return;
+            }
+
+            // For all other cases, use the original (unencrypted) value
+            this.OriginalMd5Hash = value;
+        }
     }
 
     /// <summary>
