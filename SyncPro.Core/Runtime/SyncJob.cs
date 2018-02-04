@@ -429,7 +429,7 @@
             {
                 if (this.CancellationToken.IsCancellationRequested)
                 {
-                    return true;
+                    break;
                 }
 
                 if (entryUpdateInfo.State == EntryUpdateState.Succeeded)
@@ -464,8 +464,7 @@
 
                 EntryProcessingContext context = new EntryProcessingContext(
                     entryUpdateInfo,
-                    semaphore,
-                    db);
+                    semaphore);
 
                 // New directories and deletes are processed synchronously. They are already pre-ordered
                 // so that parent directories will be created before children and deletes of children 
@@ -525,16 +524,12 @@
 
             public SemaphoreSlim Semaphore { get; }
 
-            public SyncDatabase Db { get; }
-
             public EntryProcessingContext(
                 EntryUpdateInfo entryUpdateInfo,
-                SemaphoreSlim semaphore,
-                SyncDatabase db)
+                SemaphoreSlim semaphore)
             {
                 this.EntryUpdateInfo = entryUpdateInfo;
                 this.Semaphore = semaphore;
-                this.Db = db;
             }
         }
 
@@ -588,8 +583,11 @@
 
                         lock (this.dbLock)
                         {
-                            ctx.Db.HistoryEntries.Add(historyEntry);
-                            ctx.Db.SaveChanges();
+                            using (var db = this.Relationship.GetDatabase())
+                            {
+                                db.HistoryEntries.Add(historyEntry);
+                                db.SaveChanges();
+                            }
                         }
                     }
                 }
