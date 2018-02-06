@@ -60,7 +60,16 @@
                 int bytesPerSecond = 0;
                 if (this.throughputCalculationCache.Count() > 10)
                 {
-                    Tuple<DateTime, long> oldest = this.throughputCalculationCache.Dequeue();
+                    Tuple<DateTime, long> oldest;
+
+                    if (this.throughputCalculationCache.Count() > 100)
+                    {
+                        oldest = this.throughputCalculationCache.Dequeue();
+                    }
+                    else
+                    {
+                        oldest = this.throughputCalculationCache.Peek();
+                    }
 
                     TimeSpan delay = DateTime.Now - oldest.Item1;
                     long bytes = this.bytesCompleted - oldest.Item2;
@@ -257,7 +266,7 @@
                 syncTimeStopwatch.Start();
 
 #if SYNC_THREAD_POOLS
-                using (SemaphoreSlim semaphore = new SemaphoreSlim(5, 5))
+                using (SemaphoreSlim semaphore = new SemaphoreSlim(8, 8))
                 {
                     await this.SyncInteralWithPoolingAsync(
                         throttlingManager,
@@ -484,23 +493,19 @@
                 {
                     removedTasks += activeTasks.RemoveAll(t => t.IsCompleted);
 
-                    var entryTask = this.ProcessEntryAsync(
-                        entryUpdateInfo,
-                        adapter,
-                        throttlingManager,
-                        db);
+                    Task processingTask = Task.Factory.StartNew(
+                        async () =>
+                        {
+                            await this.ProcessEntryAsync(
+                                    entryUpdateInfo,
+                                    adapter,
+                                    throttlingManager,
+                                    db)
+                                .ContinueWith(this.ProcessEntryCompleteAsync, context)
+                                .ConfigureAwait(false);
+                        });
 
-#pragma warning disable CS4014
-
-                    // We want fire-and-forget behavior for this
-                    var processingCompleteTask = entryTask
-                        .ContinueWith(this.ProcessEntryCompleteAsync, context);
-
-                    processingCompleteTask.ConfigureAwait(false);
-
-#pragma warning restore CS4014
-
-                    activeTasks.Add(processingCompleteTask);
+                    activeTasks.Add(processingTask);
                     addedTasks++;
                 }
             }

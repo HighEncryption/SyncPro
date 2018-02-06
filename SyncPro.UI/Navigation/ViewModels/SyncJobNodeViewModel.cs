@@ -43,6 +43,9 @@ namespace SyncPro.UI.Navigation.ViewModels
                 case JobResult.NotRun:
                     this.IconImageSource = "/SyncPro.UI;component/Resources/Graphics/list_16.png";
                     break;
+                case JobResult.Cancelled:
+                    this.IconImageSource = "/SyncPro.UI;component/Resources/Graphics/list_delete2_16.png";
+                    break;
                 default:
                     this.IconImageSource = "/SyncPro.UI;component/Resources/Graphics/list_help_16.png";
                     break;

@@ -238,6 +238,8 @@
             t.Start();
         }
 
+        private DateTime lastSyncProgressUpdate = DateTime.MinValue;
+
         /// <summary>
         /// During an active sync job, this methods is invoked on progress changed (aka when a change is detected).
         /// </summary>
@@ -270,17 +272,25 @@
 
                     this.TimeElapsed = DateTime.Now.Subtract(this.StartTime);
 
-                    if (syncJobProgressInfo.BytesPerSecond > 0)
+                    if (DateTime.Now.Subtract(this.lastSyncProgressUpdate).TotalSeconds > 1)
                     {
-                        this.TimeRemaining = TimeSpan.FromSeconds(
-                            this.BytesRemaining / syncJobProgressInfo.BytesPerSecond);
-                    }
-                    else
-                    {
-                        this.TimeRemaining = TimeSpan.Zero;
-                    }
+                        this.lastSyncProgressUpdate = DateTime.Now;
 
-                    this.Throughput = FileSizeConverter.Convert(syncJobProgressInfo.BytesPerSecond, 2) + " per second";
+                        if (syncJobProgressInfo.BytesPerSecond > 0)
+                        {
+                            var secondsRemaining =
+                                this.BytesRemaining / syncJobProgressInfo.BytesPerSecond;
+
+                            this.TimeRemaining = TimeSpan.FromSeconds(
+                                Math.Round(secondsRemaining / 5.0) * 5);
+                        }
+                        else
+                        {
+                            this.TimeRemaining = TimeSpan.Zero;
+                        }
+
+                        this.Throughput = FileSizeConverter.Convert(syncJobProgressInfo.BytesPerSecond, 2) + " per second";
+                    }
                 }
 
                 if (!this.EntryUpdatesTreeList.Any() && syncJobProgressInfo.UpdateInfo != null)
