@@ -10,11 +10,9 @@ namespace SyncPro.Runtime
 
     using SyncPro.Adapters;
     using SyncPro.Configuration;
-    using SyncPro.Data;
 
     internal class FileCopyHelper
     {
-        private readonly SyncRelationship relationship;
         private readonly AdapterBase fromAdapter;
         private readonly AdapterBase toAdapter;
         private readonly EntryUpdateInfo updateInfo;
@@ -46,7 +44,6 @@ namespace SyncPro.Runtime
             CancellationToken cancellationToken,
             Action<CopyProgressInfo> progressChanged)
         {
-            this.relationship = relationship;
             this.fromAdapter = fromAdapter;
             this.toAdapter = toAdapter;
             this.updateInfo = updateInfo;
@@ -55,7 +52,7 @@ namespace SyncPro.Runtime
             this.cancellationToken = cancellationToken;
             this.progressChanged = progressChanged;
 
-            this.EncryptionMode = this.relationship.EncryptionMode;
+            this.EncryptionMode = relationship.EncryptionMode;
 
             this.UpdateSyncEntry = true;
 
@@ -189,11 +186,6 @@ namespace SyncPro.Runtime
                 fromStream?.Close();
                 toStream?.Close();
             }
-        }
-
-        public class MyClass
-        {
-            public int MyVar;
         }
 
         /// <summary>

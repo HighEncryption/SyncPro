@@ -112,6 +112,11 @@ namespace SyncPro.Adapters
             throw new NotImplementedException();
         }
 
+        public override byte[] GetItemHash(HashType hashType, IAdapterItem adapterItem)
+        {
+            throw new NotImplementedException();
+        }
+
         public override void FinalizeItemWrite(Stream stream, EntryUpdateInfo updateInfo)
         {
         }

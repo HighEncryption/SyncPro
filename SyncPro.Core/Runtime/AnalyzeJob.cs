@@ -17,6 +17,8 @@ namespace SyncPro.Runtime
     {
         private readonly AnalyzeRelationshipResult analyzeResult;
 
+        private bool firstSyncComplete;
+
         public EventHandler<AnalyzeJobProgressInfo> ChangeDetected;
 
         public AnalyzeRelationshipResult AnalyzeResult => this.analyzeResult;
@@ -31,12 +33,27 @@ namespace SyncPro.Runtime
         {
             List<Task> updateTasks = new List<Task>();
 
+            // Get the list of destination adapters. At the moment, we only support a single adapter to
+            // adapter relationship. If this changes in the future, the following code will need to be
+            // updated to handle multiple destination adapters.
+            List<AdapterBase> destinationAdapters = 
+                this.Relationship.Adapters.Where(a => a.Configuration.IsOriginator).ToList();
+
+            Pre.Assert(destinationAdapters.Count == 1, "destinationAdapters.Count == 1");
+            AdapterBase destAdapter = destinationAdapters.First();
+
+            // Check if there has been at least one successful sync run
+            using (var db = this.Relationship.GetDatabase())
+            {
+                this.firstSyncComplete = db.History.Any(h => h.Result == JobResult.Success);
+            }
+
             // For each adapter (where changes can origiante from), start a task to analyze the change for that
             // adapter. This will allow multiple adapters to be examined in parallel.
             foreach (AdapterBase adapter in this.Relationship.Adapters.Where(a => a.Configuration.IsOriginator))
             {
                 this.analyzeResult.AdapterResults.Add(adapter.Configuration.Id, new AnalyzeAdapterResult());
-                updateTasks.Add(this.AnalyzeChangesFromAdapter(adapter));
+                updateTasks.Add(this.AnalyzeChangesFromAdapter(adapter, destAdapter));
             }
 
             await Task.WhenAll(updateTasks).ContinueWith(task =>
@@ -104,38 +121,41 @@ namespace SyncPro.Runtime
             }
         }
 
-        private async Task AnalyzeChangesFromAdapter(AdapterBase adapter)
+        private async Task AnalyzeChangesFromAdapter(AdapterBase sourceAdapter, AdapterBase destAdapter)
         {
             Logger.AnalyzeChangesStart(
                 new Dictionary<string, object>()
                 {
-                    { "SyncAnalysisRunId", adapter.Configuration.Id },
-                    { "AdapterId", adapter.Configuration.Id },
-                    { "SupportChangeTracking", adapter.SupportChangeTracking() }
+                    { "SyncAnalysisRunId", sourceAdapter.Configuration.Id },
+                    { "AdapterId", sourceAdapter.Configuration.Id },
+                    { "SupportChangeTracking", sourceAdapter.SupportChangeTracking() }
                 });
 
             try
             {
                 using (SyncDatabase db = this.Relationship.GetDatabase())
                 {
-                    SyncEntry rootIndexEntry = db.Entries.FirstOrDefault(e => e.Id == adapter.Configuration.RootIndexEntryId);
+                    SyncEntry rootIndexEntry = db.Entries.FirstOrDefault(e => e.Id == sourceAdapter.Configuration.RootIndexEntryId);
 
-                    if (adapter.SupportChangeTracking())
+                    if (sourceAdapter.SupportChangeTracking())
                     {
-                        IChangeTracking changeTracking = (IChangeTracking) adapter;
+                        IChangeTracking changeTracking = (IChangeTracking) sourceAdapter;
                         TrackedChange trackedChange = await changeTracking.GetChangesAsync().ConfigureAwait(false);
 
-                        this.analyzeResult.TrackedChanges.Add(adapter, trackedChange);
-                        this.AnalyzeChangesWithChangeTracking(db, adapter, rootIndexEntry);
+                        this.analyzeResult.TrackedChanges.Add(sourceAdapter, trackedChange);
+                        this.AnalyzeChangesWithChangeTracking(db, sourceAdapter, destAdapter, rootIndexEntry);
                     }
                     else
                     {
-                        IAdapterItem rootFolder = adapter.GetRootFolder().Result;
+                        IAdapterItem sourceRootItem = await sourceAdapter.GetRootFolder();
+                        IAdapterItem destRootItem = await destAdapter.GetRootFolder();
 
                         this.AnalyzeChangesWithoutChangeTracking(
                             db,
-                            adapter,
-                            rootFolder,
+                            sourceAdapter,
+                            destAdapter,
+                            sourceRootItem,
+                            destRootItem,
                             rootIndexEntry,
                             string.Empty);
                     }
@@ -143,7 +163,7 @@ namespace SyncPro.Runtime
             }
             catch (Exception exception)
             {
-                this.analyzeResult.AdapterResults[adapter.Configuration.Id].Exception = exception;
+                this.analyzeResult.AdapterResults[sourceAdapter.Configuration.Id].Exception = exception;
             }
             finally
             {
@@ -151,7 +171,7 @@ namespace SyncPro.Runtime
                     new Dictionary<string, object>()
                     {
                         { "ResultId", this.analyzeResult.Id },
-                        { "AdapterId", adapter.Configuration.Id },
+                        { "AdapterId", sourceAdapter.Configuration.Id },
                         { "IsUpToDate", this.analyzeResult.IsUpToDate },
                         { "TotalSyncEntries", this.analyzeResult.TotalSyncEntries },
                         { "TotalChangedEntriesCount", this.analyzeResult.TotalChangedEntriesCount },
@@ -161,10 +181,11 @@ namespace SyncPro.Runtime
 
         private void AnalyzeChangesWithChangeTracking(
             SyncDatabase db,
-            AdapterBase adapter,
+            AdapterBase sourceAdapter,
+            AdapterBase destAdapter,
             SyncEntry logicalParent)
         {
-            TrackedChange trackedChange = this.analyzeResult.TrackedChanges[adapter];
+            TrackedChange trackedChange = this.analyzeResult.TrackedChanges[sourceAdapter];
 
             Logger.Debug(
                 Logger.BuildEventMessageWithProperties(
@@ -172,7 +193,7 @@ namespace SyncPro.Runtime
                     new Dictionary<string, object>()
                     {
                         { "ResultId", this.analyzeResult.Id },
-                        { "AdapterId", adapter.Configuration.Id },
+                        { "AdapterId", sourceAdapter.Configuration.Id },
                         { "RootName", logicalParent.Name },
                         { "RootId", logicalParent.Id },
                         { "TrackedChangeState", trackedChange.State },
@@ -197,7 +218,7 @@ namespace SyncPro.Runtime
             {
                 IChangeTrackedAdapterItem changeAdapterItem = pendingChanges.Dequeue();
 
-                if (this.AnalyzeSingleChangeWithTracking(db, adapter, changeAdapterItem, knownSyncEntries))
+                if (this.AnalyzeSingleChangeWithTracking(db, sourceAdapter, changeAdapterItem, knownSyncEntries))
                 {
                     // Change change was successfully analyzed. Reset the skip counter.
                     skipCount = 0;
@@ -428,6 +449,11 @@ namespace SyncPro.Runtime
             else if (logicalChild.UpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.IsNew))
             {
                 message = "A new item was found";
+
+                if (logicalChild.UpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.DestinationExists))
+                {
+                    message += " and the item was also found at the destination";
+                }
             }
             else if (logicalChild.UpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.IsUpdated))
             {
@@ -454,8 +480,9 @@ namespace SyncPro.Runtime
         /// 
         /// </summary>
         /// <param name="db"></param>
-        /// <param name="adapter"></param>
-        /// <param name="adapterParent"></param>
+        /// <param name="sourceAdapter"></param>
+        /// <param name="sourceItem"></param>
+        /// <param name="destItem"></param>
         /// <param name="logicalParent"></param>
         /// <param name="relativePath"></param>
         /// <remarks>
@@ -464,12 +491,15 @@ namespace SyncPro.Runtime
         /// </remarks>
         private void AnalyzeChangesWithoutChangeTracking(
             SyncDatabase db,
-            AdapterBase adapter,
-            IAdapterItem adapterParent,
+            AdapterBase sourceAdapter,
+            AdapterBase destAdapter,
+            IAdapterItem sourceItem,
+            IAdapterItem destItem,
             SyncEntry logicalParent,
             string relativePath)
         {
-            IList<IAdapterItem> adapterChildren = new List<IAdapterItem>();
+            IList<IAdapterItem> sourceChildItems = new List<IAdapterItem>();
+            IList<IAdapterItem> destChildItems = new List<IAdapterItem>();
 
             Logger.Debug(
                 Logger.BuildEventMessageWithProperties(
@@ -477,20 +507,27 @@ namespace SyncPro.Runtime
                     new Dictionary<string, object>()
                     {
                         { "ResultId", this.analyzeResult.Id },
-                        { "AdapterId", adapter.Configuration.Id },
+                        { "AdapterId", sourceAdapter.Configuration.Id },
                         { "RootName", logicalParent.Name },
                         { "RootId", logicalParent.Id },
                     }));
 
             // Get files and folders in the given directory. If this given directory is null (such as when a directory was deleted),
             // the list will be empty (allowing deletes to occur recursivly).
-            if (adapterParent != null)
+            if (sourceItem != null)
             {
-                Logger.Debug("Getting child adapter items for item {0}", adapterParent.FullName);
-                adapterChildren = adapter.GetAdapterItems(adapterParent).ToList();
+                Logger.Debug("Getting child items for source adapter item {0}", sourceItem.FullName);
+                sourceChildItems = sourceAdapter.GetAdapterItems(sourceItem).ToList();
             }
 
-            Logger.Debug("Found {0} child items from adapter.", adapterChildren.Count);
+            // Get the files and folders in the destination directory
+            if (!this.firstSyncComplete && destItem != null)
+            {
+                Logger.Debug("Getting child items from destination adapter item {0}", destItem.FullName);
+                destChildItems = destAdapter.GetAdapterItems(destItem).ToList();
+            }
+
+            Logger.Debug("Found {0} child items from adapter.", sourceChildItems.Count);
 
             // Get the children (files and directories) for a particular directory as identified by 'entry'.
             // Performance Note: Check if the logical parent is a new item. If so, then any of the children will
@@ -514,7 +551,7 @@ namespace SyncPro.Runtime
             }
 
             // Loop through each of the items return by the adapter (eg files on disk)
-            foreach (IAdapterItem adapterChild in adapterChildren)
+            foreach (IAdapterItem sourceAdapterChild in sourceChildItems)
             {
                 if (this.CancellationToken.IsCancellationRequested)
                 {
@@ -525,108 +562,119 @@ namespace SyncPro.Runtime
                 // TODO: Further note - this would be the right place to implement an inclusion/exclusion behavior.
 
                 // Check if there was an error reading the item from the adapter. If so, skip the item.
-                if (!string.IsNullOrEmpty(adapterChild.ErrorMessage))
+                if (!string.IsNullOrEmpty(sourceAdapterChild.ErrorMessage))
                 {
-                    Logger.Info("Skipping adapter child '{0}' with error.", adapterChild.FullName);
+                    Logger.Info("Skipping adapter child '{0}' with error.", sourceAdapterChild.FullName);
                     continue;
+                }
+
+                IAdapterItem destAdapterChild = null;
+                if (destChildItems != null)
+                {
+                    destAdapterChild = destChildItems.FirstOrDefault(i => i.Name == sourceAdapterChild.Name);
+                }
+
+                if (destAdapterChild != null)
+                {
+                    Logger.Debug("Found matching destination adapter child");
                 }
 
                 // Get the list of sync entries from the index. We will match these up with the adapter items to determine what has been 
                 // added, modified, or removed.
-                Logger.Debug("Examining adapter child item {0}", adapterChild.FullName);
+                Logger.Debug("Examining adapter child item {0}", sourceAdapterChild.FullName);
 
                 // First check if there is an entry that matches the unique ID of the item
-                SyncEntry logicalChild = logicalChildren?.FirstOrDefault(c => c.HasUniqueId(adapterChild.UniqueId));
+                SyncEntry sourceLogicalChild = logicalChildren?.FirstOrDefault(c => c.HasUniqueId(sourceAdapterChild.UniqueId));
 
                 // A match was found, so determine
-                if (logicalChild != null)
+                if (sourceLogicalChild != null)
                 {
-                    Logger.Debug("Found child item {0} in database that matches adapter item.", logicalChild.Id);
+                    Logger.Debug("Found child item {0} in database that matches adapter item.", sourceLogicalChild.Id);
 
                     // The database already contains an entry for this item. Remove it from the list, then update as needed.
-                    logicalChildren.Remove(logicalChild);
+                    logicalChildren.Remove(sourceLogicalChild);
 
-                    if (logicalChild.State.HasFlag(SyncEntryState.IsDeleted))
+                    if (sourceLogicalChild.State.HasFlag(SyncEntryState.IsDeleted))
                     {
-                        Logger.Debug("Child item {0} was un-deleted.", logicalChild.Id);
+                        Logger.Debug("Child item {0} was un-deleted.", sourceLogicalChild.Id);
 
                         // Clear the IsDeleted flag (needed in cases where the file was previously deleted).
-                        logicalChild.State &= ~SyncEntryState.IsDeleted;
+                        sourceLogicalChild.State &= ~SyncEntryState.IsDeleted;
 
                         // Create the update info for the new entry (marked as a new file/directory)
-                        logicalChild.UpdateInfo = new EntryUpdateInfo(
-                            logicalChild,
-                            adapter,
+                        sourceLogicalChild.UpdateInfo = new EntryUpdateInfo(
+                            sourceLogicalChild,
+                            sourceAdapter,
                             SyncEntryChangedFlags.Restored,
-                            Path.Combine(relativePath, logicalChild.Name));
+                            Path.Combine(relativePath, sourceLogicalChild.Name));
 
                         // Because the item was previously deleted, all of the previous values will be null/empty
                         // Other metadata will need to be set for new properties
-                        logicalChild.UpdateInfo.CreationDateTimeUtcNew = adapterChild.CreationTimeUtc;
-                        logicalChild.UpdateInfo.ModifiedDateTimeUtcNew = adapterChild.ModifiedTimeUtc;
+                        sourceLogicalChild.UpdateInfo.CreationDateTimeUtcNew = sourceAdapterChild.CreationTimeUtc;
+                        sourceLogicalChild.UpdateInfo.ModifiedDateTimeUtcNew = sourceAdapterChild.ModifiedTimeUtc;
 
                         // Raise change notification so that the UI can be updated in "real time" rather than waiting for the analyze 
                         // process to finish.
-                        this.RaiseChangeDetected(adapter.Configuration.Id, logicalChild.UpdateInfo);
+                        this.RaiseChangeDetected(sourceAdapter.Configuration.Id, sourceLogicalChild.UpdateInfo);
 
-                        this.LogSyncAnalyzerChangeFound(logicalChild);
+                        this.LogSyncAnalyzerChangeFound(sourceLogicalChild);
                         continue;
                     }
 
                     EntryUpdateResult updateResult;
 
                     // If the item differs from the entry in the index, an update will be required.
-                    if (logicalChild.UpdateInfo == null && adapter.IsEntryUpdated(logicalChild, adapterChild, out updateResult))
+                    if (sourceLogicalChild.UpdateInfo == null && sourceAdapter.IsEntryUpdated(sourceLogicalChild, sourceAdapterChild, out updateResult))
                     {
-                        Logger.Debug("Child item {0} is out of sync.", logicalChild.Id);
+                        Logger.Debug("Child item {0} is out of sync.", sourceLogicalChild.Id);
 
                         // Create the update info for the new entry
-                        logicalChild.UpdateInfo = new EntryUpdateInfo(
-                            logicalChild, 
-                            adapter,
+                        sourceLogicalChild.UpdateInfo = new EntryUpdateInfo(
+                            sourceLogicalChild, 
+                            sourceAdapter,
                             updateResult.ChangeFlags, 
-                            Path.Combine(relativePath, logicalChild.Name));
+                            Path.Combine(relativePath, sourceLogicalChild.Name));
 
                         // Set all of the previous metadata values to those from the sync entry
-                        logicalChild.UpdateInfo.SetOldMetadataFromSyncEntry();
+                        sourceLogicalChild.UpdateInfo.SetOldMetadataFromSyncEntry();
 
                         // Set the new timestamps according to what the adapter returns
-                        if (logicalChild.UpdateInfo.CreationDateTimeUtcOld != adapterChild.CreationTimeUtc)
+                        if (sourceLogicalChild.UpdateInfo.CreationDateTimeUtcOld != sourceAdapterChild.CreationTimeUtc)
                         {
-                            logicalChild.UpdateInfo.CreationDateTimeUtcNew = adapterChild.CreationTimeUtc;
+                            sourceLogicalChild.UpdateInfo.CreationDateTimeUtcNew = sourceAdapterChild.CreationTimeUtc;
                         }
 
-                        if (logicalChild.UpdateInfo.ModifiedDateTimeUtcOld != adapterChild.ModifiedTimeUtc)
+                        if (sourceLogicalChild.UpdateInfo.ModifiedDateTimeUtcOld != sourceAdapterChild.ModifiedTimeUtc)
                         {
-                            logicalChild.UpdateInfo.ModifiedDateTimeUtcNew = adapterChild.ModifiedTimeUtc;
+                            sourceLogicalChild.UpdateInfo.ModifiedDateTimeUtcNew = sourceAdapterChild.ModifiedTimeUtc;
                         }
 
-                        if (string.CompareOrdinal(logicalChild.UpdateInfo.RelativePath, logicalChild.UpdateInfo.PathOld) != 0)
+                        if (string.CompareOrdinal(sourceLogicalChild.UpdateInfo.RelativePath, sourceLogicalChild.UpdateInfo.PathOld) != 0)
                         {
-                            logicalChild.UpdateInfo.PathNew = logicalChild.UpdateInfo.RelativePath;
+                            sourceLogicalChild.UpdateInfo.PathNew = sourceLogicalChild.UpdateInfo.RelativePath;
                         }
 
                         if (this.Relationship.EncryptionMode == EncryptionMode.Decrypt)
                         {
-                            if (logicalChild.UpdateInfo.EncryptedSizeOld != adapterChild.Size)
+                            if (sourceLogicalChild.UpdateInfo.EncryptedSizeOld != sourceAdapterChild.Size)
                             {
-                                logicalChild.UpdateInfo.EncryptedSizeNew = adapterChild.Size;
+                                sourceLogicalChild.UpdateInfo.EncryptedSizeNew = sourceAdapterChild.Size;
                             }
                         }
                         else
                         {
-                            if (logicalChild.UpdateInfo.OriginalSizeOld != adapterChild.Size)
+                            if (sourceLogicalChild.UpdateInfo.OriginalSizeOld != sourceAdapterChild.Size)
                             {
-                                logicalChild.UpdateInfo.OriginalSizeNew = adapterChild.Size;
+                                sourceLogicalChild.UpdateInfo.OriginalSizeNew = sourceAdapterChild.Size;
                             }
                         }
 
                         // Set the NotSynchronized flag so that we know this has not yet been committed to the database.
-                        logicalChild.State = SyncEntryState.NotSynchronized;
+                        sourceLogicalChild.State = SyncEntryState.NotSynchronized;
 
                         // Raise change notification so that the UI can be updated in "real time" rather than waiting for the analyze process to finish.
-                        this.RaiseChangeDetected(adapter.Configuration.Id, logicalChild.UpdateInfo);
-                        this.LogSyncAnalyzerChangeFound(logicalChild);
+                        this.RaiseChangeDetected(sourceAdapter.Configuration.Id, sourceLogicalChild.UpdateInfo);
+                        this.LogSyncAnalyzerChangeFound(sourceLogicalChild);
                     }
                 }
                 else
@@ -635,36 +683,52 @@ namespace SyncPro.Runtime
 
                     // This file/directory was not found in the index, so create a new entry for it. Note that while this is a call
                     // to the adapter, no object is created as a result of the call (the result is in-memory only).
-                    logicalChild = adapter.CreateSyncEntryForAdapterItem(adapterChild, logicalParent);
+                    sourceLogicalChild = sourceAdapter.CreateSyncEntryForAdapterItem(sourceAdapterChild, logicalParent);
 
                     // Set the NotSynchronized flag so that we know this has not yet been committed to the database.
-                    logicalChild.State = SyncEntryState.NotSynchronized;
+                    sourceLogicalChild.State = SyncEntryState.NotSynchronized;
 
                     // Create the update info for the new entry
-                    logicalChild.UpdateInfo = new EntryUpdateInfo(
-                        logicalChild,
-                        adapter,
-                        GetFlagsForNewSyncEntry(adapterChild),
-                        Path.Combine(relativePath, logicalChild.Name));
+                    sourceLogicalChild.UpdateInfo = new EntryUpdateInfo(
+                        sourceLogicalChild,
+                        sourceAdapter,
+                        GetFlagsForNewSyncEntry(sourceAdapterChild),
+                        Path.Combine(relativePath, sourceLogicalChild.Name));
 
-                    logicalChild.UpdateInfo.CreationDateTimeUtcNew = adapterChild.CreationTimeUtc;
-                    logicalChild.UpdateInfo.ModifiedDateTimeUtcNew = adapterChild.ModifiedTimeUtc;
-                    logicalChild.UpdateInfo.PathNew = logicalChild.UpdateInfo.RelativePath;
+                    sourceLogicalChild.UpdateInfo.CreationDateTimeUtcNew = sourceAdapterChild.CreationTimeUtc;
+                    sourceLogicalChild.UpdateInfo.ModifiedDateTimeUtcNew = sourceAdapterChild.ModifiedTimeUtc;
+                    sourceLogicalChild.UpdateInfo.PathNew = sourceLogicalChild.UpdateInfo.RelativePath;
+
+                    // An optimization can be made when syncing a relationship for the first time. There is a possibility that the
+                    // file to be synced already exists in the destination. Check if it does, and if the metadata and at least one
+                    // of the hashes matches between the source and the destination. If so, then the actual copy of the file can
+                    // be skipped, and only the SyncEntry created.
+                    if (destAdapterChild != null)
+                    {
+                        this.CheckIfSyncRequired(
+                            sourceAdapter,
+                            destAdapter,
+                            sourceLogicalChild,
+                            sourceAdapterChild,
+                            destAdapterChild);
+                    }
 
                     // Raise change notification so that the UI can be updated in "real time" rather than waiting for the analyze process to finish.
-                    this.RaiseChangeDetected(adapter.Configuration.Id, logicalChild.UpdateInfo);
-                    this.LogSyncAnalyzerChangeFound(logicalChild);
+                    this.RaiseChangeDetected(sourceAdapter.Configuration.Id, sourceLogicalChild.UpdateInfo);
+                    this.LogSyncAnalyzerChangeFound(sourceLogicalChild);
                 }
 
                 // If this is a directory, descend into it
-                if (adapterChild.ItemType == SyncAdapterItemType.Directory)
+                if (sourceAdapterChild.ItemType == SyncAdapterItemType.Directory)
                 {
                     this.AnalyzeChangesWithoutChangeTracking(
                         db,
-                        adapter,
-                        adapterChild,
-                        logicalChild,
-                        Path.Combine(relativePath, logicalChild.Name));
+                        sourceAdapter,
+                        destAdapter,
+                        sourceAdapterChild,
+                        destAdapterChild,
+                        sourceLogicalChild,
+                        Path.Combine(relativePath, sourceLogicalChild.Name));
                 }
             }
 
@@ -691,7 +755,7 @@ namespace SyncPro.Runtime
                     // Create the update info for the new entry
                     oldChild.UpdateInfo = new EntryUpdateInfo(
                         oldChild,
-                        adapter,
+                        sourceAdapter,
                         SyncEntryChangedFlags.Deleted,
                         Path.Combine(relativePath, oldChild.Name));
 
@@ -700,7 +764,7 @@ namespace SyncPro.Runtime
                     // will be null/empty.
                     oldChild.UpdateInfo.SetOldMetadataFromSyncEntry();
 
-                    this.RaiseChangeDetected(adapter.Configuration.Id, oldChild.UpdateInfo);
+                    this.RaiseChangeDetected(sourceAdapter.Configuration.Id, oldChild.UpdateInfo);
                     this.LogSyncAnalyzerChangeFound(oldChild);
 
                     // If the entry we are removing is a directory, we need to also check for subdirectories and files. We can do this by calling 
@@ -710,13 +774,160 @@ namespace SyncPro.Runtime
                     {
                         this.AnalyzeChangesWithoutChangeTracking(
                             db,
-                            adapter,
+                            sourceAdapter,
+                            destAdapter,
+                            null,
                             null,
                             oldChild,
                             Path.Combine(relativePath, oldChild.Name));
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Check if a file needs to be synced, or if it is already present in the destination.
+        /// </summary>
+        /// <param name="sourceAdapter"></param>
+        /// <param name="destAdapter"></param>
+        /// <param name="sourceLogicalChild"></param>
+        /// <param name="sourceAdapterChild"></param>
+        /// <param name="destAdapterChild"></param>
+        private void CheckIfSyncRequired(
+            AdapterBase sourceAdapter, 
+            AdapterBase destAdapter, 
+            SyncEntry sourceLogicalChild, 
+            IAdapterItem sourceAdapterChild, 
+            IAdapterItem destAdapterChild)
+        {
+            // First check if encryption is enabled, since that is immediately going to block the
+            // ability to use an existing file.
+            if (this.Relationship.EncryptionMode != EncryptionMode.None)
+            {
+                return;
+            }
+
+            SyncEntryChangedFlags newChangeFlags = sourceLogicalChild.UpdateInfo.Flags;
+            sourceLogicalChild.UpdateInfo.ExistingItemId = destAdapterChild.UniqueId;
+
+            if (sourceLogicalChild.UpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.NewDirectory))
+            {
+                newChangeFlags |= SyncEntryChangedFlags.DestinationExists;
+
+                // The directory exists on the destination. Check if the metadata is incorrect.
+                if (!DateTimeEqual(sourceAdapterChild.CreationTimeUtc, destAdapterChild.CreationTimeUtc))
+                {
+                    newChangeFlags |= SyncEntryChangedFlags.CreatedTimestamp;
+                }
+
+                if (!DateTimeEqual(sourceAdapterChild.ModifiedTimeUtc, destAdapterChild.ModifiedTimeUtc))
+                {
+                    newChangeFlags |= SyncEntryChangedFlags.ModifiedTimestamp;
+                }
+
+                sourceLogicalChild.UpdateInfo.SetFlags(newChangeFlags);
+                return;
+            }
+
+            // Verify that we are only dealing with a single new file update
+            Pre.Assert(sourceLogicalChild.UpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.NewFile));
+
+            bool isSourceSha1Available =
+                sourceAdapterChild.Sha1Hash != null || sourceAdapter.Locality != AdapterLocality.Internet;
+
+            bool isDestSha1Available =
+                destAdapterChild.Sha1Hash != null || destAdapter.Locality != AdapterLocality.Internet;
+
+            bool isSourceMd5Available =
+                sourceAdapterChild.Md5Hash != null || sourceAdapter.Locality != AdapterLocality.Internet;
+
+            bool isDestMd5Available =
+                destAdapterChild.Md5Hash != null || destAdapter.Locality != AdapterLocality.Internet;
+
+            if (!isSourceSha1Available && !isSourceMd5Available)
+            {
+                // No hashes are available from the source and they can't be easily computed, so we 
+                // dont know for sure if the file already exists at the destination. Therefore, we
+                // will need to copy the file.
+                Logger.Debug("CheckIfSyncRequired: No hashes available");
+                return;
+            }
+
+            // If the length of the files is different, we will have to copy the file (along with metadata)
+            if (sourceAdapterChild.Size != destAdapterChild.Size)
+            {
+                Logger.Debug(
+                    "CheckIfSyncRequired: File size differs (source={0}, dest={1})",
+                    sourceAdapterChild.Size,
+                    destAdapterChild.Size);
+
+                return;
+            }
+
+            if (isSourceSha1Available && isDestSha1Available)
+            {
+                byte[] sourceSha1 = sourceAdapter.GetItemHash(HashType.SHA1, sourceAdapterChild);
+                byte[] destSha1 = destAdapter.GetItemHash(HashType.SHA1, destAdapterChild);
+
+                if (!NativeMethods.ByteArrayEquals(sourceSha1, destSha1))
+                {
+                    // The SHA1 hashes for the files do not match, so we need to copy the file
+                    return;
+                }
+
+                // Set the SHA1 hash property on the logical objects
+                sourceLogicalChild.SetSha1Hash(this.Relationship, SyncEntryPropertyLocation.Source, sourceSha1);
+                sourceLogicalChild.SetSha1Hash(this.Relationship, SyncEntryPropertyLocation.Destination, sourceSha1);
+                sourceLogicalChild.UpdateInfo.OriginalSha1HashNew = sourceSha1;
+
+                newChangeFlags |= SyncEntryChangedFlags.DestinationExists;
+
+                Logger.Debug(
+                    "The SHA1 hash ({0}) matches source and destination copies of {1}. File copy will be skipped.",
+                    "0x" + BitConverter.ToString(sourceSha1).Replace("-", ""),
+                    sourceAdapterChild.FullName);
+            }
+            else if (isSourceMd5Available && isDestMd5Available)
+            {
+                byte[] sourceMd5 = sourceAdapter.GetItemHash(HashType.MD5, sourceAdapterChild);
+                byte[] destMd5 = destAdapter.GetItemHash(HashType.MD5, destAdapterChild);
+
+                if (!NativeMethods.ByteArrayEquals(sourceMd5, destMd5))
+                {
+                    // The MD5 hashes for the files do not match, so we need to copy the file
+                    return;
+                }
+
+                // Set the SHA1 hash property on the logical objects
+                sourceLogicalChild.SetMd5Hash(this.Relationship, SyncEntryPropertyLocation.Source, sourceMd5);
+                sourceLogicalChild.SetMd5Hash(this.Relationship, SyncEntryPropertyLocation.Destination, sourceMd5);
+                sourceLogicalChild.UpdateInfo.OriginalMd5HashNew = sourceMd5;
+
+                newChangeFlags |= SyncEntryChangedFlags.DestinationExists;
+
+                Logger.Debug(
+                    "The MD5 hash ({0}) matches source and destination copies of {1}. File copy will be skipped.",
+                    "0x" + BitConverter.ToString(sourceMd5).Replace("-", ""),
+                    sourceAdapterChild.FullName);
+            }
+            else
+            {
+                // Some combination of hashes were not available
+                Logger.Debug("Cannot perform hash comparison of {0}", sourceAdapterChild.FullName);
+            }
+
+            // We found a hash match for the file (either SHA1 or MD5). Check if the metadata is incorrect.
+            if (!DateTimeEqual(sourceAdapterChild.CreationTimeUtc, destAdapterChild.CreationTimeUtc))
+            {
+                newChangeFlags |= SyncEntryChangedFlags.CreatedTimestamp;
+            }
+
+            if (!DateTimeEqual(sourceAdapterChild.ModifiedTimeUtc, destAdapterChild.ModifiedTimeUtc))
+            {
+                newChangeFlags |= SyncEntryChangedFlags.ModifiedTimestamp;
+            }
+
+            sourceLogicalChild.UpdateInfo.SetFlags(newChangeFlags);
         }
 
         private static SyncEntryChangedFlags GetFlagsForNewSyncEntry(IAdapterItem item)
@@ -744,5 +955,20 @@ namespace SyncPro.Runtime
                     this.analyzeResult.AdapterResults[adapterId].EntryResults.Count,
                     0));
         }
+
+        private static bool DateTimeEqual(DateTime dt1, DateTime dt2)
+        {
+            const long Epsilon = 100;
+
+            return dt1.ToUniversalTime().Ticks - dt2.ToUniversalTime().Ticks < Epsilon;
+        }
     }
+
+    public enum HashType
+    {
+        None,
+        SHA1,
+        MD5
+    }
+
 }

@@ -360,6 +360,11 @@
                 changes.Add("HD5 Hash Changed");
             }
 
+            if ((flags & SyncEntryChangedFlags.DestinationExists) == SyncEntryChangedFlags.DestinationExists)
+            {
+                changes.Add("Destination Exists");
+            }
+
             return changes;
         }
     }

@@ -10,6 +10,13 @@
     using SyncPro.Data;
     using SyncPro.Runtime;
 
+    public enum AdapterLocality
+    {
+        LocalComputer,
+        LocalNetwork,
+        Internet
+    }
+
     /// <summary>
     /// Base class for all adapters.
     /// </summary>
@@ -37,7 +44,7 @@
         /// </summary>
         public AdapterFaultInformation FaultInformation
         {
-            get { return this.faultInformation; }
+            get => this.faultInformation;
             set
             {
                 if (this.SetProperty(ref this.faultInformation, value))
@@ -64,6 +71,8 @@
         /// Gets the GUID that uniquely identifies this type of adapter.
         /// </summary>
         public abstract Guid GetTargetTypeId();
+
+        public virtual AdapterLocality Locality => AdapterLocality.Internet;
 
         /// <summary>
         /// Created the root SyncEntry object for this adapter.
@@ -187,6 +196,16 @@
             return bytes;
         }
 
+        public void AddAdapterEntry(EntryUpdateInfo updateInfo)
+        {
+            updateInfo.Entry.AdapterEntries.Add(new SyncEntryAdapterData()
+            {
+                SyncEntryId = updateInfo.Entry.Id,
+                AdapterId = this.Configuration.Id,
+                AdapterEntryId = updateInfo.ExistingItemId
+            });
+        }
+
         /// <summary>
         /// Indicates whether the <see cref="AdapterBase"/> supports change notification. See 
         /// <see cref="IChangeNotification"/> for more information on change notifiation.
@@ -204,6 +223,8 @@
         {
             return this is IChangeTracking;
         }
+
+        public abstract byte[] GetItemHash(HashType hashType, IAdapterItem adapterItem);
     }
 
     public class EntryUpdateResult

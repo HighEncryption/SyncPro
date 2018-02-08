@@ -120,6 +120,16 @@
             return this.CreateEntry(adapterItem.Item, parentEntry);
         }
 
+        public override byte[] GetItemHash(HashType hashType, IAdapterItem adapterItem)
+        {
+            if (hashType == HashType.MD5)
+            {
+                return adapterItem.Md5Hash;
+            }
+
+            return null;
+        }
+
         public override void FinalizeItemWrite(Stream stream, EntryUpdateInfo updateInfo)
         {
             throw new NotImplementedException();

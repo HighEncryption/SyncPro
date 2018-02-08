@@ -173,6 +173,7 @@ namespace SyncPro.UI.ViewModels
                 }
             }
         }
+
         public long BytesToCopy { get; set; }
 
         private ObservableCollection<EntryUpdateInfoViewModel> entryUpdatesTreeList;

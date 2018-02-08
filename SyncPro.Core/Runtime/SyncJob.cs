@@ -18,11 +18,6 @@
     /// </summary>
     public class SyncJob : JobBase
     {
-        ///// <summary>
-        ///// The buffer size used for copying data between adapters (currently 64k).
-        ///// </summary>
-        //private const int transferBufferSize = 0x10000;
-
         private readonly SyncRelationship relationship;
 
         private long filesCompleted;
@@ -65,7 +60,16 @@
                 int bytesPerSecond = 0;
                 if (this.throughputCalculationCache.Count() > 10)
                 {
-                    Tuple<DateTime, long> oldest = this.throughputCalculationCache.Dequeue();
+                    Tuple<DateTime, long> oldest;
+
+                    if (this.throughputCalculationCache.Count() > 100)
+                    {
+                        oldest = this.throughputCalculationCache.Dequeue();
+                    }
+                    else
+                    {
+                        oldest = this.throughputCalculationCache.Peek();
+                    }
 
                     TimeSpan delay = DateTime.Now - oldest.Item1;
                     long bytes = this.bytesCompleted - oldest.Item2;
@@ -262,7 +266,7 @@
                 syncTimeStopwatch.Start();
 
 #if SYNC_THREAD_POOLS
-                using (SemaphoreSlim semaphore = new SemaphoreSlim(5, 5))
+                using (SemaphoreSlim semaphore = new SemaphoreSlim(8, 8))
                 {
                     await this.SyncInteralWithPoolingAsync(
                         throttlingManager,
@@ -434,7 +438,7 @@
             {
                 if (this.CancellationToken.IsCancellationRequested)
                 {
-                    return true;
+                    break;
                 }
 
                 if (entryUpdateInfo.State == EntryUpdateState.Succeeded)
@@ -469,8 +473,7 @@
 
                 EntryProcessingContext context = new EntryProcessingContext(
                     entryUpdateInfo,
-                    semaphore,
-                    db);
+                    semaphore);
 
                 // New directories and deletes are processed synchronously. They are already pre-ordered
                 // so that parent directories will be created before children and deletes of children 
@@ -490,23 +493,19 @@
                 {
                     removedTasks += activeTasks.RemoveAll(t => t.IsCompleted);
 
-                    var entryTask = this.ProcessEntryAsync(
-                        entryUpdateInfo,
-                        adapter,
-                        throttlingManager,
-                        db);
+                    Task processingTask = Task.Factory.StartNew(
+                        async () =>
+                        {
+                            await this.ProcessEntryAsync(
+                                    entryUpdateInfo,
+                                    adapter,
+                                    throttlingManager,
+                                    db)
+                                .ContinueWith(this.ProcessEntryCompleteAsync, context)
+                                .ConfigureAwait(false);
+                        });
 
-#pragma warning disable CS4014
-
-                    // We want fire-and-forget behavior for this
-                    var processingCompleteTask = entryTask
-                        .ContinueWith(this.ProcessEntryCompleteAsync, context);
-
-                    processingCompleteTask.ConfigureAwait(false);
-
-#pragma warning restore CS4014
-
-                    activeTasks.Add(processingCompleteTask);
+                    activeTasks.Add(processingTask);
                     addedTasks++;
                 }
             }
@@ -530,16 +529,12 @@
 
             public SemaphoreSlim Semaphore { get; }
 
-            public SyncDatabase Db { get; }
-
             public EntryProcessingContext(
                 EntryUpdateInfo entryUpdateInfo,
-                SemaphoreSlim semaphore,
-                SyncDatabase db)
+                SemaphoreSlim semaphore)
             {
                 this.EntryUpdateInfo = entryUpdateInfo;
                 this.Semaphore = semaphore;
-                this.Db = db;
             }
         }
 
@@ -593,8 +588,11 @@
 
                         lock (this.dbLock)
                         {
-                            ctx.Db.HistoryEntries.Add(historyEntry);
-                            ctx.Db.SaveChanges();
+                            using (var db = this.Relationship.GetDatabase())
+                            {
+                                db.HistoryEntries.Add(historyEntry);
+                                db.SaveChanges();
+                            }
                         }
                     }
                 }
@@ -644,23 +642,53 @@
                 // will create the item when setting the content.
                 if (entryUpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.NewDirectory))
                 {
-                    Logger.Debug("Creating item without content");
-                    await destinationAdapter.CreateItemAsync(entryUpdateInfo.Entry).ConfigureAwait(false);
+                    if (entryUpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.DestinationExists))
+                    {
+                        Logger.Debug("Directory already exists at destination.");
+                        destinationAdapter.AddAdapterEntry(entryUpdateInfo);
+
+                        if (entryUpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.IsUpdated))
+                        {
+                            // The metadata for the item was updated, so update the item
+                            Logger.Debug("Updating existing item using adapter");
+                            destinationAdapter.UpdateItem(entryUpdateInfo, entryUpdateInfo.Flags);
+                        }
+                    }
+                    else
+                    {
+                        Logger.Debug("Creating new directory");
+                        await destinationAdapter.CreateItemAsync(entryUpdateInfo.Entry).ConfigureAwait(false);
+                    }
                 }
                 else
                 {
-                    FileCopyHelper fileCopyHelper = new FileCopyHelper(
-                        this.Relationship,
-                        entryUpdateInfo.OriginatingAdapter,
-                        destinationAdapter,
-                        entryUpdateInfo,
-                        throttlingManager,
-                        this.encryptionCertificate,
-                        this.CancellationToken,
-                        this.CopyProgressChanged);
+                    if (entryUpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.DestinationExists))
+                    {
+                        Logger.Debug("File already exists at destination.");
+                        destinationAdapter.AddAdapterEntry(entryUpdateInfo);
 
-                    Logger.Debug("Creating item with content");
-                    await fileCopyHelper.CopyFileAsync().ConfigureAwait(false);
+                        if (entryUpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.IsUpdated))
+                        {
+                            // The metadata for the item was updated, so update the item
+                            Logger.Debug("Updating existing item using adapter");
+                            destinationAdapter.UpdateItem(entryUpdateInfo, entryUpdateInfo.Flags);
+                        }
+                    }
+                    else
+                    {
+                        FileCopyHelper fileCopyHelper = new FileCopyHelper(
+                            this.Relationship,
+                            entryUpdateInfo.OriginatingAdapter,
+                            destinationAdapter,
+                            entryUpdateInfo,
+                            throttlingManager,
+                            this.encryptionCertificate,
+                            this.CancellationToken,
+                            this.CopyProgressChanged);
+
+                        Logger.Debug("Creating item with content");
+                        await fileCopyHelper.CopyFileAsync().ConfigureAwait(false);
+                    }
                 }
             }
             else if ((entryUpdateInfo.Flags & SyncEntryChangedFlags.Deleted) != 0)
@@ -704,7 +732,6 @@
 
             // The operation succeeded. Update state variables.
             entryUpdateInfo.State = EntryUpdateState.Succeeded;
-
             entryUpdateInfo.Entry.EntryLastUpdatedDateTimeUtc = DateTime.UtcNow;
 
             // We are about to add or update the entry, so clear the NotSynchronized bit from the status.
@@ -745,8 +772,6 @@
                 lock (this.dbLock)
                 {
                     db.Entry(entryUpdateInfo.Entry).State = EntityState.Modified;
-
-                    //db.UpdateSyncEntry(entryUpdateInfo.Entry);
                 }
             }
 

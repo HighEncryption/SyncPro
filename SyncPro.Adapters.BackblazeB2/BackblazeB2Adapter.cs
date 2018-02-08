@@ -212,6 +212,17 @@
             base.SaveConfiguration();
         }
 
+        public override byte[] GetItemHash(HashType hashType, IAdapterItem adapterItem)
+        {
+            // SHA1 is the only hash supported by Blackblaze
+            if (hashType == HashType.SHA1)
+            {
+                return adapterItem.Sha1Hash;
+            }
+
+            return null;
+        }
+
         public override void FinalizeItemWrite(Stream stream, EntryUpdateInfo updateInfo)
         {
             BackblazeB2UploadStream uploadStream = (BackblazeB2UploadStream)stream;

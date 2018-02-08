@@ -1,5 +1,6 @@
 ﻿namespace SyncPro.UI.Navigation.ViewModels
 {
+    using System;
     using System.Collections.Specialized;
     using System.Linq;
 
@@ -43,8 +44,27 @@
                 SyncJobViewModel = syncJobViewModel
             };
 
-            this.Children.Add(new SyncJobNodeViewModel(this, syncJobPanel));
+            int index = this.FindIndex(syncJobPanel);
+
+            this.Children.Insert(index, new SyncJobNodeViewModel(this, syncJobPanel));
             this.RaisePropertyChanged(nameof(this.Children));
+        }
+
+        private int FindIndex(SyncJobPanelViewModel syncJobPanel)
+        {
+            int i = 0;
+            for (; i < this.Children.Count; i++)
+            {
+                SyncJobNodeViewModel nodeViewModel = this.Children[i] as SyncJobNodeViewModel;
+
+                if (syncJobPanel.SyncJobViewModel.StartTime >
+                    ((SyncJobPanelViewModel) nodeViewModel.Item).SyncJobViewModel.StartTime)
+                {
+                    return i;
+                }
+            }
+
+            return i;
         }
     }
 }
