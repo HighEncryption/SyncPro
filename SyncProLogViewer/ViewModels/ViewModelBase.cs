@@ -3,6 +3,7 @@
     using System;
     using System.ComponentModel;
     using System.Diagnostics.CodeAnalysis;
+    using System.Runtime.CompilerServices;
 
     public class ViewModelBase : IViewModel
     {
@@ -26,13 +27,7 @@
         }
 
         [SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", Justification = "Design is specific to ViewModel pattern.")]
-        protected bool SetProperty<T>(string propertyName, ref T property, T newValue)
-        {
-            return this.SetProperty(propertyName, ref property, newValue, false);
-        }
-
-        [SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", Justification = "Design is specific to ViewModel pattern.")]
-        protected bool SetProperty<T>(string propertyName, ref T property, T newValue, bool revalidate)
+        protected bool SetProperty<T>(ref T property, T newValue, [CallerMemberName] string propertyName = "")
         {
             if (string.IsNullOrEmpty(propertyName))
             {
@@ -62,7 +57,7 @@
 
         internal delegate void SetPropertyDelegate();
 
-        internal bool SetPropertyDelegated<T>(string propertyName, T property, T newValue, SetPropertyDelegate setProperty)
+        internal bool SetPropertyDelegated<T>(T property, T newValue, SetPropertyDelegate setProperty, [CallerMemberName] string propertyName = "")
         {
             if (string.IsNullOrEmpty(propertyName))
             {

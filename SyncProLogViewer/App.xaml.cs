@@ -16,6 +16,8 @@
 
         internal new static App Current { get; private set; }
 
+        public string ConfigDirectoryPath { get; private set; }
+
         public MainWindowViewModel MainWindowsViewModel => this.mainWindowViewModel;
 
         private MainWindowViewModel mainWindowViewModel;
@@ -36,6 +38,15 @@
                     message);
             };
 
+            app.ConfigDirectoryPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), 
+                "SyncProLogViewer");
+
+            if (!Directory.Exists(app.ConfigDirectoryPath))
+            {
+                Directory.CreateDirectory(app.ConfigDirectoryPath);
+            }
+
             app.localDispatcher = Dispatcher.CurrentDispatcher;
             using (app.mainWindowViewModel = new MainWindowViewModel())
             using (Task task = new Task(app.Initialize))
@@ -43,6 +54,8 @@
                 task.Start();
                 app.Run();
             }
+
+
         }
 
         private void Initialize()

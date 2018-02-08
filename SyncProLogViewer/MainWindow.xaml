@@ -4,9 +4,15 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SyncProLogViewer"
+        xmlns:viewModels="clr-namespace:SyncProLogViewer.ViewModels"
         mc:Ignorable="d"
         Icon="Resources/list-search.ico"
-        Title="SyncPro Log Viewer" Height="850" Width="950">
+        Title="SyncPro Log Viewer" 
+        Height="{Binding Path=Config.WindowHeight, Mode=TwoWay}" 
+        Width="{Binding Path=Config.WindowWidth, Mode=TwoWay}" 
+        Top="{Binding Path=Config.WindowTop, Mode=TwoWay}"
+        Left="{Binding Path=Config.WindowLeft, Mode=TwoWay}"
+        d:DataContext="{d:DesignInstance viewModels:MainWindowViewModel}">
 
     <Grid>
         <Grid.Resources>
@@ -38,9 +44,6 @@
                                     <GridViewRowPresenter VerticalAlignment="{TemplateBinding VerticalContentAlignment}" 
                                                           SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
                                 </Border>
-
-                                <ControlTemplate.Triggers>
-                                </ControlTemplate.Triggers>
                             </ControlTemplate>
                         </Setter.Value>
                     </Setter>

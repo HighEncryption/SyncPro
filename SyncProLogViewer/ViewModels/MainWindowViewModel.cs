@@ -12,6 +12,8 @@
     {
         private TraceEventSession listener;
 
+        public ViewerConfiguration Config { get; }
+
         public ObservableCollection<LogEntry> Entries { get; }
 
         private void DynamicOnAll(TraceEvent traceEvent)
@@ -63,11 +65,15 @@
             }
         }
 
-
         public MainWindowViewModel()
         {
             this.Entries = new ObservableCollection<LogEntry>();
 
+            // Load settings
+            this.Config = ViewerConfiguration.LoadOrCreate(
+                App.Current.ConfigDirectoryPath);
+
+            // Initialize the session listener to receive the log messages
             this.listener = new TraceEventSession("MyViewerSession");
             this.listener.Source.Dynamic.All += this.DynamicOnAll;
 
@@ -84,6 +90,8 @@
             {
                 this.listener.Dispose();
                 this.listener = null;
+
+                this.Config.Save(App.Current.ConfigDirectoryPath);
             }
         }
     }
