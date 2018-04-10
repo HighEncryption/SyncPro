@@ -20,6 +20,7 @@ namespace SyncPro.UnitTests
         {
             string certificateFilePath = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),
+                "SyncProTesting",
                 "SyncProEncTest.pfx");
 
             if (!File.Exists(certificateFilePath))
@@ -43,8 +44,10 @@ namespace SyncPro.UnitTests
                 .SaveRelationship()
                 .CreateSimpleSourceStructure();
 
+            X509Certificate2 cert = ReadTestCert();
+
             wrapper.Relationship.EncryptionMode = EncryptionMode.Encrypt;
-            wrapper.Relationship.EncryptionCertificateThumbprint = "420fe8033179cfb0ef21862d24bf6a1ec7df6c6d";
+            wrapper.Relationship.EncryptionCertificateThumbprint = cert.Thumbprint;
 
             wrapper.CreateSyncJob()
                 .RunToCompletion()

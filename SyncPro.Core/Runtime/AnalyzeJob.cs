@@ -33,27 +33,22 @@ namespace SyncPro.Runtime
         {
             List<Task> updateTasks = new List<Task>();
 
-            // Get the list of destination adapters. At the moment, we only support a single adapter to
-            // adapter relationship. If this changes in the future, the following code will need to be
-            // updated to handle multiple destination adapters.
-            List<AdapterBase> destinationAdapters = 
-                this.Relationship.Adapters.Where(a => a.Configuration.IsOriginator).ToList();
-
-            Pre.Assert(destinationAdapters.Count == 1, "destinationAdapters.Count == 1");
-            AdapterBase destAdapter = destinationAdapters.First();
-
             // Check if there has been at least one successful sync run
             using (var db = this.Relationship.GetDatabase())
             {
                 this.firstSyncComplete = db.History.Any(h => h.Result == JobResult.Success);
             }
 
-            // For each adapter (where changes can origiante from), start a task to analyze the change for that
-            // adapter. This will allow multiple adapters to be examined in parallel.
+            // For each adapter (where changes can origiante from), start a task to analyze the change
+            // originating from that adapter that would apply to every other adapter. This will allow 
+            // multiple adapters to be examined in parallel.
             foreach (AdapterBase adapter in this.Relationship.Adapters.Where(a => a.Configuration.IsOriginator))
             {
-                this.analyzeResult.AdapterResults.Add(adapter.Configuration.Id, new AnalyzeAdapterResult());
-                updateTasks.Add(this.AnalyzeChangesFromAdapter(adapter, destAdapter));
+                foreach (AdapterBase destAdapter in this.Relationship.Adapters.Where(a => a != adapter))
+                {
+                    this.analyzeResult.AdapterResults.Add(adapter.Configuration.Id, new AnalyzeAdapterResult());
+                    updateTasks.Add(this.AnalyzeChangesFromAdapter(adapter, destAdapter));
+                }
             }
 
             await Task.WhenAll(updateTasks).ContinueWith(task =>

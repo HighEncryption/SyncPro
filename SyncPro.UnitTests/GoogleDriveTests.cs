@@ -35,6 +35,7 @@
 
             string tokenFilePath = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),
+                "SyncProTesting",
                 "GoogleDriveTestingToken.json");
 
             if (!File.Exists(tokenFilePath))
@@ -44,7 +45,6 @@
 
             string tokenContent = File.ReadAllText(tokenFilePath);
 
-            //var token = JsonConvert.DeserializeObject<TokenResponseEx>(tokenContent);
             var token = JsonConvert.DeserializeObject<TokenResponse>(tokenContent);
 
             if (!token.IsEncrypted)

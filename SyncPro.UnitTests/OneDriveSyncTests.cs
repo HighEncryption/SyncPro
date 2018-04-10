@@ -38,6 +38,7 @@ namespace SyncPro.UnitTests
 
             string tokenFilePath = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),
+                "SyncProTesting",
                 "OneDriveTestingToken.json");
 
             if (!File.Exists(tokenFilePath))

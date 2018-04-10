@@ -226,6 +226,14 @@
                     this.relationship.EncryptionCertificateThumbprint,
                     false);
 
+                if (cert.Count == 0)
+                {
+                    throw new Exception(
+                        string.Format(
+                            "Failed to locate a certificate in the CurrentUser/My store with thumbprint {0}",
+                            this.relationship.EncryptionCertificateThumbprint));
+                }
+
                 this.encryptionCertificate = cert[0];
             }
 
@@ -493,7 +501,7 @@
                 {
                     removedTasks += activeTasks.RemoveAll(t => t.IsCompleted);
 
-                    Task processingTask = Task.Factory.StartNew(
+                    Task processingTask = Task.Run(
                         async () =>
                         {
                             await this.ProcessEntryAsync(
@@ -583,8 +591,14 @@
                         Pre.Assert(this.syncHistoryId != null, "this.syncHistoryId != null");
 
                         historyEntry.SyncHistoryId = this.syncHistoryId.Value;
-                        //historyEntry.SyncEntryId = ctx.EntryUpdateInfo.Entry.Id;
-                        historyEntry.SyncEntry = ctx.EntryUpdateInfo.Entry;
+                        if (ctx.EntryUpdateInfo.Entry.Id != 0)
+                        {
+                            historyEntry.SyncEntryId = ctx.EntryUpdateInfo.Entry.Id;
+                        }
+                        else
+                        {
+                            historyEntry.SyncEntry = ctx.EntryUpdateInfo.Entry;
+                        }
 
                         lock (this.dbLock)
                         {
@@ -691,16 +705,19 @@
                     }
                 }
             }
-            else if ((entryUpdateInfo.Flags & SyncEntryChangedFlags.Deleted) != 0)
+            else if (entryUpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.Deleted))
             {
                 // TODO: Check for any other (invalid) flags that are set and throw exception
                 // Delete the file on the adapter (the actual file). The entry will NOT be deleted from the
                 // database as a part of this method.
                 Logger.Debug("Deleting item using adapter");
                 destinationAdapter.DeleteItem(entryUpdateInfo.Entry);
+
+                // Persist the deleted state of the entry. This will be saved in the db.
+                entryUpdateInfo.Entry.State |= SyncEntryState.IsDeleted;
             }
-            else if ((entryUpdateInfo.Flags & SyncEntryChangedFlags.IsUpdated) != 0 ||
-                     (entryUpdateInfo.Flags & SyncEntryChangedFlags.Renamed) != 0)
+            else if (entryUpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.IsUpdated) ||
+                     entryUpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.Renamed))
             {
                 // If IsUpdated is true (which is possible along with a rename) and the item is a file, update
                 // the file contents.
@@ -765,6 +782,7 @@
                 {
                     db.Entries.Add(entryUpdateInfo.Entry);
                     db.AdapterEntries.AddRange(entryUpdateInfo.Entry.AdapterEntries);
+                    db.SaveChanges();
                 }
             }
             else
@@ -772,6 +790,7 @@
                 lock (this.dbLock)
                 {
                     db.Entry(entryUpdateInfo.Entry).State = EntityState.Modified;
+                    db.SaveChanges();
                 }
             }
 

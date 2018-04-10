@@ -52,7 +52,6 @@
                 };
             }
 
-
             if (Enum.IsDefined(typeof(NativeMethods.CredUI.CredUIReturnCodes), returnCode))
             {
                 string errorName = Enum.GetName(typeof(NativeMethods.CredUI.CredUIReturnCodes), returnCode);

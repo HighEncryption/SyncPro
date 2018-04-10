@@ -2,6 +2,7 @@ namespace SyncPro.UnitTests
 {
     using System;
     using System.Collections.Generic;
+    using System.ComponentModel;
     using System.IO;
     using System.Linq;
     using System.Security.Cryptography;
@@ -37,6 +38,7 @@ namespace SyncPro.UnitTests
 
             accountInfoFilePath = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),
+                "SyncProTesting",
                 "BackblazeB2AccountInfo.json");
 
             if (File.Exists(accountInfoFilePath))
@@ -46,9 +48,22 @@ namespace SyncPro.UnitTests
 
                 return;
             }
-            
-            CredentialResult credentials = CredentialHelper.PromptForCredentials(
-                "Enter your Backblaze AccountID (username) and Application Key (password)");
+
+            CredentialResult credentials;
+            try
+            {
+                credentials = CredentialHelper.PromptForCredentials(
+                    "Enter your Backblaze AccountID (username) and Application Key (password)");
+            }
+            catch (Win32Exception win32Exception)
+                when (win32Exception.NativeErrorCode ==
+                      (int) NativeMethods.CredUI.CredUIReturnCodes.ERROR_CANCELLED)
+            {
+                Assert.Inconclusive("Backblaze B2 credentials are required to run tests");
+
+                // ReSharper disable once HeuristicUnreachableCode
+                return;
+            }
 
             accountInfo = new BackblazeB2AccountInfo
             {
