@@ -72,6 +72,29 @@ namespace SyncPro.UnitTests
             return this;
         }
 
+        public TestWrapper<TSource, TDestination> CopySourceStructureToDestination()
+        {
+            WindowsFileSystemAdapter sourceAdapter = this.SourceAdapter as WindowsFileSystemAdapter;
+            WindowsFileSystemAdapter destAdapter = this.DestinationAdapter as WindowsFileSystemAdapter;
+
+            if (sourceAdapter == null)
+            {
+                throw new NotImplementedException();
+            }
+
+            if (destAdapter == null)
+            {
+                throw new NotImplementedException();
+            }
+
+            DirectoryCopy(
+                sourceAdapter.Config.RootDirectory,
+                destAdapter.Config.RootDirectory,
+                true);
+
+            return this;
+        }
+
         public TestWrapper<TSource, TDestination> CreateSimpleSourceStructure()
         {
             WindowsFileSystemAdapter sourceAdapter = this.SourceAdapter as WindowsFileSystemAdapter;
@@ -148,6 +171,44 @@ namespace SyncPro.UnitTests
         public TestRunWrapper<TSource, TDestination> CreateAnalyzeJob()
         {
             return new TestRunWrapper<TSource, TDestination>(this, new AnalyzeJob(this.Relationship));
+        }
+
+        private static void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs)
+        {
+            // Get the subdirectories for the specified directory.
+            DirectoryInfo dir = new DirectoryInfo(sourceDirName);
+
+            if (!dir.Exists)
+            {
+                throw new DirectoryNotFoundException(
+                    "Source directory does not exist or could not be found: "
+                    + sourceDirName);
+            }
+
+            DirectoryInfo[] dirs = dir.GetDirectories();
+            // If the destination directory doesn't exist, create it.
+            if (!Directory.Exists(destDirName))
+            {
+                Directory.CreateDirectory(destDirName);
+            }
+        
+            // Get the files in the directory and copy them to the new location.
+            FileInfo[] files = dir.GetFiles();
+            foreach (FileInfo file in files)
+            {
+                string temppath = Path.Combine(destDirName, file.Name);
+                file.CopyTo(temppath, false);
+            }
+
+            // If copying subdirectories, copy them and their contents to new location.
+            if (copySubDirs)
+            {
+                foreach (DirectoryInfo subdir in dirs)
+                {
+                    string temppath = Path.Combine(destDirName, subdir.Name);
+                    DirectoryCopy(subdir.FullName, temppath, true);
+                }
+            }
         }
     }
 
@@ -252,6 +313,19 @@ namespace SyncPro.UnitTests
             SyncJob syncJob = (SyncJob)((AnalyzeJob)this.CurrentJob).ContinuationJob;
 
             Assert.AreEqual(JobResult.NotRun, syncJob.JobResult);
+
+            return this;
+        }
+
+        public TestRunWrapper<TSource, TDestination> VerifyEntryUpdateInfo(Func<EntryUpdateInfo, bool> predicate)
+        {
+            SyncJob syncJob = (SyncJob)((AnalyzeJob)this.CurrentJob).ContinuationJob;
+
+            Assert.AreEqual(1, syncJob.AnalyzeResult.AdapterResults.Count);
+            foreach (var result in syncJob.AnalyzeResult.AdapterResults.First().Value.EntryResults)
+            {
+                Assert.IsTrue(predicate(result));
+            }
 
             return this;
         }

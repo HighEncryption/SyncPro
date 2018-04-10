@@ -46,6 +46,10 @@
       <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.SqlServer.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="JsonLog, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\JsonLog\JsonLog\bin\Debug\JsonLog.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
@@ -82,10 +86,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\JsonLog\JsonLog\JsonLog.csproj">
-      <Project>{6028CE31-C870-4ECB-BF55-B4C4D4953B9D}</Project>
-      <Name>JsonLog</Name>
-    </ProjectReference>
     <ProjectReference Include="..\OneDriveTokenHelper\OneDriveTokenHelper.csproj">
       <Project>{a6727cd7-8703-432c-95a8-36666aff583b}</Project>
       <Name>OneDriveTokenHelper</Name>

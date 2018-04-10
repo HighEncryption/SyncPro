@@ -118,6 +118,24 @@
         }
 
         [TestMethod]
+        public void SyncWithAllExistingFiles()
+        {
+            var testWrapper = TestWrapperFactory
+                .CreateLocalToLocal(this.TestContext)
+                .SaveRelationship()
+                .CreateBasicSourceStructure()
+                .CopySourceStructureToDestination()
+                .CreateSyncJob()
+                .RunToCompletion();
+
+            testWrapper
+                .VerifySyncSuccess()
+                .VerifyResultContainsAllFiles()
+                .VerifyAnalyzeEntryCount(13)
+                .VerifyEntryUpdateInfo(e => e.HasSyncEntryFlag(SyncEntryChangedFlags.DestinationExists));
+        }
+
+        [TestMethod]
         public void SyncCreationTimestampChange()
         {
             var testWrapper = TestWrapperFactory
