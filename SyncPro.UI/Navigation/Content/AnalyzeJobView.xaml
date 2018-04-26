@@ -402,35 +402,35 @@
                                Visibility="{Binding Path=SelectedSyncEntry.IsDirectory, Converter={StaticResource BooleanToVisibilityCollapsedReversed}}" />
                     <TextBlock Grid.Column="3" Grid.Row="4" Margin="4,2,0,0"
                                Visibility="{Binding Path=SelectedSyncEntry.IsDirectory, Converter={StaticResource BooleanToVisibilityCollapsedReversed}}"
-                               Text="{Binding Path=SelectedSyncEntry.SizeNew, Converter={StaticResource FileSize}}"
+                               Text="{Binding Path=SelectedSyncEntry.OriginalSizeNew, Converter={StaticResource FileSize}}"
                                Foreground="{Binding Path=SelectedSyncEntry.Flags, Converter={StaticResource SyncEntryChangedFlagsToForeground}, ConverterParameter={x:Static adapters:SyncEntryChangedFlags.FileSize}}"
-                               ToolTip="{Binding Path=SelectedSyncEntry.SizeNew}"/>
+                               ToolTip="{Binding Path=SelectedSyncEntry.OriginalSizeNew}"/>
                     <TextBlock Grid.Column="3" Grid.Row="5" Margin="4,2,0,0" Foreground="Red"
                                Visibility="{Binding Path=SelectedSyncEntry.ShowSizeOld, Converter={StaticResource BooleanToVisibilityCollapsed}}"
-                               Text="{Binding Path=SelectedSyncEntry.SizeOld, Converter={StaticResource FileSize}}"
-                               ToolTip="{Binding Path=SelectedSyncEntry.SizeOld}"/>
+                               Text="{Binding Path=SelectedSyncEntry.OriginalSizeOld, Converter={StaticResource FileSize}}"
+                               ToolTip="{Binding Path=SelectedSyncEntry.OriginalSizeOld}"/>
 
                     <TextBlock Grid.Column="0" Grid.Row="6" Text="SHA1 Hash" Foreground="#7d7d7d" Margin="0,16,0,0" />
                     <TextBlock Grid.Column="3" Grid.Row="6" Margin="4,16,0,0"  TextTrimming="CharacterEllipsis" Width="150"
-                               Text="{Binding Path=SelectedSyncEntry.Sha1HashNew, Converter={StaticResource ByteArrayToString}}"
+                               Text="{Binding Path=SelectedSyncEntry.OriginalSha1HashNew, Converter={StaticResource ByteArrayToString}}"
                                Foreground="{Binding Path=SelectedSyncEntry.Flags, Converter={StaticResource SyncEntryChangedFlagsToForeground}, ConverterParameter={x:Static adapters:SyncEntryChangedFlags.Sha1Hash}}"
-                               ToolTip="{Binding Path=SelectedSyncEntry.Sha1HashNew, Converter={StaticResource ByteArrayToString}}"/>
+                               ToolTip="{Binding Path=SelectedSyncEntry.OriginalSha1HashNew, Converter={StaticResource ByteArrayToString}}"/>
                     <TextBlock Grid.Column="3" Grid.Row="7" Margin="4,16,0,0"  TextTrimming="CharacterEllipsis" Width="150"
                                Foreground="Red"
                                Visibility="{Binding Path=SelectedSyncEntry.Flags, Converter={StaticResource SyncEntryChangedFlagsToVisibility}, ConverterParameter={x:Static adapters:SyncEntryChangedFlags.Sha1Hash}}"
-                               Text="{Binding Path=SelectedSyncEntry.Sha1HashOld, Converter={StaticResource ByteArrayToString}}"
-                               ToolTip="{Binding Path=SelectedSyncEntry.Sha1HashOld, Converter={StaticResource ByteArrayToString}}"/>
+                               Text="{Binding Path=SelectedSyncEntry.OriginalSha1HashOld, Converter={StaticResource ByteArrayToString}}"
+                               ToolTip="{Binding Path=SelectedSyncEntry.OriginalSha1HashOld, Converter={StaticResource ByteArrayToString}}"/>
 
                     <TextBlock Grid.Column="0" Grid.Row="8" Text="MD5 Hash" Foreground="#7d7d7d" Margin="0,2,0,0" />
                     <TextBlock Grid.Column="3" Grid.Row="8" Margin="4,2,0,0"  TextTrimming="CharacterEllipsis" Width="150"
-                               Text="{Binding Path=SelectedSyncEntry.Md5HashNew, Converter={StaticResource ByteArrayToString}}"
+                               Text="{Binding Path=SelectedSyncEntry.OriginalMd5HashNew, Converter={StaticResource ByteArrayToString}}"
                                Foreground="{Binding Path=SelectedSyncEntry.Flags, Converter={StaticResource SyncEntryChangedFlagsToForeground}, ConverterParameter={x:Static adapters:SyncEntryChangedFlags.Md5Hash}}"
-                               ToolTip="{Binding Path=SelectedSyncEntry.Md5HashNew, Converter={StaticResource ByteArrayToString}}"/>
+                               ToolTip="{Binding Path=SelectedSyncEntry.OriginalMd5HashNew, Converter={StaticResource ByteArrayToString}}"/>
                     <TextBlock Grid.Column="3" Grid.Row="9" Margin="4,2,0,0"  TextTrimming="CharacterEllipsis" Width="150"
                                Foreground="Red"
                                Visibility="{Binding Path=SelectedSyncEntry.Flags, Converter={StaticResource SyncEntryChangedFlagsToVisibility}, ConverterParameter={x:Static adapters:SyncEntryChangedFlags.Md5Hash}}"
-                               Text="{Binding Path=SelectedSyncEntry.Md5HashOld, Converter={StaticResource ByteArrayToString}}"
-                               ToolTip="{Binding Path=SelectedSyncEntry.Md5HashOld, Converter={StaticResource ByteArrayToString}}"/>
+                               Text="{Binding Path=SelectedSyncEntry.OriginalMd5HashOld, Converter={StaticResource ByteArrayToString}}"
+                               ToolTip="{Binding Path=SelectedSyncEntry.OriginalMd5HashOld, Converter={StaticResource ByteArrayToString}}"/>
 
                     <TextBlock Grid.Column="0" Grid.Row="10" Text="Last Synchronized" Foreground="#7d7d7d" Margin="0,16,0,0" />
                     <TextBlock Grid.Column="3" Grid.Row="10" Margin="4,16,0,0" 
