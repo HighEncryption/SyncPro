@@ -19,9 +19,12 @@ namespace SyncPro.Runtime
 
         public EntryUpdateInfo UpdateInfo { get; }
 
-        public AnalyzeJobProgressInfo(EntryUpdateInfo updateInfo, int filesTotal, long bytesTotal)
+        public int SourceAdapterId { get; }
+
+        public AnalyzeJobProgressInfo(EntryUpdateInfo updateInfo, int sourceAdapterId, int filesTotal, long bytesTotal)
         {
             this.ProgressValue = double.PositiveInfinity;
+            this.SourceAdapterId = sourceAdapterId;
             this.FilesTotal = filesTotal;
             this.BytesTotal = bytesTotal;
 

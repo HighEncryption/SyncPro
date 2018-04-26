@@ -342,6 +342,17 @@
             </Border.Style>
 
             <StackPanel>
+                <Grid Height="200"
+                      Width="250">
+                    <TextBlock Text="Loading Preview"
+                               FontStyle="Oblique" HorizontalAlignment="Center" VerticalAlignment="Center"
+                               Visibility="{Binding Path=SelectedSyncEntry.ShowPreviewLoading, Converter={StaticResource BooleanToVisibilityCollapsed}}" />
+
+                    <Image HorizontalAlignment="Center"
+                           Source="{Binding Path=SelectedSyncEntry.PreviewImage}"
+                    />
+                </Grid>
+
                 <StackPanel Orientation="Horizontal">
                     <Image HorizontalAlignment="Left"
                            Source="{Binding Path=SelectedSyncEntry.LargeIcon}"

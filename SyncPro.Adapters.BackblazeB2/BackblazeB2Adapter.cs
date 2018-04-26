@@ -223,6 +223,11 @@
             return null;
         }
 
+        public override async Task<byte[]> GetItemThumbnail(string itemId)
+        {
+            return null;
+        }
+
         public override void FinalizeItemWrite(Stream stream, EntryUpdateInfo updateInfo)
         {
             BackblazeB2UploadStream uploadStream = (BackblazeB2UploadStream)stream;

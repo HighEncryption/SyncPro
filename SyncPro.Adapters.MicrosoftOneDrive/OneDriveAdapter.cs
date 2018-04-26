@@ -466,6 +466,19 @@
             return null;
         }
 
+        public override async Task<byte[]> GetItemThumbnail(string itemId)
+        {
+            ThumbnailSet thumbnailSet = await this.oneDriveClient.GetThumbnailsAsync(itemId).ConfigureAwait(false);
+
+            ThumbnailInfo thumbnail;
+            if (!thumbnailSet.Thumbnails.TryGetValue("medium", out thumbnail))
+            {
+                return null;
+            }
+
+            return await this.oneDriveClient.GetRawBytesFromOneDrive(thumbnail.Url).ConfigureAwait(false);
+        }
+
         /// <inheritdoc />
         public override void SaveConfiguration()
         {

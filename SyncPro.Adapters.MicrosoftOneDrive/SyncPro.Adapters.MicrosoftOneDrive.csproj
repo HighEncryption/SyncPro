@@ -52,6 +52,7 @@
     <Compile Include="DataModel\ItemContainer.cs" />
     <Compile Include="DataModel\ItemReference.cs" />
     <Compile Include="DataModel\Quota.cs" />
+    <Compile Include="DataModel\ThumbnailInfo.cs" />
     <Compile Include="DataModel\ThumbnailSet.cs" />
     <Compile Include="DataModel\UserEmails.cs" />
     <Compile Include="DataModel\UserProfile.cs" />

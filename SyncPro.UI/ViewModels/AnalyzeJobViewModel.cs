@@ -121,7 +121,10 @@ namespace SyncPro.UI.ViewModels
                     this.CalculateChangeMetrics(progressInfo.UpdateInfo);
 
                     this.AddEntryUpdate(
-                        new EntryUpdateInfoViewModel(progressInfo.UpdateInfo, this.SyncRelationship),
+                        new EntryUpdateInfoViewModel(
+                            progressInfo.UpdateInfo, 
+                            this.SyncRelationship,
+                            progressInfo.SourceAdapterId),
                         pathStack);
                 }
             });

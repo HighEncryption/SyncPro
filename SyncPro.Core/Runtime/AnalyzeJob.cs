@@ -947,6 +947,7 @@ namespace SyncPro.Runtime
                 this, 
                 new AnalyzeJobProgressInfo(
                     updateInfo, 
+                    adapterId,
                     this.analyzeResult.AdapterResults[adapterId].EntryResults.Count,
                     0));
         }

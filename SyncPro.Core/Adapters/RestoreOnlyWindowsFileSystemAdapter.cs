@@ -117,6 +117,11 @@ namespace SyncPro.Adapters
             throw new NotImplementedException();
         }
 
+        public override Task<byte[]> GetItemThumbnail(string itemId)
+        {
+            throw new NotImplementedException();
+        }
+
         public override void FinalizeItemWrite(Stream stream, EntryUpdateInfo updateInfo)
         {
         }

@@ -225,6 +225,8 @@
         }
 
         public abstract byte[] GetItemHash(HashType hashType, IAdapterItem adapterItem);
+
+        public abstract Task<byte[]> GetItemThumbnail(string itemId);
     }
 
     public class EntryUpdateResult

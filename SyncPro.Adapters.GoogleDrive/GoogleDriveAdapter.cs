@@ -130,6 +130,11 @@
             return null;
         }
 
+        public override async Task<byte[]> GetItemThumbnail(string itemId)
+        {
+            return null;
+        }
+
         public override void FinalizeItemWrite(Stream stream, EntryUpdateInfo updateInfo)
         {
             throw new NotImplementedException();

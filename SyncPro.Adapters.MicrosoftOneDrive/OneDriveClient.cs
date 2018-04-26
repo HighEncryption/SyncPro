@@ -160,7 +160,6 @@
             return response.Value;
         }
 
-
         public async Task<Item> GetItemByPathAsync(string path)
         {
             string requestUri = "/v1.0/drive/root:/" + path.TrimStart('/');
@@ -212,6 +211,18 @@
             HttpResponseMessage response = await this.SendOneDriveRequest(request).ConfigureAwait(false);
 
             return await response.Content.ReadAsJsonAsync<Item>().ConfigureAwait(false);
+        }
+
+        public async Task<ThumbnailSet> GetThumbnailsAsync(string itemId)
+        {
+            string requestUri = "/v1.0/drive/items/" + itemId + "/thumbnails";
+            var response = await this.GetOneDriveItem<ThumbnailSet>(requestUri).ConfigureAwait(false);
+            return response.Value;
+        }
+
+        public async Task<byte[]> GetRawBytesFromOneDrive(string url)
+        {
+            return await this.oneDriveHttpClient.GetByteArrayAsync(url).ConfigureAwait(false);
         }
 
         private async Task<OneDriveResponse<T>> GetOneDriveItem<T>(string requestUri)

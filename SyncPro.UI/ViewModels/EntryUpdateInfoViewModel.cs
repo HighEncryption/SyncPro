@@ -7,7 +7,6 @@
     using System.Linq;
     using System.Threading.Tasks;
     using System.Windows.Media;
-
     using SyncPro.Adapters;
     using SyncPro.Data;
     using SyncPro.Runtime;
@@ -172,12 +171,33 @@
             }
         }
 
-        public EntryUpdateInfoViewModel(EntryUpdateInfo info, SyncRelationshipViewModel syncRelationship)
+        private bool showPreviewLoading;
+
+        public bool ShowPreviewLoading
+        {
+            get => this.showPreviewLoading;
+            set => this.SetProperty(ref this.showPreviewLoading, value);
+        }
+
+        private ImageSource previewImage;
+
+        public ImageSource PreviewImage
+        {
+            get { return this.previewImage; }
+            set { this.SetProperty(ref this.previewImage, value); }
+        }
+
+        public EntryUpdateInfoViewModel(
+            EntryUpdateInfo info, 
+            SyncRelationshipViewModel syncRelationship,
+            int sourceAdapterId)
         {
             this.syncRelationship = syncRelationship;
             this.Name = info.Entry.Name;
             this.RelativePath = info.RelativePath;
             this.syncEntryId = info.Entry.Id;
+            this.sourceAdapterId = sourceAdapterId;
+            this.adapterEntryId = info.Entry.AdapterEntries.First(a => a.AdapterId == sourceAdapterId).AdapterEntryId;
 
             this.IsDirectory = info.Entry.Type == SyncEntryType.Directory;
 
@@ -267,8 +287,10 @@
 
         private volatile object loadLock = new object();
 
-        private bool isLoadingStarted = false;
+        private bool isLoadingStarted;
         private readonly long syncEntryId;
+        private readonly int sourceAdapterId;
+        private readonly string adapterEntryId;
 
         private void BeginLoadSyncJobReferences()
         {
@@ -366,6 +388,29 @@
             }
 
             return changes;
+        }
+
+        public void LoadThumbnails()
+        {
+            if (this.IsDirectory)
+            {
+                return;
+            }
+
+            this.ShowPreviewLoading = true;
+
+            Task.Run(async () =>
+            {
+                Thumbnail thumbnail = 
+                    await ThumbnailCache.GetThumbnailsAsync(
+                        this.syncRelationship,
+                        this.adapterEntryId,
+                        this.sourceAdapterId);
+
+                this.ShowPreviewLoading = false;
+
+                App.DispatcherInvoke(() => { this.PreviewImage = thumbnail.Image; });
+            });
         }
     }
 }

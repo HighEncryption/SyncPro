@@ -330,6 +330,11 @@
             throw new NotImplementedException("Unknown hash type");
         }
 
+        public override async Task<byte[]> GetItemThumbnail(string itemId)
+        {
+            return null;
+        }
+
         public override void FinalizeItemWrite(Stream stream, EntryUpdateInfo updateInfo)
         {
             stream.Flush();

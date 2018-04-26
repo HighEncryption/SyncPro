@@ -313,7 +313,10 @@
                     this.CalculateChangeMetrics(syncJobProgressInfo.UpdateInfo);
 
                     this.AddEntryUpdate(
-                        new EntryUpdateInfoViewModel(syncJobProgressInfo.UpdateInfo, this.SyncRelationship), 
+                        new EntryUpdateInfoViewModel(
+                            syncJobProgressInfo.UpdateInfo, 
+                            this.SyncRelationship,
+                            -1), 
                         pathStack);
                 }
             });

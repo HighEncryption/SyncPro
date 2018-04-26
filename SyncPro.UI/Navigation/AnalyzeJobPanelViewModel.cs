@@ -109,7 +109,13 @@ namespace SyncPro.UI.Navigation
         public EntryUpdateInfoViewModel SelectedSyncEntry
         {
             get { return this.selectedSyncEntry; }
-            set { this.SetProperty(ref this.selectedSyncEntry, value); }
+            set
+            {
+                if (this.SetProperty(ref this.selectedSyncEntry, value))
+                {
+                    this.selectedSyncEntry.LoadThumbnails();
+                }
+            }
         }
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]

@@ -619,5 +619,17 @@
             stopwatch.Stop();
             Logger.Debug("Finished CalculateRelationshipMetadataAsync. Duration=" + stopwatch.Elapsed);
         }
+
+        public async Task<byte[]> GetThumbnailAsync(int sourceAdapterId, string adapterEntryId)
+        {
+            var adapter = this.BaseModel.Adapters.FirstOrDefault(a => a.Configuration.Id == sourceAdapterId);
+
+            if (adapter == null)
+            {
+                return null;
+            }
+
+            return await adapter.GetItemThumbnail(adapterEntryId).ConfigureAwait(false);
+        }
     }
 }
