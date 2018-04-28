@@ -11,6 +11,7 @@
 
     using SyncPro.Runtime;
     using SyncPro.Tracing;
+    using SyncPro.UI.Dialogs;
     using SyncPro.UI.Framework;
     using SyncPro.UI.Framework.MVVM;
     using SyncPro.UI.Navigation;
@@ -20,6 +21,8 @@
     public class MainWindowViewModel : ViewModelBase, IRequestClose
     {
         public ICommand StartPowerShellCommand { get; }
+
+        public ICommand OpenAppSettingsWindow { get; }
 
         public ICommand CreateRelationshipCommand { get; }
 
@@ -132,6 +135,7 @@
         public MainWindowViewModel()
         {
             this.StartPowerShellCommand = new DelegatedCommand(this.StartPowerShell);
+            this.OpenAppSettingsWindow = new DelegatedCommand(this.OpenAppSettings);
             this.CreateRelationshipCommand = new DelegatedCommand(this.CreateRelationship);
             this.CloseWindowCommand = new DelegatedCommand(this.CloseWindow);
             this.BeginSearchCommand = new DelegatedCommand(this.BeginSearch);
@@ -246,6 +250,15 @@
             Logger.Info("Starting PowerShell window");
 
             PowerShell.RuntimeHost.Start();
+        }
+
+        private void OpenAppSettings(object obj)
+        {
+            Logger.Info("Opening App Settings Window");
+
+            ApplicationSettingsWindow appSettingsWindow = new ApplicationSettingsWindow();
+
+            bool? result = appSettingsWindow.ShowDialog();
         }
 
         private void CreateRelationship(object obj)

@@ -125,6 +125,9 @@
     <Compile Include="Controls\RestoreJobStatusView.xaml.cs">
       <DependentUpon>RestoreJobStatusView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Dialogs\ApplicationSettingsWindow.xaml.cs">
+      <DependentUpon>ApplicationSettingsWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Dialogs\BackblazeCredentialDialog.xaml.cs">
       <DependentUpon>BackblazeCredentialDialog.xaml</DependentUpon>
     </Compile>
@@ -283,6 +286,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\RestoreJobStatusView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialogs\ApplicationSettingsWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
