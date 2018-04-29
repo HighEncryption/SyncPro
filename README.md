@@ -6,16 +6,16 @@ SyncPro currently supports the following online storage services:
 
 |   Online Service  |  Status  |
 | ----------------- | -------- |
-| ![Microsoft OneDrive](https://github.com/HighEncryption/SyncPro/blob/master/SyncPro.UI/Resources/ProviderLogos/onedrive.png) |Supported|
-| ![Google Drive](https://github.com/HighEncryption/SyncPro/blob/master/SyncPro.UI/Resources/ProviderLogos/google_drive.png) |In Progress|
-| ![Dropbox](https://github.com/HighEncryption/SyncPro/blob/master/SyncPro.UI/Resources/ProviderLogos/dropbox.png) |Planned|
-| ![Amazon S3](https://github.com/HighEncryption/SyncPro/blob/master/SyncPro.UI/Resources/ProviderLogos/amazonS3.png) |Planned|
-| ![Microsoft Azure](https://github.com/HighEncryption/SyncPro/blob/master/SyncPro.UI/Resources/ProviderLogos/windows_azure.png)|Planned|
+| ![Microsoft OneDrive](https://github.com/HighEncryption/SyncPro/raw/master/SyncPro.UI/Resources/ProviderLogos/onedrive.png) |Supported|
+| ![Google Drive](https://github.com/HighEncryption/SyncPro/raw/master/SyncPro.UI/Resources/ProviderLogos/google_drive.png) |In Progress|
+| ![Dropbox](https://github.com/HighEncryption/SyncPro/raw/master/SyncPro.UI/Resources/ProviderLogos/dropbox.png) |Planned|
+| ![Amazon S3](https://github.com/HighEncryption/SyncPro/raw/master/SyncPro.UI/Resources/ProviderLogos/amazonS3.png) |Planned|
+| ![Microsoft Azure](https://github.com/HighEncryption/SyncPro/raw/master/SyncPro.UI/Resources/ProviderLogos/windows_azure.png)|Planned|
 
 The main window of SyncPro provides an at-a-glance view of the sync relationships. Last sync time, last sync result, and other useful information is displayed for each relationship.
 
-![Dashboard](https://github.com/HighEncryption/SyncPro/blob/master/Content/SyncProDashboard1.png)
+![Dashboard](https://github.com/HighEncryption/SyncPro/raw/master/Content/SyncProDashboard1.png)
 
 Creating a new sync relationship is done using the dialog shown below
 
-![Create Relationship](https://github.com/HighEncryption/SyncPro/blob/master/Content/CreateRelationshipSourceProvider.png)
+![Create Relationship](https://github.com/HighEncryption/SyncPro/raw/master/Content/CreateRelationshipSourceProvider.png)
