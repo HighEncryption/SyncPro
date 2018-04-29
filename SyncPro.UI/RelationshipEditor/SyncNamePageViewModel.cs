@@ -85,6 +85,12 @@
                 return;
             }
 
+            if (string.IsNullOrEmpty(destAdapter.DestinationPath) ||
+                string.IsNullOrEmpty(sourceAdapter.DestinationPath))
+            {
+                return;
+            }
+
             string sourceFolderName = sourceAdapter.DestinationPath.Split(
                 new[] { sourceAdapter.AdapterBase.PathSeparator },
                 StringSplitOptions.None).Last();
