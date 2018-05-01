@@ -197,7 +197,11 @@
             this.RelativePath = info.RelativePath;
             this.syncEntryId = info.Entry.Id;
             this.sourceAdapterId = sourceAdapterId;
-            this.adapterEntryId = info.Entry.AdapterEntries.First(a => a.AdapterId == sourceAdapterId).AdapterEntryId;
+            var adapterEntry = info.Entry.AdapterEntries.FirstOrDefault(a => a.AdapterId == sourceAdapterId);
+            if (adapterEntry != null)
+            {
+                this.adapterEntryId = adapterEntry.AdapterEntryId;
+            }
 
             this.IsDirectory = info.Entry.Type == SyncEntryType.Directory;
 

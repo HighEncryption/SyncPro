@@ -45,7 +45,12 @@
     /// </summary>
     public class ItemsChangedEventArgs : EventArgs
     {
-        public List<ItemChange> Changes { get; set; }
+        public ItemsChangedEventArgs()
+        {
+            this.Changes = new List<ItemChange>();
+        }
+
+        public List<ItemChange> Changes { get; }
     }
 
     /// <summary>

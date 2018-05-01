@@ -350,6 +350,10 @@
                     SyncEntry = updateInfo.Entry,
                     AdapterId = this.Configuration.Id,
                 };
+                
+                // [2018-04-30] It appears that the SyncEntryId field needs to be set on the adapter entry
+                // in order to avoid a referential integrity violation in the DB.
+                adapterEntry.SyncEntryId = updateInfo.Entry.Id;
 
                 updateInfo.Entry.AdapterEntries.Add(adapterEntry);
             }
@@ -574,9 +578,10 @@
                 return;
             }
 
-            this.ItemChanged?.Invoke(
-                this, 
-                new ItemsChangedEventArgs { Changes = pendingChangesToProcess });
+            ItemsChangedEventArgs eventArgs = new ItemsChangedEventArgs();
+            eventArgs.Changes.AddRange(pendingChangesToProcess);
+
+            this.ItemChanged?.Invoke(this, eventArgs);
         }
 
         private void FileSystemWatcherError(object sender, ErrorEventArgs e)

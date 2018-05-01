@@ -643,10 +643,21 @@
                     Logger.LogException(exception, "Failed to pull changes from OneDrive");
                 }
 
-                if (changes != null &&
+                if (changes != null && 
+                    changes.Changes.Any() &&
                     !string.Equals(changes.State, this.Config.LatestDeltaToken, StringComparison.Ordinal))
                 {
-                    this.ItemChanged?.Invoke(this, new ItemsChangedEventArgs());
+                    ItemsChangedEventArgs eventArgs = new ItemsChangedEventArgs();
+
+                    foreach (IChangeTrackedAdapterItem change in changes.Changes)
+                    {
+                        eventArgs.Changes.Add(
+                            new ItemChange(
+                                change.FullName,
+                                ItemChangeType.None));
+                    }
+
+                    this.ItemChanged?.Invoke(this, eventArgs);
                 }
 
                 Logger.Debug("OneDriveAdapter.ChangeNotificationThreadMain delay for " + OneDriveChangeNotificationPollingInterval);
