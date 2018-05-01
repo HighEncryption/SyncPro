@@ -1,10 +1,8 @@
 ﻿namespace SyncPro.UI.RelationshipEditor
 {
+    using System;
     using System.Diagnostics;
 
-    using Newtonsoft.Json;
-
-    using SyncPro.Data;
     using SyncPro.Tracing;
     using SyncPro.UI.ViewModels;
 
@@ -13,12 +11,19 @@
         public SyncTriggeringPageViewModel(RelationshipEditorViewModel editorViewModel)
             : base(editorViewModel)
         {
-            this.SelectedTriggering = SyncTriggerType.Continuous;
-            this.WeeklyDaysOfWeekSelection = new DaysOfWeekSelection();
-
             // Set default values that will be used when nothing is loaded from context
-            this.SelectedScheduleInterval = SyncScheduleInterval.Hourly;
+            this.SelectedTriggering = SyncTriggerType.Manual;
+            this.SelectedScheduleInterval = TriggerScheduleInterval.Hourly;
+
             this.HourlyIntervalValue = 1;
+            this.HourlyMinutesPastSyncTime = 0;
+
+            this.DailyIntervalValue = 1;
+            this.DailyStartTime = DateTime.Now.Date;
+
+            this.WeeklyIntervalValue = 1;
+            this.WeeklyStartTime = DateTime.Now.Date;
+            this.WeeklyDaysOfWeekSelection = new DaysOfWeekSelection();
         }
 
         public override string TabItemImageSource => "/SyncPro.UI;component/Resources/Graphics/clock_20.png";
@@ -29,35 +34,51 @@
         {
             this.SelectedTriggering = this.EditorViewModel.Relationship.TriggerType;
 
-            // TODO: Fix
-            //this.SelectedTriggering = this.EditorViewModel.SyncRelationship.Triggering;
-            //this.SelectedScheduleInterval = this.EditorViewModel.SyncRelationship.ScheduleInterval;
-            //this.HourlyIntervalValue = this.EditorViewModel.SyncRelationship.HourlyIntervalValue;
-            //this.HourlyMinutesPastSyncTime = this.EditorViewModel.SyncRelationship.HourlyMinutesPastSyncTime;
+            if (this.SelectedTriggering != SyncTriggerType.Scheduled)
+            {
+                return;
+            }
+
+            this.SelectedScheduleInterval = this.EditorViewModel.Relationship.TriggerScheduleInterval;
+
+            if (this.SelectedScheduleInterval == TriggerScheduleInterval.Hourly)
+            {
+                this.HourlyIntervalValue = this.EditorViewModel.Relationship.TriggerHourlyInterval;
+                this.HourlyMinutesPastSyncTime = this.EditorViewModel.Relationship.TriggerHourlyMinutesPastSyncTime;
+            }
+
+            if (this.SelectedScheduleInterval == TriggerScheduleInterval.Daily)
+            {
+                this.DailyIntervalValue = this.EditorViewModel.Relationship.TriggerDailyIntervalValue;
+                this.DailyStartTime = DateTime.Now.Date.Add(
+                    this.EditorViewModel.Relationship.TriggerDailyStartTime);
+            }
+
+            if (this.SelectedScheduleInterval == TriggerScheduleInterval.Weekly)
+            {
+                this.WeeklyIntervalValue = this.EditorViewModel.Relationship.TriggerWeeklyIntervalValue;
+                this.WeeklyStartTime = DateTime.Now.Date.Add(
+                    this.EditorViewModel.Relationship.TriggerWeeklyStartTime);
+
+                this.WeeklyDaysOfWeekSelection.SetFromFlags(
+                    this.EditorViewModel.Relationship.TriggerWeeklyDays);
+            }
         }
 
         public override void SaveContext()
         {
             this.EditorViewModel.Relationship.TriggerType = this.SelectedTriggering;
-           
+            this.EditorViewModel.Relationship.TriggerScheduleInterval = this.SelectedScheduleInterval;
 
-            // TODO: FIX ME
-            //this.EditorViewModel.Relationship.Model.Configuration.SyncTriggerType = this.SelectedTriggering;
-            //this.EditorViewModel.Relationship.Model.Configuration.TriggerConfiguration = this.CreateTriggerConfiguration();
-        }
+            this.EditorViewModel.Relationship.TriggerHourlyInterval = this.HourlyIntervalValue;
+            this.EditorViewModel.Relationship.TriggerHourlyMinutesPastSyncTime = this.HourlyMinutesPastSyncTime;
 
-        private string CreateTriggerConfiguration()
-        {
-            SyncTriggerConfiguration config = new SyncTriggerConfiguration();
+            this.EditorViewModel.Relationship.TriggerDailyIntervalValue = this.DailyIntervalValue;
+            this.EditorViewModel.Relationship.TriggerDailyStartTime = DailyStartTime?.TimeOfDay ?? TimeSpan.Zero;
 
-            if (this.SelectedTriggering == SyncTriggerType.Scheduled)
-            {
-                config.ScheduleInterval = this.SelectedScheduleInterval;
-                config.HourlyIntervalValue = this.HourlyIntervalValue;
-                config.HourlyMinutesPastSyncTime = this.HourlyMinutesPastSyncTime;
-            }
-
-            return JsonConvert.SerializeObject(config);
+            this.EditorViewModel.Relationship.TriggerWeeklyIntervalValue = this.WeeklyIntervalValue;
+            this.EditorViewModel.Relationship.TriggerWeeklyStartTime = this.WeeklyStartTime?.TimeOfDay ?? TimeSpan.Zero;
+            this.EditorViewModel.Relationship.TriggerWeeklyDays = this.WeeklyDaysOfWeekSelection.ToFlags();
         }
 
         public override string NavTitle => "Schedule";
@@ -69,7 +90,7 @@
 
         public SyncTriggerType SelectedTriggering
         {
-            get { return this.selectedTriggering; }
+            get => this.selectedTriggering;
             set
             {
                 if (this.SetProperty(ref this.selectedTriggering, value))
@@ -103,19 +124,19 @@
 
         public string SelectedTriggeringMessage
         {
-            get { return this.selectedTriggeringMessage; }
-            set { this.SetProperty(ref this.selectedTriggeringMessage, value); }
+            get => this.selectedTriggeringMessage;
+            set => this.SetProperty(ref this.selectedTriggeringMessage, value);
         }
 
         #region Scheduled Triggering Properties
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private SyncScheduleInterval selectedScheduleInterval;
+        private TriggerScheduleInterval selectedScheduleInterval;
 
-        public SyncScheduleInterval SelectedScheduleInterval
+        public TriggerScheduleInterval SelectedScheduleInterval
         {
-            get { return this.selectedScheduleInterval; }
-            set { this.SetProperty(ref this.selectedScheduleInterval, value); }
+            get => this.selectedScheduleInterval;
+            set => this.SetProperty(ref this.selectedScheduleInterval, value);
         }
 
         #region Hourly Properties
@@ -125,8 +146,8 @@
 
         public int HourlyIntervalValue
         {
-            get { return this.hourlyIntervalValue; }
-            set { this.SetProperty(ref this.hourlyIntervalValue, value); }
+            get => this.hourlyIntervalValue;
+            set => this.SetProperty(ref this.hourlyIntervalValue, value);
         }
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -134,8 +155,30 @@
 
         public int HourlyMinutesPastSyncTime
         {
-            get { return this.hourlyMinutesPastSyncTime; }
-            set { this.SetProperty(ref this.hourlyMinutesPastSyncTime, value); }
+            get => this.hourlyMinutesPastSyncTime;
+            set => this.SetProperty(ref this.hourlyMinutesPastSyncTime, value);
+        }
+
+        #endregion
+
+        #region Daily Properties
+
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private int dailyIntervalValue;
+
+        public int DailyIntervalValue
+        {
+            get => this.dailyIntervalValue;
+            set => this.SetProperty(ref this.dailyIntervalValue, value);
+        }
+
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private DateTime? dailyStartTime;
+
+        public DateTime? DailyStartTime
+        {
+            get => this.dailyStartTime;
+            set => this.SetProperty(ref this.dailyStartTime, value);
         }
 
         #endregion
@@ -147,11 +190,20 @@
 
         public int WeeklyIntervalValue
         {
-            get { return this.weeklyIntervalValue; }
-            set { this.SetProperty(ref this.weeklyIntervalValue, value); }
+            get => this.weeklyIntervalValue;
+            set => this.SetProperty(ref this.weeklyIntervalValue, value);
         }
 
-        public DaysOfWeekSelection WeeklyDaysOfWeekSelection { get; private set; }
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private DateTime? weeklyStartTime;
+
+        public DateTime? WeeklyStartTime
+        {
+            get => this.weeklyStartTime;
+            set => this.SetProperty(ref this.weeklyStartTime, value);
+        }
+
+        public DaysOfWeekSelection WeeklyDaysOfWeekSelection { get; }
 
         #endregion
 
@@ -164,8 +216,8 @@
 
         public SyncTriggerType SelectedEventTriggering
         {
-            get { return this.selectedEventTriggering; }
-            set { this.SetProperty(ref this.selectedEventTriggering, value); }
+            get => this.selectedEventTriggering;
+            set => this.SetProperty(ref this.selectedEventTriggering, value);
         }
 
         #endregion

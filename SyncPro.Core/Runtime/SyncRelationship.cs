@@ -97,6 +97,17 @@
             this.SyncAttributes = configuration.SyncAttributes;
 
             this.TriggerType = configuration.TriggerConfiguration.TriggerType;
+            this.TriggerScheduleInterval = configuration.TriggerConfiguration.ScheduleInterval;
+
+            this.TriggerHourlyInterval = this.Configuration.TriggerConfiguration.HourlyIntervalValue;
+            this.TriggerHourlyMinutesPastSyncTime = this.Configuration.TriggerConfiguration.HourlyMinutesPastSyncTime;
+
+            this.TriggerDailyIntervalValue = this.Configuration.TriggerConfiguration.DailyIntervalValue;
+            this.TriggerDailyStartTime = this.Configuration.TriggerConfiguration.DailyStartTime;
+
+            this.TriggerWeeklyIntervalValue = this.Configuration.TriggerConfiguration.WeeklyIntervalValue;
+            this.TriggerWeeklyStartTime = this.Configuration.TriggerConfiguration.WeeklyStartTime;
+            this.TriggerWeeklyDays = this.Configuration.TriggerConfiguration.WeeklyDays;
 
             this.IsThrottlingEnabled = configuration.ThrottlingConfiguration.IsEnabled;
             this.ThrottlingValue = configuration.ThrottlingConfiguration.Value;
@@ -135,9 +146,16 @@
                 this.Configuration.ThrottlingConfiguration.ScaleFactor = this.ThrottlingScaleFactor;
 
                 this.Configuration.TriggerConfiguration.TriggerType = this.TriggerType;
+                this.Configuration.TriggerConfiguration.ScheduleInterval = this.TriggerScheduleInterval;
+
                 this.Configuration.TriggerConfiguration.HourlyIntervalValue = this.TriggerHourlyInterval;
                 this.Configuration.TriggerConfiguration.HourlyMinutesPastSyncTime = this.TriggerHourlyMinutesPastSyncTime;
-                this.Configuration.TriggerConfiguration.ScheduleInterval = this.TriggerScheduleInterval;
+
+                this.Configuration.TriggerConfiguration.DailyIntervalValue = this.TriggerDailyIntervalValue;
+                this.Configuration.TriggerConfiguration.DailyStartTime = this.TriggerDailyStartTime;
+
+                this.Configuration.TriggerConfiguration.WeeklyIntervalValue = this.TriggerWeeklyIntervalValue;
+                this.Configuration.TriggerConfiguration.WeeklyStartTime = this.TriggerWeeklyStartTime;
 
                 // Set the encryption mode for adapters that may need it. Other encryption configuration is set below.
                 this.Configuration.EncryptionConfiguration.Mode = this.EncryptionMode;
@@ -404,6 +422,15 @@
         }
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private TriggerScheduleInterval triggerScheduleInterval;
+
+        public TriggerScheduleInterval TriggerScheduleInterval
+        {
+            get { return this.triggerScheduleInterval; }
+            set { this.SetProperty(ref this.triggerScheduleInterval, value); }
+        }
+
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private int triggerHourlyInterval;
 
         public int TriggerHourlyInterval
@@ -422,12 +449,48 @@
         }
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private TriggerScheduleInterval triggerScheduleInterval;
+        private int triggerDailyIntervalValue;
 
-        public TriggerScheduleInterval TriggerScheduleInterval
+        public int TriggerDailyIntervalValue
         {
-            get { return this.triggerScheduleInterval; }
-            set { this.SetProperty(ref this.triggerScheduleInterval, value); }
+            get { return this.triggerDailyIntervalValue; }
+            set { this.SetProperty(ref this.triggerDailyIntervalValue, value); }
+        }
+
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private TimeSpan triggerDailyStartTime;
+
+        public TimeSpan TriggerDailyStartTime
+        {
+            get { return this.triggerDailyStartTime; }
+            set { this.SetProperty(ref this.triggerDailyStartTime, value); }
+        }
+
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private int triggerWeeklyIntervalValue;
+
+        public int TriggerWeeklyIntervalValue
+        {
+            get { return this.triggerWeeklyIntervalValue; }
+            set { this.SetProperty(ref this.triggerWeeklyIntervalValue, value); }
+        }
+
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private TimeSpan triggerWeeklyStartTime;
+
+        public TimeSpan TriggerWeeklyStartTime
+        {
+            get { return this.triggerWeeklyStartTime; }
+            set { this.SetProperty(ref this.triggerWeeklyStartTime, value); }
+        }
+
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private WeeklyDays triggerWeeklyDays;
+
+        public WeeklyDays TriggerWeeklyDays
+        {
+            get { return this.triggerWeeklyDays; }
+            set { this.SetProperty(ref this.triggerWeeklyDays, value); }
         }
 
         #endregion
@@ -462,7 +525,7 @@
 
         public async Task InitializeAsync()
         {
-            await Task.Factory.StartNew(this.Initialize)
+            await Task.Run(() => { this.Initialize(); })
                 .ContinueWith(this.InitializeComplete)
                 .ConfigureAwait(false);
         }
@@ -581,13 +644,43 @@
 
         private async Task SyncSchedulerScheduledMainThread()
         {
+            DateTime nextSyncTime = this.GetNextScheduledTriggerTime();
+
+            // Briefly wait when starting the scheduler
+            await Task.Delay(1000).ConfigureAwait(false);
+
             while (!this.syncSchedulerCancellationTokenSource.Token.IsCancellationRequested)
             {
-                // 1 minute wait between checking the schedule
-                await Task.Delay(
-                        SyncSchedulerDelay,
-                        this.syncSchedulerCancellationTokenSource.Token)
-                    .ConfigureAwait(false);
+                try
+                {
+                    if (nextSyncTime < DateTime.Now)
+                    {
+                        if (this.State == SyncRelationshipState.Idle)
+                        {
+                            this.BeginSyncJob(
+                                SyncTriggerType.Scheduled,
+                                null);
+
+                            nextSyncTime = this.GetNextScheduledTriggerTime();
+                        }
+                        else
+                        {
+                            Logger.Debug(
+                                "Deferring scheduled sync job start. Relationship state is {0}",
+                                this.State);
+                        }
+                    }
+
+                    // 1 minute wait between checking the schedule
+                    await Task.Delay(
+                            SyncRelationship.SyncSchedulerDelay,
+                            this.syncSchedulerCancellationTokenSource.Token)
+                        .ConfigureAwait(false);
+                }
+                catch (TaskCanceledException)
+                {
+                    // Suppress task cancellation exception
+                }
             }
         }
 
@@ -600,6 +693,117 @@
 
             // TODO: Use only the files listed from the event args
             this.BeginSyncJob(SyncTriggerType.Continuous, null);
+        }
+
+        public DateTime GetNextScheduledTriggerTime()
+        {
+            // First get the DateTime of midnight of the current day
+            DateTime nextSyncTime = DateTime.Now.Date;
+
+            if (this.TriggerScheduleInterval == TriggerScheduleInterval.Hourly)
+            {
+                // Add the minute offset
+                nextSyncTime = nextSyncTime.AddMinutes(this.TriggerHourlyMinutesPastSyncTime);
+
+                while (true)
+                {
+                    nextSyncTime = nextSyncTime.AddHours(this.TriggerHourlyInterval);
+
+                    if (nextSyncTime > DateTime.Now)
+                    {
+                        return nextSyncTime;
+                    }
+                }
+            }
+
+            if (this.TriggerScheduleInterval == TriggerScheduleInterval.Daily)
+            {
+                nextSyncTime = nextSyncTime.Add(TriggerDailyStartTime);
+
+                while (true)
+                {
+                    nextSyncTime = nextSyncTime.AddDays(this.TriggerDailyIntervalValue);
+
+                    if (nextSyncTime > DateTime.Now)
+                    {
+                        return nextSyncTime;
+                    }
+                }
+            }
+
+            if (this.TriggerScheduleInterval == TriggerScheduleInterval.Weekly)
+            {
+                if (this.TriggerWeeklyDays == WeeklyDays.None)
+                {
+                    this.TriggerWeeklyDays = WeeklyDays.All;
+                }
+
+                nextSyncTime = nextSyncTime.Add(TriggerWeeklyStartTime);
+
+                while (true)
+                {
+                    nextSyncTime = nextSyncTime.AddDays(this.TriggerWeeklyIntervalValue);
+
+                    if (!IsScheduledDayOfWeek(nextSyncTime, this.TriggerWeeklyDays))
+                    {
+                        continue;
+                    }
+
+                    if (nextSyncTime > DateTime.Now)
+                    {
+                        return nextSyncTime;
+                    }
+                }
+            }
+
+            throw new NotImplementedException("TriggerInterval=" + this.TriggerHourlyInterval);
+        }
+
+        private static bool IsScheduledDayOfWeek(DateTime nextSyncTime, WeeklyDays weeklyDays)
+        {
+            if (nextSyncTime.DayOfWeek == DayOfWeek.Sunday &&
+                (weeklyDays & WeeklyDays.Sunday) != 0)
+            {
+                return true;
+            }
+
+            if (nextSyncTime.DayOfWeek == DayOfWeek.Monday &&
+                (weeklyDays & WeeklyDays.Monday) != 0)
+            {
+                return true;
+            }
+
+            if (nextSyncTime.DayOfWeek == DayOfWeek.Tuesday &&
+                (weeklyDays & WeeklyDays.Tuesday) != 0)
+            {
+                return true;
+            }
+
+            if (nextSyncTime.DayOfWeek == DayOfWeek.Wednesday &&
+                (weeklyDays & WeeklyDays.Wednesday) != 0)
+            {
+                return true;
+            }
+
+            if (nextSyncTime.DayOfWeek == DayOfWeek.Thursday &&
+                (weeklyDays & WeeklyDays.Thursday) != 0)
+            {
+                return true;
+            }
+
+            if (nextSyncTime.DayOfWeek == DayOfWeek.Friday &&
+                (weeklyDays & WeeklyDays.Friday) != 0)
+            {
+                return true;
+            }
+
+            if (nextSyncTime.DayOfWeek == DayOfWeek.Saturday &&
+                (weeklyDays & WeeklyDays.Saturday) != 0)
+            {
+                return true;
+            }
+
+            return false;
         }
 
         private static readonly TimeSpan SyncSchedulerDelay = TimeSpan.FromMinutes(1);

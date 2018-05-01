@@ -4,9 +4,6 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:relationshipEditor="clr-namespace:SyncPro.UI.RelationshipEditor"
-             xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
-             xmlns:extensions="clr-namespace:SyncPro.UI.Extensions"
-             xmlns:data="clr-namespace:SyncPro.Data;assembly=SyncPro.Core"
              xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
              xmlns:syncPro="clr-namespace:SyncPro;assembly=SyncPro.Core"
              mc:Ignorable="d" 
@@ -88,7 +85,7 @@
                              IsChecked="{Binding Path=SelectedScheduleInterval, Converter={StaticResource EnumToBoolean}, ConverterParameter=Weekly}">
                     <TextBlock Style="{StaticResource RadioButtonItemTextStyle}" Text="Weekly" />
                 </RadioButton>
-                <RadioButton VerticalContentAlignment="Center" Margin="16,0,0,0"
+                <RadioButton VerticalContentAlignment="Center" Margin="16,0,0,0" IsEnabled="False"
                              IsChecked="{Binding Path=SelectedScheduleInterval, Converter={StaticResource EnumToBoolean}, ConverterParameter=Monthly}">
                     <TextBlock Style="{StaticResource RadioButtonItemTextStyle}" Text="Monthly" />
                 </RadioButton>
@@ -102,7 +99,7 @@
                             <MultiDataTrigger>
                                 <MultiDataTrigger.Conditions>
                                     <Condition Binding="{Binding Path=SelectedTriggering}" Value="{x:Static syncPro:SyncTriggerType.Scheduled}" />
-                                    <Condition Binding="{Binding Path=SelectedScheduleInterval}" Value="{x:Static data:SyncScheduleInterval.Hourly}" />
+                                    <Condition Binding="{Binding Path=SelectedScheduleInterval}" Value="{x:Static syncPro:TriggerScheduleInterval.Hourly}" />
                                 </MultiDataTrigger.Conditions>
                                 <Setter Property="Visibility" Value="Visible" />
                             </MultiDataTrigger>
@@ -111,7 +108,7 @@
                 </TextBlock.Style>
             </TextBlock>
 
-            <StackPanel Grid.Column="1" Grid.Row="3" Margin="0,20,0,0" Orientation="Horizontal">
+            <StackPanel Grid.Column="1" Grid.Row="3" Margin="0,24,0,0" Orientation="Horizontal">
                 <StackPanel.Style>
                     <Style TargetType="StackPanel">
                         <Setter Property="Visibility" Value="Collapsed" />
@@ -119,7 +116,7 @@
                             <MultiDataTrigger>
                                 <MultiDataTrigger.Conditions>
                                     <Condition Binding="{Binding Path=SelectedTriggering}" Value="{x:Static syncPro:SyncTriggerType.Scheduled}" />
-                                    <Condition Binding="{Binding Path=SelectedScheduleInterval}" Value="{x:Static data:SyncScheduleInterval.Hourly}" />
+                                    <Condition Binding="{Binding Path=SelectedScheduleInterval}" Value="{x:Static syncPro:TriggerScheduleInterval.Hourly}" />
                                 </MultiDataTrigger.Conditions>
                                 <Setter Property="Visibility" Value="Visible" />
                             </MultiDataTrigger>
@@ -127,25 +124,12 @@
                     </Style>
                 </StackPanel.Style>
 
-                <TextBlock TextWrapping="NoWrap" Text="Synchronize every " VerticalAlignment="Center" />
-                <!--<TextBox Width="26" Margin="4,0,4,2" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" 
-                         Text="{Binding Path=HourlyIntervalValue}" Style="{StaticResource ItemTextBoxStyle}">
-                    <i:Interaction.Behaviors>
-                        <extensions:TextBoxInputRegExBehaviour RegularExpression="^\d+$" MaxLength="2" EmptyValue="1" />
-                    </i:Interaction.Behaviors>
-                </TextBox>-->
-                <xctk:IntegerUpDown Minimum="1" Maximum="48" Text="{Binding Path=HourlyIntervalValue}"
-                                    Width="40" Margin="4,0,4,2"  />
-                <TextBlock TextWrapping="NoWrap" Text="hour(s) at " VerticalAlignment="Center" />
-                
-                <!--<TextBox Width="26" Margin="4,0,4,2" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Text="{Binding Path=HourlyMinutesPastSyncTime}" >
-                    <i:Interaction.Behaviors>
-                        <extensions:TextBoxInputRegExBehaviour RegularExpression="^\d+$" MaxLength="2" EmptyValue="1" />
-                    </i:Interaction.Behaviors>
-                </TextBox>-->
-                <xctk:IntegerUpDown Minimum="1" Maximum="59" Text="{Binding Path=HourlyMinutesPastSyncTime}"
-                                    Width="40" Margin="4,0,4,2"  />
-
+                <TextBlock TextWrapping="NoWrap" Text="Synchronize every" VerticalAlignment="Center" />
+                <xctk:IntegerUpDown Minimum="1" Maximum="23" Text="{Binding Path=HourlyIntervalValue}"
+                                    Width="40" Margin="4,0,4,2" />
+                <TextBlock TextWrapping="NoWrap" Text="hour(s) at" VerticalAlignment="Center" />
+                <xctk:IntegerUpDown Minimum="0" Maximum="59" Text="{Binding Path=HourlyMinutesPastSyncTime}"
+                                    Width="40" Margin="4,0,4,2" />
                 <TextBlock TextWrapping="NoWrap" Text="minutes past the hour." VerticalAlignment="Center" />
             </StackPanel>
 
@@ -157,7 +141,7 @@
                             <MultiDataTrigger>
                                 <MultiDataTrigger.Conditions>
                                     <Condition Binding="{Binding Path=SelectedTriggering}" Value="{x:Static syncPro:SyncTriggerType.Scheduled}" />
-                                    <Condition Binding="{Binding Path=SelectedScheduleInterval}" Value="{x:Static data:SyncScheduleInterval.Daily}" />
+                                    <Condition Binding="{Binding Path=SelectedScheduleInterval}" Value="{x:Static syncPro:TriggerScheduleInterval.Daily}" />
                                 </MultiDataTrigger.Conditions>
                                 <Setter Property="Visibility" Value="Visible" />
                             </MultiDataTrigger>
@@ -166,7 +150,7 @@
                 </TextBlock.Style>
             </TextBlock>
 
-            <StackPanel Grid.Column="1" Grid.Row="3" Margin="0,20,0,0" Orientation="Horizontal">
+            <StackPanel Grid.Column="1" Grid.Row="3" Margin="0,24,0,0" Orientation="Horizontal">
                 <StackPanel.Style>
                     <Style TargetType="StackPanel">
                         <Setter Property="Visibility" Value="Collapsed" />
@@ -174,7 +158,7 @@
                             <MultiDataTrigger>
                                 <MultiDataTrigger.Conditions>
                                     <Condition Binding="{Binding Path=SelectedTriggering}" Value="{x:Static syncPro:SyncTriggerType.Scheduled}" />
-                                    <Condition Binding="{Binding Path=SelectedScheduleInterval}" Value="{x:Static data:SyncScheduleInterval.Daily}" />
+                                    <Condition Binding="{Binding Path=SelectedScheduleInterval}" Value="{x:Static syncPro:TriggerScheduleInterval.Daily}" />
                                 </MultiDataTrigger.Conditions>
                                 <Setter Property="Visibility" Value="Visible" />
                             </MultiDataTrigger>
@@ -183,25 +167,21 @@
                 </StackPanel.Style>
 
                 <TextBlock TextWrapping="NoWrap" Text="Synchronize every " VerticalAlignment="Center" />
-                <!--<TextBox Width="26" Margin="4,0,4,2" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Text="{Binding Path=DailyIntervalValue}" />-->
                 <xctk:IntegerUpDown Minimum="1" Maximum="31" Text="{Binding Path=DailyIntervalValue}"
                                     Width="40" Margin="4,0,4,2"  />
-
                 <TextBlock TextWrapping="NoWrap" Text="day(s) at " VerticalAlignment="Center" />
-                <xctk:DateTimePicker Format="ShortTime" Width="74" Margin="4,0,4,2" ShowDropDownButton="False" />
-                <!--<TextBox Width="26" Margin="4,0,4,2" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />-->
-                <!--<TextBlock TextWrapping="NoWrap" Text="minutes past the hour." VerticalAlignment="Center" />-->
+                <xctk:DateTimePicker Format="ShortTime" Width="74" Margin="4,0,4,2" ShowDropDownButton="False" Value="{Binding Path=DailyStartTime}" />
             </StackPanel>
 
-            <TextBlock Grid.Column="0" Grid.Row="3" Text="Start Time" VerticalAlignment="Top" Margin="0,27,0,0">
+            <TextBlock Grid.Column="0" Grid.Row="3" Text="Start Time" Margin="0,27,0,0">
                 <TextBlock.Style>
-                    <Style TargetType="TextBlock" BasedOn="{StaticResource ItemHeaderStyle}">
+                    <Style TargetType="TextBlock" BasedOn="{StaticResource LocalItemHeaderStyle}">
                         <Setter Property="Visibility" Value="Collapsed" />
                         <Style.Triggers>
                             <MultiDataTrigger>
                                 <MultiDataTrigger.Conditions>
                                     <Condition Binding="{Binding Path=SelectedTriggering}" Value="{x:Static syncPro:SyncTriggerType.Scheduled}" />
-                                    <Condition Binding="{Binding Path=SelectedScheduleInterval}" Value="{x:Static data:SyncScheduleInterval.Weekly}" />
+                                    <Condition Binding="{Binding Path=SelectedScheduleInterval}" Value="{x:Static syncPro:TriggerScheduleInterval.Weekly}" />
                                 </MultiDataTrigger.Conditions>
                                 <Setter Property="Visibility" Value="Visible" />
                             </MultiDataTrigger>
@@ -210,7 +190,7 @@
                 </TextBlock.Style>
             </TextBlock>
 
-            <StackPanel Grid.Column="1" Grid.Row="3" Margin="0,20,0,0" Orientation="Horizontal">
+            <StackPanel Grid.Column="1" Grid.Row="3" Margin="0,24,0,0" Orientation="Horizontal">
                 <StackPanel.Style>
                     <Style TargetType="StackPanel">
                         <Setter Property="Visibility" Value="Collapsed" />
@@ -218,7 +198,7 @@
                             <MultiDataTrigger>
                                 <MultiDataTrigger.Conditions>
                                     <Condition Binding="{Binding Path=SelectedTriggering}" Value="{x:Static syncPro:SyncTriggerType.Scheduled}" />
-                                    <Condition Binding="{Binding Path=SelectedScheduleInterval}" Value="{x:Static data:SyncScheduleInterval.Weekly}" />
+                                    <Condition Binding="{Binding Path=SelectedScheduleInterval}" Value="{x:Static syncPro:TriggerScheduleInterval.Weekly}" />
                                 </MultiDataTrigger.Conditions>
                                 <Setter Property="Visibility" Value="Visible" />
                             </MultiDataTrigger>
@@ -227,9 +207,12 @@
                 </StackPanel.Style>
 
                 <TextBlock TextWrapping="NoWrap" Text="Synchronize every " VerticalAlignment="Center" />
-                <TextBox Width="26" Margin="4,0,4,2" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+                <xctk:IntegerUpDown Minimum="1" Maximum="32" Text="{Binding Path=WeeklyIntervalValue}"
+                                    Width="40" Margin="4,0,4,2"  />
+                <!--<TextBox Width="26" Margin="4,0,4,2" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />-->
                 <TextBlock TextWrapping="NoWrap" Text="week(s) at " VerticalAlignment="Center" />
-                <TextBox Width="26" Margin="4,0,4,2" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+                <!--<TextBox Width="26" Margin="4,0,4,2" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />-->
+                <xctk:DateTimePicker Format="ShortTime" Width="74" Margin="4,0,4,2" ShowDropDownButton="False" Value="{Binding Path=WeeklyStartTime}" />
                 <TextBlock TextWrapping="NoWrap" Text="on" VerticalAlignment="Center" />
             </StackPanel>
 
@@ -248,7 +231,7 @@
                             <MultiDataTrigger>
                                 <MultiDataTrigger.Conditions>
                                     <Condition Binding="{Binding Path=SelectedTriggering}" Value="{x:Static syncPro:SyncTriggerType.Scheduled}" />
-                                    <Condition Binding="{Binding Path=SelectedScheduleInterval}" Value="{x:Static data:SyncScheduleInterval.Weekly}" />
+                                    <Condition Binding="{Binding Path=SelectedScheduleInterval}" Value="{x:Static syncPro:TriggerScheduleInterval.Weekly}" />
                                 </MultiDataTrigger.Conditions>
                                 <Setter Property="Visibility" Value="Visible" />
                             </MultiDataTrigger>

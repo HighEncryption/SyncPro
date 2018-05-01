@@ -39,7 +39,7 @@ namespace SyncPro.Runtime
         /// <summary>
         /// The datetime when the job finished
         /// </summary>
-        public DateTime? EndTime { get; private set; }
+        public DateTime? EndTime { get; protected set; }
 
         /// <summary>
         /// The result of the sync job
@@ -100,7 +100,11 @@ namespace SyncPro.Runtime
 
         private void ExecuteTaskComplete(Task obj)
         {
-            this.EndTime = DateTime.Now;
+            if (this.EndTime == null)
+            {
+                this.EndTime = DateTime.Now;
+            }
+
             this.Relationship.State = SyncRelationshipState.Idle;
             this.Relationship.ActiveJob = null;
 

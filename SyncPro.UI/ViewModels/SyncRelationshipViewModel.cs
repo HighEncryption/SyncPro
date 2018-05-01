@@ -62,6 +62,8 @@
             set { this.BaseModel.SyncScope = value; }
         }
 
+        #region Triggering
+
         [BaseModelProperty(NotifyOnPropertyChange = true)]
         public SyncTriggerType TriggerType
         {
@@ -70,11 +72,62 @@
         }
 
         [BaseModelProperty(NotifyOnPropertyChange = true)]
+        public TriggerScheduleInterval TriggerScheduleInterval
+        {
+            get { return this.BaseModel.TriggerScheduleInterval; }
+            set { this.BaseModel.TriggerScheduleInterval = value; }
+        }
+
+        [BaseModelProperty(NotifyOnPropertyChange = true)]
         public int TriggerHourlyInterval
         {
             get { return this.BaseModel.TriggerHourlyInterval; }
             set { this.BaseModel.TriggerHourlyInterval = value; }
         }
+
+        [BaseModelProperty(NotifyOnPropertyChange = true)]
+        public int TriggerHourlyMinutesPastSyncTime
+        {
+            get { return this.BaseModel.TriggerHourlyMinutesPastSyncTime; }
+            set { this.BaseModel.TriggerHourlyMinutesPastSyncTime = value; }
+        }
+
+        [BaseModelProperty(NotifyOnPropertyChange = true)]
+        public int TriggerDailyIntervalValue
+        {
+            get { return this.BaseModel.TriggerDailyIntervalValue; }
+            set { this.BaseModel.TriggerDailyIntervalValue = value; }
+        }
+
+        [BaseModelProperty(NotifyOnPropertyChange = true)]
+        public TimeSpan TriggerDailyStartTime
+        {
+            get { return this.BaseModel.TriggerDailyStartTime; }
+            set { this.BaseModel.TriggerDailyStartTime = value; }
+        }
+
+        [BaseModelProperty(NotifyOnPropertyChange = true)]
+        public int TriggerWeeklyIntervalValue
+        {
+            get { return this.BaseModel.TriggerWeeklyIntervalValue; }
+            set { this.BaseModel.TriggerWeeklyIntervalValue = value; }
+        }
+
+        [BaseModelProperty(NotifyOnPropertyChange = true)]
+        public TimeSpan TriggerWeeklyStartTime
+        {
+            get { return this.BaseModel.TriggerWeeklyStartTime; }
+            set { this.BaseModel.TriggerWeeklyStartTime = value; }
+        }
+
+        [BaseModelProperty(NotifyOnPropertyChange = true)]
+        public WeeklyDays TriggerWeeklyDays
+        {
+            get { return this.BaseModel.TriggerWeeklyDays; }
+            set { this.BaseModel.TriggerWeeklyDays = value; }
+        }
+
+        #endregion
 
         [BaseModelProperty(NotifyOnPropertyChange = true)]
         public SyncRelationshipState State => this.BaseModel.State;
@@ -351,6 +404,8 @@
 
             this.UpdateStatusDescription();
 
+            this.CalculateRelationshipMetadataAsync().Wait();
+
             this.JobFinished?.Invoke(sender, args);
 
             this.ActiveJob = null;
@@ -541,6 +596,8 @@
             if (initializeAfterSave)
             {
                 await this.BaseModel.InitializeAsync().ConfigureAwait(false);
+
+                await this.CalculateRelationshipMetadataAsync().ConfigureAwait(false);
             }
 
             if (!Global.SyncRelationships.Contains(this.BaseModel))
@@ -567,6 +624,11 @@
             if (this.TriggerType == SyncTriggerType.Manual)
             {
                 this.NextSyncDisplayString = "When manually triggered";
+            }
+            else if (this.TriggerType == SyncTriggerType.Scheduled)
+            {
+                DateTime nextSyncTime = this.BaseModel.GetNextScheduledTriggerTime();
+                this.NextSyncDisplayString = nextSyncTime.ToString("dddd, MMMM dd, HH:mm");
             }
             else if (this.SyncSourceAdapter.AdapterBase.SupportsChangeNotification())
             {

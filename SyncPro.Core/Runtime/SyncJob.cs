@@ -164,6 +164,8 @@
             }
             finally
             {
+                this.EndTime = DateTime.Now;
+
                 this.SaveSyncJobHistory();
             }
         }
