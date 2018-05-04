@@ -445,6 +445,14 @@ namespace SyncPro.UnitTests
     {
         public static JobBase WaitForCompletion(this JobBase job)
         {
+            // Default to 1 minute for execution
+            int delayMs = 60000;
+
+            if (Debugger.IsAttached)
+            {
+                delayMs *= 10;
+            }
+
             ManualResetEvent evt = new ManualResetEvent(false);
             while (true)
             {
@@ -453,7 +461,7 @@ namespace SyncPro.UnitTests
                     evt.Set();
                 };
 
-                if (evt.WaitOne(60000) == false)
+                if (evt.WaitOne(delayMs) == false)
                 {
                     Assert.Fail("Timeout");
                 }
