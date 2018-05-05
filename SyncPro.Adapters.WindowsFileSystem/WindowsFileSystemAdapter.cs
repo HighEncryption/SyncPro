@@ -11,6 +11,7 @@
     using SyncPro.Data;
     using SyncPro.Runtime;
     using SyncPro.Tracing;
+    using SyncPro.Utility;
 
     public class WindowsFileSystemAdapter : AdapterBase, IChangeNotification, IDisposable
     {
@@ -177,6 +178,8 @@
                 {
                     throw new NotImplementedException();
                 }
+
+                updateInfo.Entry.Name = PathUtility.GetSegment(updateInfo.PathNew, -1);
             }
         }
 

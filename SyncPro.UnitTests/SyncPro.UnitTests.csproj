@@ -73,6 +73,7 @@
   <ItemGroup>
     <Compile Include="BackblazeB2AccountInfo.cs" />
     <Compile Include="BackblazeB2SyncTests.cs" />
+    <Compile Include="ComponentTests.cs" />
     <Compile Include="CredentialHelper.cs" />
     <Compile Include="EncryptionTests.cs" />
     <Compile Include="EntryProcessingSorterTests.cs" />

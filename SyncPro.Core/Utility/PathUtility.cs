@@ -1,5 +1,6 @@
 ﻿namespace SyncPro.Utility
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Text;
@@ -55,6 +56,31 @@
         {
             string[] segments = path.Split(PathUtility.pathSeparators);
             return string.Join("\\", segments, count, segments.Length - count);
+        }
+
+        public static string GetSegment(string path, int index)
+        {
+            string[] parts = path.Split(PathUtility.pathSeparators);
+
+            if (index >= 0)
+            {
+                if (index > parts.Length - 1)
+                {
+                    throw new ArgumentOutOfRangeException(
+                        nameof(index),
+                        "index is greater than the number of parts in the path");
+                }
+
+                return parts[index];
+            }
+
+            if (0 - index > parts.Length - 1)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(index));
+            }
+
+            return parts[parts.Length + index];
         }
     }
 
