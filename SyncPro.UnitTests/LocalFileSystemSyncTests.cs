@@ -144,16 +144,28 @@
             Directory.Move(
                 Path.Combine(syncSourcePath, "dir1\\file2.txt"), 
                 Path.Combine(syncSourcePath, "dir1\\file2a.txt"));
+            Directory.Move(
+                Path.Combine(syncSourcePath, "dir2"), 
+                Path.Combine(syncSourcePath, "dir2a"));
 
             testWrapper.SyncFileList.Remove("dir1\\file2.txt");
             testWrapper.SyncFileList.Add("dir1\\file2a.txt");
+
+            for (int i = 0; i < testWrapper.SyncFileList.Count; i++)
+            {
+                string path = testWrapper.SyncFileList[i];
+                if (path.StartsWith("dir2\\")|| path== "dir2")
+                {
+                    testWrapper.SyncFileList[i] = path.Insert(4, "a");
+                }
+            }
 
             // Second sync job
             testWrapper
                 .CreateSyncJob()
                 .RunToCompletion()
                 .VerifySyncSuccess()
-                .VerifyAnalyzeEntryCount(2)
+                .VerifyAnalyzeEntryCount(3)
                 .VerifyDatabaseHashes();
         }
 

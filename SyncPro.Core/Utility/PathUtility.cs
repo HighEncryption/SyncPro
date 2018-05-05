@@ -74,7 +74,7 @@
                 return parts[index];
             }
 
-            if (0 - index > parts.Length - 1)
+            if (0 - index > parts.Length)
             {
                 throw new ArgumentOutOfRangeException(
                     nameof(index));
