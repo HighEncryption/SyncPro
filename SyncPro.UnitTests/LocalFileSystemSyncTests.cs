@@ -118,6 +118,88 @@
         }
 
         [TestMethod]
+        public void SyncWithFileRename()
+        {
+            var testWrapper = TestWrapperFactory
+                .CreateLocalToLocal(this.TestContext)
+                .SaveRelationship()
+                .CreateBasicSourceStructure();
+
+            // First sync job
+            testWrapper
+                .CreateSyncJob()
+                .RunToCompletion()
+                .VerifySyncSuccess()
+                .VerifyResultContainsAllFiles()
+                .VerifyDatabaseHashes();
+
+            Logger.Info("Logging database before delete:");
+            using (var db = testWrapper.Relationship.GetDatabase())
+            {
+                TestHelper.LogConfiguration(testWrapper.Relationship.Configuration);
+                TestHelper.LogDatabase(db);
+            }
+
+            var syncSourcePath = testWrapper.SourceAdapter.Config.RootDirectory;
+            Directory.Move(
+                Path.Combine(syncSourcePath, "dir1\\file2.txt"), 
+                Path.Combine(syncSourcePath, "dir1\\file2a.txt"));
+
+            testWrapper.SyncFileList.Remove("dir1\\file2.txt");
+            testWrapper.SyncFileList.Add("dir1\\file2a.txt");
+
+            // Second sync job
+            testWrapper
+                .CreateSyncJob()
+                .RunToCompletion()
+                .VerifySyncSuccess()
+                .VerifyAnalyzeEntryCount(2)
+                .VerifyDatabaseHashes();
+        }
+
+        [TestMethod]
+        public void SyncWithFileMove()
+        {
+            var testWrapper = TestWrapperFactory
+                .CreateLocalToLocal(this.TestContext)
+                .SaveRelationship()
+                .CreateBasicSourceStructure();
+
+            // First sync job
+            testWrapper
+                .CreateSyncJob()
+                .RunToCompletion()
+                .VerifySyncSuccess()
+                .VerifyResultContainsAllFiles()
+                .VerifyDatabaseHashes();
+
+            Logger.Info("Logging database before delete:");
+            using (var db = testWrapper.Relationship.GetDatabase())
+            {
+                TestHelper.LogConfiguration(testWrapper.Relationship.Configuration);
+                TestHelper.LogDatabase(db);
+            }
+
+            // Move the file we are going to test
+            var syncSourcePath = testWrapper.SourceAdapter.Config.RootDirectory;
+            Directory.Move(
+                Path.Combine(syncSourcePath, "dir2\\dir3\\dir4\\file100.txt"), 
+                Path.Combine(syncSourcePath, "dir1\\file100.txt"));
+
+            // Update the expected set of files
+            testWrapper.SyncFileList.Remove("dir2\\dir3\\dir4\\file100.txt");
+            testWrapper.SyncFileList.Add("dir1\\file100.txt");
+
+            // Run the second sync job
+            testWrapper
+                .CreateSyncJob()
+                .RunToCompletion()
+                .VerifySyncSuccess()
+                .VerifyAnalyzeEntryCount(6)
+                .VerifyDatabaseHashes();
+        }
+
+        [TestMethod]
         public void SyncWithAllExistingFiles()
         {
             var testWrapper = TestWrapperFactory

@@ -125,10 +125,16 @@
 
         public override void UpdateItem(EntryUpdateInfo updateInfo, SyncEntryChangedFlags changeFlags)
         {
-            string fullPath;
+            string fullPath, newFullPath = null;
+
             using (var database = this.Relationship.GetDatabase())
             {
                 fullPath = Path.Combine(this.Config.RootDirectory, updateInfo.Entry.GetRelativePath(database, this.PathSeparator));
+
+                if (!string.IsNullOrWhiteSpace(updateInfo.PathNew))
+                {
+                    newFullPath = Path.Combine(this.Config.RootDirectory, updateInfo.PathNew);
+                }
             }
 
             FileSystemInfo fileSystemInfo = GetFileSystemInfo(fullPath, updateInfo.Entry.Type);
@@ -153,6 +159,24 @@
 
                 // Update the SyncEntry to record that this is now the "current" value of ModifiedDateTimeUtcNew
                 updateInfo.Entry.ModifiedDateTimeUtc = updateInfo.ModifiedDateTimeUtcNew.Value;
+            }
+
+            if ((changeFlags & SyncEntryChangedFlags.Renamed) != 0)
+            {
+                if (updateInfo.Entry.Type == SyncEntryType.File)
+                {
+                    Pre.Assert(!string.IsNullOrEmpty(newFullPath), "newFullPath != null");
+                    File.Move(fullPath, newFullPath);
+                }
+                else if (updateInfo.Entry.Type == SyncEntryType.Directory)
+                {
+                    Pre.Assert(!string.IsNullOrEmpty(newFullPath), "newFullPath != null");
+                    Directory.Move(fullPath, newFullPath);
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
             }
         }
 

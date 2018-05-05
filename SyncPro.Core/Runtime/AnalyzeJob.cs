@@ -12,7 +12,15 @@ namespace SyncPro.Runtime
     using SyncPro.Configuration;
     using SyncPro.Data;
     using SyncPro.Tracing;
+    using SyncPro.Utility;
 
+    /// <summary>
+    /// Contains the logic for analyzing changes in a relationship
+    /// </summary>
+    /// <remarks>
+    /// The AnalyzeJob class comprises one of the two central components in the process of
+    /// synchronizing files (the other being the SyncJob class).
+    /// </remarks>
     public class AnalyzeJob : JobBase
     {
         private readonly AnalyzeRelationshipResult analyzeResult;
@@ -29,6 +37,9 @@ namespace SyncPro.Runtime
             this.analyzeResult = new AnalyzeRelationshipResult();
         }
 
+        /// <summary>
+        /// Entry point the the analyze logic
+        /// </summary>
         protected override async Task ExecuteTask()
         {
             List<Task> updateTasks = new List<Task>();
@@ -51,6 +62,7 @@ namespace SyncPro.Runtime
                 }
             }
 
+            // Wait until all of the tasks are complete
             await Task.WhenAll(updateTasks).ContinueWith(task =>
             {
                 if (updateTasks.All(t => t.IsCompleted))
@@ -59,6 +71,8 @@ namespace SyncPro.Runtime
                 }
             });
 
+            // The analyze logic only determines the number of files that are new or have changed. Once
+            // analysis completes, calculate the number of files that are unchanged.
             this.CalculateUnchangedEntryCounts();
         }
 
@@ -454,6 +468,10 @@ namespace SyncPro.Runtime
             {
                 message = "The item was updated";
             }
+            else if (logicalChild.UpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.Renamed))
+            {
+                message = "The item was renamed";
+            }
             else
             {
                 message = "An unknown change has occurred in the item";
@@ -472,17 +490,20 @@ namespace SyncPro.Runtime
         }
 
         /// <summary>
-        /// 
+        /// Analyze the changes in files/folders between two adapters without change tracking. For 
+        /// non-bi-directional syncing, analyze changes that originate on the source adapter that 
+        /// are not present on the destination adapter.
         /// </summary>
-        /// <param name="db"></param>
-        /// <param name="sourceAdapter"></param>
-        /// <param name="sourceItem"></param>
-        /// <param name="destItem"></param>
-        /// <param name="logicalParent"></param>
-        /// <param name="relativePath"></param>
+        /// <param name="db">The relationship database</param>
+        /// <param name="sourceAdapter">The source adapters</param>
+        /// <param name="destAdapter">The destination adapter</param>
+        /// <param name="sourceItem">The item read from the source adapter to analyze</param>
+        /// <param name="destItem">The item read from the destination adapter to analyze</param>
+        /// <param name="logicalParent">The logical item built from database that represents the item being analyzed</param>
+        /// <param name="relativePath">The relative path to the item in the folder structure</param>
         /// <remarks>
         /// This method uses a recursive strategy for comparing items exposed by an adapter. This requires retrieving the metadata
-        /// for each item on the adapter (expensive for non-local adapters).
+        /// for each item on the adapter (expensive for non-local adapters). 
         /// </remarks>
         private void AnalyzeChangesWithoutChangeTracking(
             SyncDatabase db,
@@ -575,13 +596,14 @@ namespace SyncPro.Runtime
                 }
 
                 // Get the list of sync entries from the index. We will match these up with the adapter items to determine what has been 
-                // added, modified, or removed.
+                // added, modified, or removed. Matching is done using the item's adapter ID, which is static for the lifetime of a file
+                // and is used to catch situations like a file more or rename.
                 Logger.Debug("Examining adapter child item {0}", sourceAdapterChild.FullName);
 
                 // First check if there is an entry that matches the unique ID of the item
                 SyncEntry sourceLogicalChild = logicalChildren?.FirstOrDefault(c => c.HasUniqueId(sourceAdapterChild.UniqueId));
 
-                // A match was found, so determine
+                // A match was found, so determine what changes on the entry
                 if (sourceLogicalChild != null)
                 {
                     Logger.Debug("Found child item {0} in database that matches adapter item.", sourceLogicalChild.Id);
@@ -619,7 +641,8 @@ namespace SyncPro.Runtime
                     EntryUpdateResult updateResult;
 
                     // If the item differs from the entry in the index, an update will be required.
-                    if (sourceLogicalChild.UpdateInfo == null && sourceAdapter.IsEntryUpdated(sourceLogicalChild, sourceAdapterChild, out updateResult))
+                    if (sourceLogicalChild.UpdateInfo == null && 
+                        sourceAdapter.IsEntryUpdated(sourceLogicalChild, sourceAdapterChild, out updateResult))
                     {
                         Logger.Debug("Child item {0} is out of sync.", sourceLogicalChild.Id);
 
@@ -633,20 +656,26 @@ namespace SyncPro.Runtime
                         // Set all of the previous metadata values to those from the sync entry
                         sourceLogicalChild.UpdateInfo.SetOldMetadataFromSyncEntry();
 
-                        // Set the new timestamps according to what the adapter returns
+                        // If the source item's creation time differs from the destination item's, set the new
+                        // value in the update information.
                         if (sourceLogicalChild.UpdateInfo.CreationDateTimeUtcOld != sourceAdapterChild.CreationTimeUtc)
                         {
                             sourceLogicalChild.UpdateInfo.CreationDateTimeUtcNew = sourceAdapterChild.CreationTimeUtc;
                         }
 
+                        // If the source item's modified time differs from the destination item's, set the new
+                        // value in the update information.
                         if (sourceLogicalChild.UpdateInfo.ModifiedDateTimeUtcOld != sourceAdapterChild.ModifiedTimeUtc)
                         {
                             sourceLogicalChild.UpdateInfo.ModifiedDateTimeUtcNew = sourceAdapterChild.ModifiedTimeUtc;
                         }
 
-                        if (string.CompareOrdinal(sourceLogicalChild.UpdateInfo.RelativePath, sourceLogicalChild.UpdateInfo.PathOld) != 0)
+                        // If the source item's relative path differs from the destination item's, set the new
+                        // value in the update information.
+                        string newRelativePath = PathUtility.TrimStart(sourceAdapterChild.FullName, 1);
+                        if (string.CompareOrdinal(sourceLogicalChild.UpdateInfo.PathOld, newRelativePath) != 0)
                         {
-                            sourceLogicalChild.UpdateInfo.PathNew = sourceLogicalChild.UpdateInfo.RelativePath;
+                            sourceLogicalChild.UpdateInfo.PathNew = newRelativePath;
                         }
 
                         if (this.Relationship.EncryptionMode == EncryptionMode.Decrypt)

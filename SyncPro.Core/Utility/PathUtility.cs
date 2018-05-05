@@ -4,11 +4,12 @@
     using System.Linq;
     using System.Text;
 
-    using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
 
     public static class PathUtility
     {
+        private static readonly char[] pathSeparators = new[] {'\\'};
+
         public static string Join(string pathSeparator, IList<string> values)
         {
             int length = values.Sum(v => v.Length) + (values.Count - 1) * pathSeparator.Length;
@@ -48,6 +49,12 @@
 
                 return sb.ToString();
             }
+        }
+
+        public static string TrimStart(string path, int count)
+        {
+            string[] segments = path.Split(PathUtility.pathSeparators);
+            return string.Join("\\", segments, count, segments.Length - count);
         }
     }
 

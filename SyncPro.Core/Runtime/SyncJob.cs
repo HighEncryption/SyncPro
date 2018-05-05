@@ -721,9 +721,15 @@
             else if (entryUpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.IsUpdated) ||
                      entryUpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.Renamed))
             {
+                bool contentChanged =
+                    entryUpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.CreatedTimestamp) ||
+                    entryUpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.ModifiedTimestamp) ||
+                    entryUpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.FileSize) ||
+                    entryUpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.Sha1Hash);
+
                 // If IsUpdated is true (which is possible along with a rename) and the item is a file, update
                 // the file contents.
-                if (entryUpdateInfo.Entry.Type == SyncEntryType.File)
+                if (contentChanged && entryUpdateInfo.Entry.Type == SyncEntryType.File)
                 {
                     FileCopyHelper fileCopyHelper = new FileCopyHelper(
                         this.Relationship,
