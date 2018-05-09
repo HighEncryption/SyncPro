@@ -522,15 +522,6 @@ namespace SyncPro.UnitTests
             }
 
             Assert.IsTrue(run1.HasFinished);
-            //string foo = "";
-            //foreach (EntryUpdateInfo result in run1.AnalyzeResult.EntryResults)
-            //{
-            //    var path = result.Entry.GetRelativePath(newRelationship, "\\");
-            //    foo += "new Tuple<string, long>(\"" + path.Replace("\\", "\\\\") + "\", " + result.Entry.Size + ")," + Environment.NewLine;
-            //}
-
-
-            //Assert.AreEqual(syncFileList.Count, run1.AnalyzeResult.EntryResults.Count);
         }
 
         [TestMethod]

@@ -26,7 +26,7 @@
     /// detected in an entry. This object is then persisted until it is applied by the entry being
     /// synchronized, or when the analysis result is disposed (and the change is abandoned).
     /// </remarks>
-    [DebuggerDisplay("{Entry.Name}")]
+    [DebuggerDisplay("{Entry.Name} [{Flags}]")]
     public class EntryUpdateInfo : ISyncEntryMetadataChange
     {
         /// <summary>

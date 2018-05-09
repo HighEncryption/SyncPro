@@ -159,8 +159,13 @@ namespace SyncPro.Runtime
                         IAdapterItem sourceRootItem = await sourceAdapter.GetRootFolder();
                         IAdapterItem destRootItem = await destAdapter.GetRootFolder();
 
+                        int[] adapterEntryHashList = this.BuildAdapterItemHashList(db, sourceAdapter);
+                        List<string> movedEntries = new List<string>();
+
                         this.AnalyzeChangesWithoutChangeTracking(
                             db,
+                            adapterEntryHashList,
+                            movedEntries,
                             sourceAdapter,
                             destAdapter,
                             sourceRootItem,
@@ -186,6 +191,20 @@ namespace SyncPro.Runtime
                         { "TotalChangedEntriesCount", this.analyzeResult.TotalChangedEntriesCount },
                     });
             }
+        }
+
+        private int[] BuildAdapterItemHashList(SyncDatabase db, AdapterBase sourceAdapter)
+        {
+            int[] hashList = new int[db.AdapterEntries.Count()];
+
+            int i = 0;
+            foreach (var entry in db.AdapterEntries.Where(e => e.AdapterId == sourceAdapter.Configuration.Id))
+            {
+                hashList[i] = entry.AdapterEntryId.GetHashCode();
+                i++;
+            }
+
+            return hashList;
         }
 
         private void AnalyzeChangesWithChangeTracking(
@@ -495,6 +514,8 @@ namespace SyncPro.Runtime
         /// are not present on the destination adapter.
         /// </summary>
         /// <param name="db">The relationship database</param>
+        /// <param name="adapterEntryHashList"></param>
+        /// <param name="movedEntries"></param>
         /// <param name="sourceAdapter">The source adapters</param>
         /// <param name="destAdapter">The destination adapter</param>
         /// <param name="sourceItem">The item read from the source adapter to analyze</param>
@@ -507,6 +528,8 @@ namespace SyncPro.Runtime
         /// </remarks>
         private void AnalyzeChangesWithoutChangeTracking(
             SyncDatabase db,
+            int[] adapterEntryHashList,
+            List<string> movedEntries,
             AdapterBase sourceAdapter,
             AdapterBase destAdapter,
             IAdapterItem sourceItem,
@@ -705,19 +728,55 @@ namespace SyncPro.Runtime
                 {
                     Logger.Debug("Child item was not found in database that matches adapter item.");
 
-                    // This file/directory was not found in the index, so create a new entry for it. Note that while this is a call
-                    // to the adapter, no object is created as a result of the call (the result is in-memory only).
-                    sourceLogicalChild = sourceAdapter.CreateSyncEntryForAdapterItem(sourceAdapterChild, logicalParent);
+                    if (movedEntries.Contains(sourceAdapterChild.UniqueId))
+                    {
+                        Logger.Debug("Child item already processed as a move.");
+                        continue;
+                    }
+
+                    SyncEntryAdapterData existingAdapterEntry = null;
+
+                    // Before assuming that the item is new, check if it was moved from a previous location. To do this, first 
+                    // check if the item's adapterItemId is already known in the database.
+                    if (adapterEntryHashList.Any(h => h == sourceAdapterChild.UniqueId.GetHashCode()))
+                    {
+                        // The item is probably already in the database (but not for sure, since this was only a hash check
+                        // for performance reasons. Find the actual item in the database to be sure.
+                        existingAdapterEntry = db.AdapterEntries
+                            .Include(e => e.SyncEntry)
+                            .FirstOrDefault(e => e.AdapterEntryId == sourceAdapterChild.UniqueId);
+                    }
+
+                    if (existingAdapterEntry != null)
+                    {
+                        sourceLogicalChild = existingAdapterEntry.SyncEntry;
+
+                        // Create the update info for the new entry
+                        sourceLogicalChild.UpdateInfo = new EntryUpdateInfo(
+                            sourceLogicalChild,
+                            sourceAdapter,
+                            SyncEntryChangedFlags.IsUpdated,
+                            Path.Combine(relativePath, sourceLogicalChild.Name));
+
+                        movedEntries.Add(sourceAdapterChild.UniqueId);
+                    }
+                    else
+                    {
+                        // This file/directory was not found in the index, so create a new entry for it. Note that while this is a call
+                        // to the adapter, no object is created as a result of the call (the result is in-memory only).
+                        sourceLogicalChild =
+                            sourceAdapter.CreateSyncEntryForAdapterItem(sourceAdapterChild, logicalParent);
+
+                        // Create the update info for the new entry
+                        sourceLogicalChild.UpdateInfo = new EntryUpdateInfo(
+                            sourceLogicalChild,
+                            sourceAdapter,
+                            GetFlagsForNewSyncEntry(sourceAdapterChild),
+                            Path.Combine(relativePath, sourceLogicalChild.Name));
+                    }
 
                     // Set the NotSynchronized flag so that we know this has not yet been committed to the database.
                     sourceLogicalChild.State = SyncEntryState.NotSynchronized;
-
-                    // Create the update info for the new entry
-                    sourceLogicalChild.UpdateInfo = new EntryUpdateInfo(
-                        sourceLogicalChild,
-                        sourceAdapter,
-                        GetFlagsForNewSyncEntry(sourceAdapterChild),
-                        Path.Combine(relativePath, sourceLogicalChild.Name));
 
                     sourceLogicalChild.UpdateInfo.CreationDateTimeUtcNew = sourceAdapterChild.CreationTimeUtc;
                     sourceLogicalChild.UpdateInfo.ModifiedDateTimeUtcNew = sourceAdapterChild.ModifiedTimeUtc;
@@ -747,6 +806,8 @@ namespace SyncPro.Runtime
                 {
                     this.AnalyzeChangesWithoutChangeTracking(
                         db,
+                        adapterEntryHashList,
+                        movedEntries,
                         sourceAdapter,
                         destAdapter,
                         sourceAdapterChild,
@@ -766,6 +827,15 @@ namespace SyncPro.Runtime
                     if (this.CancellationToken.IsCancellationRequested)
                     {
                         break;
+                    }
+
+                    SyncEntryAdapterData adapterEntry = 
+                        oldChild.AdapterEntries.FirstOrDefault(e => e.AdapterId == sourceAdapter.Configuration.Id);
+
+                    if (movedEntries.Contains(adapterEntry.AdapterEntryId))
+                    {
+                        Logger.Debug("Child item {0} ({1}) detected as deleted, but was moved.", oldChild.Id, oldChild.Name);
+                        continue;
                     }
 
                     Logger.Debug("Child item {0} ({1}) was deleted.", oldChild.Id, oldChild.Name);
@@ -798,6 +868,8 @@ namespace SyncPro.Runtime
                     {
                         this.AnalyzeChangesWithoutChangeTracking(
                             db,
+                            adapterEntryHashList,
+                            movedEntries,
                             sourceAdapter,
                             destAdapter,
                             null,
