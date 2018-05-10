@@ -152,14 +152,14 @@
                 // If sync was run successfully commit the tracked changes for each adapter
                 if (this.JobResult == JobResult.Success)
                 {
-                    await this.AnalyzeResult.CommitTrackedChangesAsync().ConfigureAwait(false);
+                    await this.AnalyzeResult.CommitTrackedChangesAsync(this.relationship).ConfigureAwait(false);
                 }
 
                 // If a sync job was requested but not needed because all of the files are already up to date, commit change
                 // if needed (because the delta token was refreshed).
                 if (this.AnalyzeResult.IsUpToDate)
                 {
-                    await this.AnalyzeResult.CommitTrackedChangesAsync().ConfigureAwait(false);
+                    await this.AnalyzeResult.CommitTrackedChangesAsync(this.relationship).ConfigureAwait(false);
                 }
             }
             finally

@@ -3,6 +3,8 @@ namespace SyncPro.Runtime
     using System;
     using System.Collections.Generic;
 
+    using SyncPro.Adapters;
+
     public class AnalyzeAdapterResult
     {
         public List<EntryUpdateInfo> EntryResults { get; }
@@ -16,6 +18,8 @@ namespace SyncPro.Runtime
         /// Inidicates whether files will be synced from the destination to the source
         /// </summary>
         public bool SyncDestinationToSource { get; set; }
+
+        public TrackedChange TrackedChanges { get; set; }
 
         /// <summary>
         /// Indicates whether there is a tracked change that needs to be committed even if there are no changes that need
@@ -32,6 +36,22 @@ namespace SyncPro.Runtime
         /// Exception thrown during analysis.
         /// </summary>
         public Exception Exception { get; set; }
+
+        /// <summary>
+        /// The number of unchanged files
+        /// </summary>
+        public int UnchangedFileCount { get; set; }
+
+        /// <summary>
+        /// The number of unchanged files
+        /// </summary>
+        public long UnchangedFileBytes { get; set; }
+
+        /// <summary>
+        /// The number of unchanged folders
+        /// </summary>
+        public int UnchangedFolderCount { get; set; }
+
 
         public AnalyzeAdapterResult()
         {

@@ -44,12 +44,6 @@ namespace SyncPro.Runtime
 
         public int TotalChangedEntriesCount => this.TotalSyncEntries - (this.UnchangedFileCount + this.UnchangedFolderCount);
 
-
-        // Contains the mapping of Adapter -> currently tracked change. During analyze, if an adapter supports change tracking, 
-        // the current state of the tracked change is cached here. If synchronization is performed, this will be the tracked 
-        // change applied to the adapter via CommitChanges().
-        public Dictionary<AdapterBase, TrackedChange> TrackedChanges { get;  }
-
         /// <summary>
         /// The number of unchanged files
         /// </summary>
@@ -71,19 +65,25 @@ namespace SyncPro.Runtime
         {
             this.Id = Guid.NewGuid();
             this.AdapterResults = new Dictionary<int, AnalyzeAdapterResult>();
-            this.TrackedChanges = new Dictionary<AdapterBase, TrackedChange>();
 
             this.SyncJobResult = JobResult.Undefined;
         }
 
-        public async Task CommitTrackedChangesAsync()
+        public async Task CommitTrackedChangesAsync(SyncRelationship relationship)
         {
-            foreach (AdapterBase adapterBase in this.TrackedChanges.Keys)
+            foreach (KeyValuePair<int, AnalyzeAdapterResult> adapterResult in AdapterResults)
             {
-                Logger.Info("Committing tracked change for adapter {0}", adapterBase.Configuration.Id);
+                if (adapterResult.Value.TrackedChanges != null)
+                {
+                    AdapterBase adapterBase = 
+                        relationship.Adapters.First(a => a.Configuration.Id == adapterResult.Key);
 
-                IChangeTracking changeTracking = (IChangeTracking)adapterBase;
-                await changeTracking.CommitChangesAsync(this.TrackedChanges[adapterBase]).ConfigureAwait(false);
+                    Logger.Info("Committing tracked change for adapter {0}", adapterBase.Configuration.Id);
+
+                    IChangeTracking changeTracking = (IChangeTracking)adapterBase;
+                    await changeTracking.CommitChangesAsync(adapterResult.Value.TrackedChanges).ConfigureAwait(false);
+
+                }
             }
         }
     }

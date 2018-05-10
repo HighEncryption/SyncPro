@@ -73,6 +73,7 @@
     <Compile Include="Adapters\AdapterRegistry.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="Runtime\AnalyzeJobProgressInfo.cs" />
+    <Compile Include="Runtime\AnalyzeJobWorker.cs" />
     <Compile Include="Runtime\EncryptedFileHeader.cs" />
     <Compile Include="Runtime\EncryptionManager.cs" />
     <Compile Include="Runtime\EntryProcessingSorter.cs" />
