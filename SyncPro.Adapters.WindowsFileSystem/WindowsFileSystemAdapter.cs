@@ -162,7 +162,8 @@
                 updateInfo.Entry.ModifiedDateTimeUtc = updateInfo.ModifiedDateTimeUtcNew.Value;
             }
 
-            if ((changeFlags & SyncEntryChangedFlags.Renamed) != 0)
+            if ((changeFlags & SyncEntryChangedFlags.Renamed) != 0 ||
+                (changeFlags & SyncEntryChangedFlags.Moved) != 0)
             {
                 if (updateInfo.Entry.Type == SyncEntryType.File)
                 {
@@ -179,7 +180,15 @@
                     throw new NotImplementedException();
                 }
 
-                updateInfo.Entry.Name = PathUtility.GetSegment(updateInfo.PathNew, -1);
+                if ((changeFlags & SyncEntryChangedFlags.Renamed) != 0)
+                {
+                    updateInfo.Entry.Name = PathUtility.GetSegment(updateInfo.PathNew, -1);
+                }
+
+                if ((changeFlags & SyncEntryChangedFlags.Moved) != 0)
+                {
+                    updateInfo.Entry.ParentId = updateInfo.ParentIdNew;
+                }
             }
         }
 

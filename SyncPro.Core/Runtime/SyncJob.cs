@@ -719,7 +719,8 @@
                 entryUpdateInfo.Entry.State |= SyncEntryState.IsDeleted;
             }
             else if (entryUpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.IsUpdated) ||
-                     entryUpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.Renamed))
+                     entryUpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.Renamed) ||
+                     entryUpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.Moved))
             {
                 bool contentChanged =
                     entryUpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.CreatedTimestamp) ||

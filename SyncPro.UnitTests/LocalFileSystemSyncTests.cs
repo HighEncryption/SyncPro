@@ -170,7 +170,7 @@
         }
 
         [TestMethod]
-        public void SyncWithFileMove()
+        public void SyncWithFileMoveLeafToRoot()
         {
             var testWrapper = TestWrapperFactory
                 .CreateLocalToLocal(this.TestContext)
@@ -207,7 +207,7 @@
                 .CreateSyncJob()
                 .RunToCompletion()
                 .VerifySyncSuccess()
-                .VerifyAnalyzeEntryCount(6)
+                .VerifyAnalyzeEntryCount(2)
                 .VerifyDatabaseHashes();
         }
 

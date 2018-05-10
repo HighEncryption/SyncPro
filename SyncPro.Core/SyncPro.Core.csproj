@@ -78,6 +78,7 @@
     <Compile Include="Runtime\EncryptionManager.cs" />
     <Compile Include="Runtime\EntryProcessingSorter.cs" />
     <Compile Include="Runtime\FileCopyHelper.cs" />
+    <Compile Include="Runtime\FlagNameCache.cs" />
     <Compile Include="Runtime\JobBase.cs" />
     <Compile Include="Runtime\RestoreJob.cs" />
     <Compile Include="Adapters\RestoreOnlyWindowsFileSystemAdapter.cs" />

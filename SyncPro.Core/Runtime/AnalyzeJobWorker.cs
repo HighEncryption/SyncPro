@@ -781,8 +781,10 @@ namespace SyncPro.Runtime
                         sourceLogicalChild.UpdateInfo = new EntryUpdateInfo(
                             sourceLogicalChild,
                             sourceAdapter,
-                            SyncEntryChangedFlags.IsUpdated,
+                            SyncEntryChangedFlags.Moved,
                             Path.Combine(relativePath, sourceLogicalChild.Name));
+
+                        sourceLogicalChild.UpdateInfo.ParentIdNew = logicalParent.Id;
 
                         movedEntries.Add(sourceAdapterChild.UniqueId);
                     }

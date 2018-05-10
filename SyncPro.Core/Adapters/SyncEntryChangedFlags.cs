@@ -64,9 +64,14 @@ namespace SyncPro.Adapters
         Md5Hash = 0x0200,
 
         /// <summary>
-        /// Indicates that item is already present on the destination.
+        /// Indicates that the item is already present on the destination.
         /// </summary>
         DestinationExists = 0x0400,
+
+        /// <summary>
+        /// Indicates that the item's parent changed (was moved)
+        /// </summary>
+        Moved = 0x0800,
 
         /// <summary>
         /// Indicates that the change is a new file or directory

@@ -3,7 +3,6 @@
     using System;
     using System.Collections.Concurrent;
     using System.Diagnostics;
-    using System.Text;
 
     using SyncPro.Adapters;
     using SyncPro.Data;
@@ -155,6 +154,8 @@
 
         public string ExistingItemId { get; set; }
 
+        public long ParentIdNew { get; set; }
+
         #endregion
 
         public bool HasSyncEntryFlag(SyncEntryChangedFlags flag)
@@ -272,78 +273,12 @@
                 return value;
             }
 
-            value = this.BuildFlagString(this.Flags);
+            value = FlagNameCache.GetNamesForFlags(this.Flags);
 
             FlagLookup.TryAdd((uint) this.Flags, value);
 
             return value;
         }
 
-        private string BuildFlagString(SyncEntryChangedFlags flags)
-        {
-            StringBuilder sb = new StringBuilder();
-
-            if (flags == SyncEntryChangedFlags.None)
-            {
-                return "None";
-            }
-
-            if ((flags & SyncEntryChangedFlags.CreatedTimestamp) != 0)
-            {
-                sb.Append("CreatedTimestamp,");
-            }
-
-            if ((flags & SyncEntryChangedFlags.Md5Hash) != 0)
-            {
-                sb.Append("Md5Hash,");
-            }
-
-            if ((flags & SyncEntryChangedFlags.Sha1Hash) != 0)
-            {
-                sb.Append("Sha1Hash,");
-            }
-
-            if ((flags & SyncEntryChangedFlags.Deleted) != 0)
-            {
-                sb.Append("Deleted,");
-            }
-
-            if ((flags & SyncEntryChangedFlags.FileSize) != 0)
-            {
-                sb.Append("FileSize,");
-            }
-
-            if ((flags & SyncEntryChangedFlags.ModifiedTimestamp) != 0)
-            {
-                sb.Append("ModifiedTimestamp,");
-            }
-
-            if ((flags & SyncEntryChangedFlags.NewDirectory) != 0)
-            {
-                sb.Append("NewDirectory,");
-            }
-
-            if ((flags & SyncEntryChangedFlags.NewFile) != 0)
-            {
-                sb.Append("NewFile,");
-            }
-
-            if ((flags & SyncEntryChangedFlags.Renamed) != 0)
-            {
-                sb.Append("Renamed,");
-            }
-
-            if ((flags & SyncEntryChangedFlags.Restored) != 0)
-            {
-                sb.Append("Restored,");
-            }
-
-            if ((flags & SyncEntryChangedFlags.DestinationExists) != 0)
-            {
-                sb.Append("DestinationExists,");
-            }
-
-            return sb.ToString(0, sb.Length - 1);
-        }
     }
 }
