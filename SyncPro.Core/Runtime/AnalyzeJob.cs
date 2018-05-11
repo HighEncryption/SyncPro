@@ -9,16 +9,14 @@ namespace SyncPro.Runtime
 
     public class AnalyzeJob : JobBase
     {
-        private readonly AnalyzeRelationshipResult analyzeResult;
-
         public EventHandler<AnalyzeJobProgressInfo> ChangeDetected;
 
-        public AnalyzeRelationshipResult AnalyzeResult => this.analyzeResult;
+        public AnalyzeRelationshipResult AnalyzeResult { get; }
 
         public AnalyzeJob(SyncRelationship relationship)
             : base(relationship)
         {
-            this.analyzeResult = new AnalyzeRelationshipResult();
+            this.AnalyzeResult = new AnalyzeRelationshipResult();
         }
 
         /// <summary>
@@ -41,7 +39,7 @@ namespace SyncPro.Runtime
                             this.Relationship,
                             adapter,
                             destAdapter,
-                            this.analyzeResult,
+                            this.AnalyzeResult,
                             this.CancellationToken);
 
                     worker.ChangeDetected += this.ChangeDetected;
@@ -60,17 +58,17 @@ namespace SyncPro.Runtime
             {
                 if (updateTasks.All(t => t.IsCompleted))
                 {
-                    this.analyzeResult.IsComplete = true;
+                    this.AnalyzeResult.IsComplete = true;
                 }
             });
 
             // The analyze logic only determines the number of files that are new or have changed. Once
             // analysis completes, calculate the number of files that are unchanged.
-            foreach (AnalyzeAdapterResult adapterResult in this.analyzeResult.AdapterResults.Values)
+            foreach (AnalyzeAdapterResult adapterResult in this.AnalyzeResult.AdapterResults.Values)
             {
-                this.analyzeResult.UnchangedFileCount += adapterResult.UnchangedFileCount;
-                this.analyzeResult.UnchangedFolderCount += adapterResult.UnchangedFolderCount;
-                this.analyzeResult.UnchangedFileBytes += adapterResult.UnchangedFileBytes;
+                this.AnalyzeResult.UnchangedFileCount += adapterResult.UnchangedFileCount;
+                this.AnalyzeResult.UnchangedFolderCount += adapterResult.UnchangedFolderCount;
+                this.AnalyzeResult.UnchangedFileBytes += adapterResult.UnchangedFileBytes;
             }
         }
     }

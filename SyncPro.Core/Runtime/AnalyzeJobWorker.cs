@@ -50,7 +50,17 @@ namespace SyncPro.Runtime
         // If a match is not found, then this is a new file/directory and will be recorded as such.
         private int[] adapterEntryHashList;
 
+        // Contains the uniqueIds for items that are known to have been moved (as opposed to having
+        // been added/modified/deleted). Moving items is typically more infrequent that adding or
+        // updating items, so we will keep the list of moved items to greatly improve performance
+        // when detecting that an item has moved.
         private List<string> movedEntries;
+
+        // This dictionary maintains a a list of tuples in the form of {UniqueId,UpdateInfo} for 
+        // each entry that was deleted. This is needed in order to properly detect when an item
+        // was moved from one folder to another, and the latter folder has not yet been analyzed, 
+        // so that the entry is not incorrectly reported as having been deleted.
+        private Dictionary<string, EntryUpdateInfo> deletedEntries;
 
         /// <summary>
         /// Invoked when a new change is detected during analysis.
@@ -148,16 +158,29 @@ namespace SyncPro.Runtime
                     // declaration for more info.
                     this.adapterEntryHashList = this.BuildAdapterItemHashList();
 
-                    // Initialize the list of entries that are detected as moved items
+                    // Initialize the list of entries that are detected as moved or deleted items
                     this.movedEntries = new List<string>();
+                    this.deletedEntries = new Dictionary<string, EntryUpdateInfo>();
 
+                    // Build the list of changes by recursively walking the directory structure. This method
+                    // is where the bulk of the analysis work will be performed.
                     this.AnalyzeChangesWithoutChangeTracking(
                         sourceRootItem,
                         destRootItem,
                         this.rootIndexEntry,
                         string.Empty);
+
+                    // Any items that were detected as being deleted will be in the deletedEntries list. Now 
+                    // that the full analysis is complete, raise the change notification for these entries.
+                    foreach (KeyValuePair<string, EntryUpdateInfo> deletedEntry in this.deletedEntries)
+                    {
+                        this.RaiseChangeDetected(sourceAdapter.Configuration.Id, deletedEntry.Value);
+                        this.LogSyncAnalyzerChangeFound(deletedEntry.Value.Entry);
+                    }
                 }
 
+                // Now that the raw analysis for this set of adapters is complete, calculate the number
+                // of files that have not been changed.
                 this.CalculateUnchangedEntryCounts();
             }
             catch (Exception exception)
@@ -233,6 +256,13 @@ namespace SyncPro.Runtime
             }
         }
 
+        /// <summary>
+        /// Creates the list of hash codes for unique Ids for existing items.
+        /// </summary>
+        /// <returns>The array of hash codes</returns>
+        /// <remarks>
+        /// See the comments on the adapterEntryHashList field for more information.
+        /// </remarks>
         private int[] BuildAdapterItemHashList()
         {
             int[] hashList = new int[db.AdapterEntries.Count()];
@@ -249,7 +279,6 @@ namespace SyncPro.Runtime
 
         private void AnalyzeChangesWithChangeTracking()
         {
-            //TrackedChange trackedChange = this.AnalyzeResult.TrackedChanges[sourceAdapter];
             TrackedChange trackedChange = this.AnalyzeResult.TrackedChanges;
 
             Logger.Debug(
@@ -526,6 +555,10 @@ namespace SyncPro.Runtime
             {
                 message = "The item was renamed";
             }
+            else if (logicalChild.UpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.Moved))
+            {
+                message = "The item was moved";
+            }
             else
             {
                 message = "An unknown change has occurred in the item";
@@ -760,6 +793,17 @@ namespace SyncPro.Runtime
                         continue;
                     }
 
+                    EntryUpdateInfo updateInfo;
+                    if (this.deletedEntries.TryGetValue(sourceAdapterChild.UniqueId, out updateInfo))
+                    {
+                        Logger.Debug("Child item was previously detected as a delete but was moved.");
+
+                        // This item was detected as having been deleted from a different folder, but was found
+                        // in this folder. Remove it from the list of deleted items, and let normal processing 
+                        // continue to evaluate the item.
+                        this.deletedEntries.Remove(sourceAdapterChild.UniqueId);
+                    }
+
                     SyncEntryAdapterData existingAdapterEntry = null;
 
                     // Before assuming that the item is new, check if it was moved from a previous location. To do this, first 
@@ -817,8 +861,6 @@ namespace SyncPro.Runtime
                     if (destAdapterChild != null)
                     {
                         this.CheckIfSyncRequired(
-                            sourceAdapter,
-                            destAdapter,
                             sourceLogicalChild,
                             sourceAdapterChild,
                             destAdapterChild);
@@ -881,8 +923,11 @@ namespace SyncPro.Runtime
                     // will be null/empty.
                     oldChild.UpdateInfo.SetOldMetadataFromSyncEntry();
 
-                    this.RaiseChangeDetected(sourceAdapter.Configuration.Id, oldChild.UpdateInfo);
-                    this.LogSyncAnalyzerChangeFound(oldChild);
+                    // The item appears to have been deleted, but it may have in fact been moved into a folder
+                    // that we have not yet examined. Put the deleted item into the list below. If we find the 
+                    // same item in another folder and in this list, then we will know that it was moved. If we
+                    // do not find the item anywhere else, then we know that it was in fact deleted.
+                    this.deletedEntries.Add(adapterEntry.AdapterEntryId, oldChild.UpdateInfo);
 
                     // If the entry we are removing is a directory, we need to also check for subdirectories and files. We can do this by calling 
                     // this method recursivly, and passing null for adapter folder (indicating that is no longer exists according to the 
@@ -902,14 +947,10 @@ namespace SyncPro.Runtime
         /// <summary>
         /// Check if a file needs to be synced, or if it is already present in the destination.
         /// </summary>
-        /// <param name="sourceAdapter"></param>
-        /// <param name="destAdapter"></param>
         /// <param name="sourceLogicalChild"></param>
         /// <param name="sourceAdapterChild"></param>
         /// <param name="destAdapterChild"></param>
         private void CheckIfSyncRequired(
-            AdapterBase sourceAdapter, 
-            AdapterBase destAdapter, 
             SyncEntry sourceLogicalChild, 
             IAdapterItem sourceAdapterChild, 
             IAdapterItem destAdapterChild)
