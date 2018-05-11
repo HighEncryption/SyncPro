@@ -130,6 +130,9 @@
     <Compile Include="Utility\CommandLineHelper.cs" />
     <Compile Include="Utility\PathUtility.cs" />
     <Compile Include="Utility\SecureStringExtensions.cs" />
+    <Compile Include="..\SyncPro.Tracing\Properties\SharedAssemblyInfo.cs">
+      <Link>Properties\SharedAssemblyInfo.cs</Link>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

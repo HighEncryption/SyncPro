@@ -74,6 +74,9 @@
     <Compile Include="OneDriveUploadSession.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WindowsLiveError.cs" />
+    <Compile Include="..\SyncPro.Tracing\Properties\SharedAssemblyInfo.cs">
+      <Link>Properties\SharedAssemblyInfo.cs</Link>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SyncPro.Core\SyncPro.Core.csproj">

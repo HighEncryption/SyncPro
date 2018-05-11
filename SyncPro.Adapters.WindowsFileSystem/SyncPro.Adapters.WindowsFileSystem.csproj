@@ -56,6 +56,9 @@
     <Compile Include="WindowsFileSystemAdapter.cs" />
     <Compile Include="WindowsFileSystemAdapterConfiguration.cs" />
     <Compile Include="WindowsFileSystemFolder.cs" />
+    <Compile Include="..\SyncPro.Tracing\Properties\SharedAssemblyInfo.cs">
+      <Link>Properties\SharedAssemblyInfo.cs</Link>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SyncPro.Core\SyncPro.Core.csproj">

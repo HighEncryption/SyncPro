@@ -75,6 +75,9 @@
     <Compile Include="UploadCancelledException.cs" />
     <Compile Include="UploadException.cs" />
     <Compile Include="DataModel\UploadPartResponse.cs" />
+    <Compile Include="..\SyncPro.Tracing\Properties\SharedAssemblyInfo.cs">
+      <Link>Properties\SharedAssemblyInfo.cs</Link>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SyncPro.Core\SyncPro.Core.csproj">
