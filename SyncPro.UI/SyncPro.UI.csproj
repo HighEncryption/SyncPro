@@ -281,7 +281,7 @@
     <Compile Include="ViewModels\Adapters\SyncAdapterViewModel.cs" />
     <Compile Include="ViewModels\Adapters\WindowsFileSystemAdapterViewModel.cs" />
     <Compile Include="ViewModels\ThumbnailCache.cs" />
-    <Compile Include="ViewModels\WizardPageViewModelBase.cs" />
+    <Compile Include="ViewModels\TabPageViewModelBase.cs" />
     <Compile Include="WebBrowserWindow.cs" />
     <Page Include="Controls\AdapterErrorView.xaml">
       <SubType>Designer</SubType>

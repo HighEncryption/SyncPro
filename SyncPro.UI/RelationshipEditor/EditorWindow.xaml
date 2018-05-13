@@ -27,7 +27,7 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <TabControl Style="{StaticResource MyTabControlStyle}" ItemsSource="{Binding Path=WizardPages}">
+        <TabControl Style="{StaticResource SyncProTabControlStyle}" ItemsSource="{Binding Path=TabPages}">
             <TabControl.Resources>
                 <DataTemplate DataType="{x:Type relationshipEditor:SyncSourcePageViewModel}">
                     <sections:SyncDestinationSection DataContext="{Binding}" />

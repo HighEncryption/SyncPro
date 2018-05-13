@@ -13,7 +13,7 @@ namespace SyncPro.UI.RelationshipEditor
         public int ScaleFactor { get; set; }
     }
 
-    public class SyncPerformancePageViewModel : WizardPageViewModelBase
+    public class SyncPerformancePageViewModel : TabPageViewModelBase
     {
         public SyncPerformancePageViewModel(RelationshipEditorViewModel editorViewModel)
             : base(editorViewModel)

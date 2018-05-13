@@ -4,7 +4,7 @@
 
     using SyncPro.UI.Framework;
 
-    public abstract class WizardPageViewModelBase : ViewModelBase
+    public abstract class TabPageViewModelBase : ViewModelBase
     {
         public RelationshipEditorViewModel EditorViewModel { get; }
 
@@ -30,15 +30,15 @@
             {
                 if (this.SetProperty(ref this.isActive, value) && value)
                 {
-                    if (this.EditorViewModel.CurrentWizardPage != this)
+                    if (this.EditorViewModel.CurrentTabPage != this)
                     {
-                        this.EditorViewModel.CurrentWizardPage = this;
+                        this.EditorViewModel.CurrentTabPage = this;
                     }
                 }
             }
         }
 
-        protected WizardPageViewModelBase(RelationshipEditorViewModel editorViewModel)
+        protected TabPageViewModelBase(RelationshipEditorViewModel editorViewModel)
             : base(true)
         {
             this.EditorViewModel = editorViewModel;

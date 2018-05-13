@@ -51,21 +51,21 @@
         public SyncNamePageViewModel SyncNamePageViewModel { get; }
 
 
-        private ObservableCollection<WizardPageViewModelBase> wizardPages;
+        private ObservableCollection<TabPageViewModelBase> tabPages;
 
-        public ObservableCollection<WizardPageViewModelBase> WizardPages => 
-            this.wizardPages ?? (this.wizardPages = new ObservableCollection<WizardPageViewModelBase>());
+        public ObservableCollection<TabPageViewModelBase> TabPages => 
+            this.tabPages ?? (this.tabPages = new ObservableCollection<TabPageViewModelBase>());
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private WizardPageViewModelBase currentWizardPage;
+        private TabPageViewModelBase currentTabPage;
 
-        public WizardPageViewModelBase CurrentWizardPage
+        public TabPageViewModelBase CurrentTabPage
         {
-            get { return this.currentWizardPage; }
+            get { return this.currentTabPage; }
             set
             {
-                var oldPage = this.currentWizardPage;
-                if (this.SetProperty(ref this.currentWizardPage, value))
+                var oldPage = this.currentTabPage;
+                if (this.SetProperty(ref this.currentTabPage, value))
                 {
                     if (oldPage != null)
                     {
@@ -104,35 +104,35 @@
             this.CloseWindowCommand = new DelegatedCommand(this.CloseWindow);
 
             this.SyncSourcePageViewModel = new SyncSourcePageViewModel(this);
-            this.WizardPages.Add(this.SyncSourcePageViewModel);
+            this.TabPages.Add(this.SyncSourcePageViewModel);
 
             this.SyncDestinationPageViewModel = new SyncDestinationPageViewModel(this);
-            this.WizardPages.Add(this.SyncDestinationPageViewModel);
+            this.TabPages.Add(this.SyncDestinationPageViewModel);
 
             this.SyncOptionsPageViewModel = new SyncOptionsPageViewModel(this);
-            this.WizardPages.Add(this.SyncOptionsPageViewModel);
+            this.TabPages.Add(this.SyncOptionsPageViewModel);
 
             this.SyncPerformancePageViewModel = new SyncPerformancePageViewModel(this);
-            this.WizardPages.Add(this.SyncPerformancePageViewModel);
+            this.TabPages.Add(this.SyncPerformancePageViewModel);
 
             this.SyncTriggeringPageViewModel = new SyncTriggeringPageViewModel(this);
-            this.WizardPages.Add(this.SyncTriggeringPageViewModel);
+            this.TabPages.Add(this.SyncTriggeringPageViewModel);
 
             this.SyncNamePageViewModel = new SyncNamePageViewModel(this);
-            this.WizardPages.Add(this.SyncNamePageViewModel);
+            this.TabPages.Add(this.SyncNamePageViewModel);
 
             this.ErrorsChanged += (sender, args) =>
             {
                 Logger.Warning("RelationshipEditor: HasErrors is now " + this.HasErrors);
             };
 
-            foreach (WizardPageViewModelBase wizardPage in this.WizardPages)
+            foreach (TabPageViewModelBase tabPage in this.TabPages)
             {
-                wizardPage.LoadContext();
-                wizardPage.LoadingComplete = true;
+                tabPage.LoadContext();
+                tabPage.LoadingComplete = true;
             }
 
-            this.CurrentWizardPage = this.WizardPages.First();
+            this.CurrentTabPage = this.TabPages.First();
         }
 
         private void CloseWindow(object obj)
@@ -163,34 +163,34 @@
 
         private bool CanMoveNext(object obj)
         {
-            return this.WizardPages.IndexOf(this.CurrentWizardPage) < this.WizardPages.Count - 1;
+            return this.TabPages.IndexOf(this.CurrentTabPage) < this.TabPages.Count - 1;
         }
 
         private void MoveNext(object obj)
         {
-            int currentPageIndex = this.WizardPages.IndexOf(this.CurrentWizardPage);
-            this.CurrentWizardPage = this.WizardPages[currentPageIndex + 1];
+            int currentPageIndex = this.TabPages.IndexOf(this.CurrentTabPage);
+            this.CurrentTabPage = this.TabPages[currentPageIndex + 1];
         }
 
         private bool CanMovePrevious(object obj)
         {
-            return this.WizardPages.IndexOf(this.CurrentWizardPage) > 0;
+            return this.TabPages.IndexOf(this.CurrentTabPage) > 0;
         }
 
         private void MovePrevious(object obj)
         {
-            int currentPageIndex = this.WizardPages.IndexOf(this.CurrentWizardPage);
-            this.CurrentWizardPage = this.WizardPages[currentPageIndex - 1];
+            int currentPageIndex = this.TabPages.IndexOf(this.CurrentTabPage);
+            this.CurrentTabPage = this.TabPages[currentPageIndex - 1];
         }
 
         public async Task CommitRelationshipAsync()
         {
-            // Tell all of the wizard pages to write their viewmodel state to their respective contexts. This
+            // Tell all of the tab pages to write their viewmodel state to their respective contexts. This
             // is necessary before calling SaveAsync below since SaveAsync will rely on data in the context
             // objects to configure the relationship.
-            foreach (WizardPageViewModelBase wizardPage in this.WizardPages)
+            foreach (TabPageViewModelBase tabPage in this.TabPages)
             {
-                wizardPage.SaveContext();
+                tabPage.SaveContext();
             }
 
             await this.Relationship.SaveAsync(true).ConfigureAwait(false);

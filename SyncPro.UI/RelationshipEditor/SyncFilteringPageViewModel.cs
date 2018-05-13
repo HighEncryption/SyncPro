@@ -4,7 +4,7 @@ namespace SyncPro.UI.RelationshipEditor
 
     using SyncPro.UI.ViewModels;
 
-    public class SyncFilteringPageViewModel : WizardPageViewModelBase
+    public class SyncFilteringPageViewModel : TabPageViewModelBase
     {
         public SyncFilteringPageViewModel(RelationshipEditorViewModel editorViewModel)
             : base(editorViewModel)

@@ -6,7 +6,7 @@
     using SyncPro.Tracing;
     using SyncPro.UI.ViewModels;
 
-    public class SyncTriggeringPageViewModel : WizardPageViewModelBase
+    public class SyncTriggeringPageViewModel : TabPageViewModelBase
     {
         public SyncTriggeringPageViewModel(RelationshipEditorViewModel editorViewModel)
             : base(editorViewModel)

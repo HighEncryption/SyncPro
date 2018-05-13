@@ -10,7 +10,7 @@
     using SyncPro.UI.ViewModels;
     using SyncPro.UI.ViewModels.Adapters;
 
-    public class SyncNamePageViewModel : WizardPageViewModelBase
+    public class SyncNamePageViewModel : TabPageViewModelBase
     {
         public ICommand CreateRelationshipCommand { get; }
 
