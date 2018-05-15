@@ -5,6 +5,9 @@
     using System.IO;
     using System.Reflection;
 
+    using Newtonsoft.Json;
+
+    using SyncPro.Configuration;
     using SyncPro.Runtime;
     using SyncPro.Tracing;
 
@@ -15,9 +18,9 @@
         public static void Initialize(bool testMode)
         {
             string localAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            Global.Initialize(Path.Combine(localAppDataPath, "SyncPro"), testMode);
+            Initialize(Path.Combine(localAppDataPath, "SyncPro"), testMode);
 
-            IsInitialized = true;
+            Global.IsInitialized = true;
         }
 
         // Test Hook
@@ -30,6 +33,20 @@
                 Directory.CreateDirectory(Global.AppDataRoot);
             }
 
+            Global.AppConfigFilePath = Path.Combine(
+                root,
+                ApplicationConfiguration.DefaultFileName);
+
+            if (File.Exists(Global.AppConfigFilePath))
+            {
+                Global.AppConfig = JsonConvert.DeserializeObject<ApplicationConfiguration>(
+                    File.ReadAllText(Global.AppConfigFilePath));
+            }
+            else
+            {
+                Global.AppConfig = new ApplicationConfiguration();
+            }
+
             Logger.GlobalInitComplete(
                 Assembly.GetExecutingAssembly().Location,
                 Global.AppDataRoot);
@@ -37,10 +54,14 @@
 
         static Global()
         {
-            SyncRelationships = new List<SyncRelationship>();
+            Global.SyncRelationships = new List<SyncRelationship>();
         }
 
         public static string AppDataRoot { get; private set; }
+
+        public static string AppConfigFilePath { get; private set; }
+
+        public static ApplicationConfiguration AppConfig { get; private set; }
 
         public static List<SyncRelationship> SyncRelationships { get; }
 

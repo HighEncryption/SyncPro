@@ -8,7 +8,7 @@ namespace SyncPro.UI.RelationshipEditor
     using SyncPro.UI.Framework.MVVM;
     using SyncPro.UI.ViewModels;
 
-    public class SyncOptionsPageViewModel : TabPageViewModelBase
+    public class SyncOptionsPageViewModel : RelationshipEditorPageViewModelBase
     {
         public ICommand ShowEncryptionSettingsDialogCommand { get; }
 

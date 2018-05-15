@@ -4,17 +4,19 @@
                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                          xmlns:mvvm="clr-namespace:SyncPro.UI.Framework.MVVM"
+                         xmlns:viewModels="clr-namespace:SyncPro.UI.ViewModels"
                          mc:Ignorable="d"
                          ResizeMode="NoResize"
-                         Title="Application Settings" 
+                         Title="SyncPro Settings" 
                          Icon="/Resources/Graphics/SyncProIcon.ico"
-                         Height="460" Width="600">
+                         Height="600" Width="700">
     <mvvm:RequestCloseWindow.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="/Converters.xaml" />
                 <ResourceDictionary Source="/WindowStyles.xaml" />
                 <ResourceDictionary Source="/RelationshipEditor/StyleResources.xaml" />
+                <ResourceDictionary Source="/RelationshipEditor/TabControlStyle.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </mvvm:RequestCloseWindow.Resources>
@@ -26,6 +28,19 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
+
+        <TabControl Grid.Row="1" ItemsSource="{Binding Path=TabItems}"
+                    Style="{StaticResource SyncProTabControlStyle}"
+                    Margin="8">
+            <TabControl.Resources>
+                <DataTemplate DataType="{x:Type viewModels:EmailReportingTabViewModel}">
+                    <Button Width="10" Height="10"></Button>
+                </DataTemplate>
+                <DataTemplate DataType="{x:Type viewModels:HelpTabViewModel}">
+                    <Button Width="10" Height="10"></Button>
+                </DataTemplate>
+            </TabControl.Resources>
+        </TabControl>
 
         <Border Grid.Row="3" Background="{StaticResource WindowBackgroundBrush}"
                 BorderThickness="0,1,0,0" BorderBrush="#606060">

@@ -38,7 +38,6 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
             <TextBlock Grid.Column="0" Grid.Row="0" Style="{StaticResource ItemHeaderStyle}" Text="When To Sync" />
@@ -277,6 +276,24 @@
                              IsChecked="{Binding Path=SelectedEventTriggering, Converter={StaticResource EnumToBoolean}, ConverterParameter=DeviceInsertion}">
                     <TextBlock Style="{StaticResource RadioButtonItemTextStyle}" Text="When the device {0} is connected" />
                 </RadioButton>
+            </StackPanel>
+
+            <!-- 
+                Section for sending a report after a sync run
+            -->
+            <TextBlock Grid.Column="0" Grid.Row="3" Style="{StaticResource ItemHeaderStyle}" Text="Reporting" VerticalAlignment="Top" Margin="0,20,0,0" />
+
+            <StackPanel Grid.Column="1" Grid.Row="3" Orientation="Vertical" Margin="0,20,0,0">
+                <CheckBox IsChecked="{Binding Path=SendAfterSyncReport}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Style="{StaticResource RadioButtonItemTextStyle}" Text="Send email reports" />
+                        <TextBlock Style="{StaticResource RadioButtonItemTextStyle}" Margin="8,0,0,0">
+                            <Hyperlink>
+                                <Run Text="Change report settings"></Run>
+                            </Hyperlink>
+                        </TextBlock>
+                    </StackPanel>
+                </CheckBox>
             </StackPanel>
         </Grid>
     </StackPanel>

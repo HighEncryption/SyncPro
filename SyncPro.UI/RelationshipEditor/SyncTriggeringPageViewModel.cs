@@ -6,7 +6,7 @@
     using SyncPro.Tracing;
     using SyncPro.UI.ViewModels;
 
-    public class SyncTriggeringPageViewModel : TabPageViewModelBase
+    public class SyncTriggeringPageViewModel : RelationshipEditorPageViewModelBase
     {
         public SyncTriggeringPageViewModel(RelationshipEditorViewModel editorViewModel)
             : base(editorViewModel)
@@ -221,5 +221,14 @@
         }
 
         #endregion
+
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private bool sendAfterSyncReport;
+
+        public bool SendAfterSyncReport
+        {
+            get { return this.sendAfterSyncReport; }
+            set { this.SetProperty(ref this.sendAfterSyncReport, value); }
+        }
     }
 }

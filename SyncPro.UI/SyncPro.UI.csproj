@@ -265,11 +265,14 @@
     <Compile Include="ViewModels\Adapters\GoogleDriveAdapterViewModel.cs" />
     <Compile Include="ViewModels\Adapters\OneDriveAdapterViewModel.cs" />
     <Compile Include="ViewModels\AnalyzeJobViewModel.cs" />
+    <Compile Include="ViewModels\ApplicationSettingsViewModel.cs" />
     <Compile Include="ViewModels\ChangeMetrics.cs" />
     <Compile Include="Dialogs\EncryptionSettingsDialogViewModel.cs" />
+    <Compile Include="ViewModels\EmailReportingTabViewModel.cs" />
     <Compile Include="ViewModels\EntryUpdateInfoViewModel.cs" />
     <Compile Include="ViewModels\Adapters\ISyncTargetViewModel.cs" />
     <Compile Include="ViewModels\Errors\OneDriveTokenExpiredErrorViewModel.cs" />
+    <Compile Include="ViewModels\HelpTabViewModel.cs" />
     <Compile Include="ViewModels\JobViewModel.cs" />
     <Compile Include="ViewModels\MainWindowViewModel.cs" />
     <Compile Include="Startup.cs" />
@@ -646,6 +649,12 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\Graphics\list_delete2_16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Graphics\mail_20.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Graphics\help_20.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

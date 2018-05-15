@@ -16,7 +16,13 @@
     using SyncPro.UI.Navigation.ViewModels;
     using SyncPro.UI.RelationshipEditor;
 
-    public class RelationshipEditorViewModel : ViewModelBase, IRequestClose
+    public interface ITabControlHostViewModel
+    {
+        TabPageViewModelBase CurrentTabPage { get;set; }
+    }
+
+    
+    public class RelationshipEditorViewModel : ViewModelBase, IRequestClose, ITabControlHostViewModel
     {
         public ICommand MovePreviousCommand { get; }
 

@@ -57,6 +57,8 @@
         /// </summary>
         public bool SyncAttributes { get; set; }
 
+        public bool SendSyncReports { get; set; }
+
         public ThrottlingConfiguration ThrottlingConfiguration { get; set; }
 
         public EncryptionConfiguration EncryptionConfiguration { get; set; }

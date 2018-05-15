@@ -95,6 +95,7 @@
             this.Name = configuration.Name;
             this.SyncScope = configuration.Scope;
             this.SyncAttributes = configuration.SyncAttributes;
+            this.SendSyncJobReports = configuration.SendSyncReports;
 
             this.TriggerType = configuration.TriggerConfiguration.TriggerType;
             this.TriggerScheduleInterval = configuration.TriggerConfiguration.ScheduleInterval;
@@ -140,6 +141,7 @@
                 this.Configuration.Name = this.Name;
                 this.Configuration.Scope = this.SyncScope;
                 this.Configuration.SyncAttributes = this.SyncAttributes;
+                this.Configuration.SendSyncReports = this.SendSyncJobReports;
 
                 this.Configuration.ThrottlingConfiguration.IsEnabled = this.IsThrottlingEnabled;
                 this.Configuration.ThrottlingConfiguration.Value = this.ThrottlingValue;
@@ -375,6 +377,15 @@
         {
             get { return this.destinationAdapter; }
             set { this.SetProperty(ref this.destinationAdapter, value); }
+        }
+
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private bool sendSyncJobReports;
+
+        public bool SendSyncJobReports
+        {
+            get { return this.sendSyncJobReports; }
+            set { this.SetProperty(ref this.sendSyncJobReports, value); }
         }
 
         #endregion

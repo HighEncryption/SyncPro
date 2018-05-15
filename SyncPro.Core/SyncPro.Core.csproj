@@ -77,6 +77,7 @@
     <Compile Include="Adapters\AdapterItem.cs" />
     <Compile Include="Adapters\AdapterRegistration.cs" />
     <Compile Include="Adapters\AdapterRegistry.cs" />
+    <Compile Include="Configuration\ApplicationConfiguration.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="Runtime\AnalyzeJobProgressInfo.cs" />
     <Compile Include="Runtime\AnalyzeJobWorker.cs" />
@@ -130,6 +131,7 @@
     <Compile Include="Utility\CommandLineHelper.cs" />
     <Compile Include="Utility\PathUtility.cs" />
     <Compile Include="Utility\SecureStringExtensions.cs" />
+    <Compile Include="Utility\SyncReport.cs" />
     <Compile Include="..\SyncPro.Tracing\Properties\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>

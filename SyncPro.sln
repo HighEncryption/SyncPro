@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2027
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SyncPro.Core", "SyncPro.Core\SyncPro.Core.csproj", "{DE859CDC-6879-4C28-AB26-354806276E04}"
 EndProject
@@ -37,6 +37,11 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SyncPro.Certificates", "SyncPro.Certificates\SyncPro.Certificates.csproj", "{11FEBC64-EE05-4095-BD49-9FC7FABCC1DF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SyncProLogViewer", "SyncProLogViewer\SyncProLogViewer.csproj", "{F1F0285E-B3C3-4E05-9786-E775DE11F92C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{22C34D6B-3252-43D2-81DA-7379CEA51885}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -111,5 +116,8 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{A6727CD7-8703-432C-95A8-36666AFF583B} = {2B1F0A5A-D3DD-4A43-8DD7-3856B773B36A}
 		{F1F0285E-B3C3-4E05-9786-E775DE11F92C} = {2B1F0A5A-D3DD-4A43-8DD7-3856B773B36A}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3B8516F6-2B1B-4634-BCAD-A2CC2E7E0803}
 	EndGlobalSection
 EndGlobal

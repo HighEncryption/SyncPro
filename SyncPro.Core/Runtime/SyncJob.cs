@@ -12,6 +12,7 @@
     using SyncPro.Adapters;
     using SyncPro.Data;
     using SyncPro.Tracing;
+    using SyncPro.Utility;
 
     /// <summary>
     /// Contains the core logic for synchronizing (copying) files between two adapters.
@@ -167,7 +168,41 @@
                 this.EndTime = DateTime.Now;
 
                 this.SaveSyncJobHistory();
+
+                try
+                {
+                    await this.SendReport();
+                }
+                catch (Exception e)
+                {
+                    Logger.LogException(e, "Failed to send report email.");
+                }
             }
+        }
+
+        private async Task SendReport()
+        {
+            if (this.Relationship.TriggerType == SyncTriggerType.Continuous)
+            {
+                // Delay sending a report until a later time
+                // TODO
+                return;
+            }
+
+            if (!this.Relationship.SendSyncJobReports)
+            {
+                Logger.Info("Skipping report send. Reports are not enabled for this relationship.");
+                return;
+            }
+
+            if (Global.AppConfig.EmailReporting == null)
+            {
+                Logger.Info("Skipping report send. No global configuration found.");
+                return;
+            }
+
+            SyncReport report = SyncReport.Create(this);
+            await report.SendAsync();
         }
 
         private void SaveSyncJobHistory()

@@ -255,10 +255,19 @@
         private void OpenAppSettings(object obj)
         {
             Logger.Info("Opening App Settings Window");
+            var viewModel = new ApplicationSettingsViewModel();
 
-            ApplicationSettingsWindow appSettingsWindow = new ApplicationSettingsWindow();
+            ApplicationSettingsWindow appSettingsWindow = new ApplicationSettingsWindow()
+            {
+                DataContext = viewModel
+            };
 
             bool? result = appSettingsWindow.ShowDialog();
+
+            if (result.HasValue && result.Value)
+            {
+                viewModel.Save();
+            }
         }
 
         private void CreateRelationship(object obj)

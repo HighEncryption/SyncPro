@@ -8,7 +8,7 @@
     using SyncPro.UI.ViewModels;
     using SyncPro.UI.ViewModels.Adapters;
 
-    public abstract class SyncAdaptersPageViewModel : TabPageViewModelBase
+    public abstract class SyncAdaptersPageViewModel : RelationshipEditorPageViewModelBase
     {
         protected SyncAdaptersPageViewModel(RelationshipEditorViewModel editorViewModel, bool isSourceAdapter)
             : base(editorViewModel)

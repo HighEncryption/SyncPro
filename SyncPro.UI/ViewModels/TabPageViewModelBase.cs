@@ -4,9 +4,21 @@
 
     using SyncPro.UI.Framework;
 
+
+    public abstract class RelationshipEditorPageViewModelBase : TabPageViewModelBase
+    {
+        public RelationshipEditorViewModel EditorViewModel => 
+            (RelationshipEditorViewModel)this.TabControlHostView;
+
+        protected RelationshipEditorPageViewModelBase(RelationshipEditorViewModel viewModel) 
+            : base(viewModel)
+        {
+        }
+    }
+
     public abstract class TabPageViewModelBase : ViewModelBase
     {
-        public RelationshipEditorViewModel EditorViewModel { get; }
+        public ITabControlHostViewModel TabControlHostView { get; }
 
         public abstract string NavTitle { get; }
 
@@ -30,18 +42,18 @@
             {
                 if (this.SetProperty(ref this.isActive, value) && value)
                 {
-                    if (this.EditorViewModel.CurrentTabPage != this)
+                    if (this.TabControlHostView.CurrentTabPage != this)
                     {
-                        this.EditorViewModel.CurrentTabPage = this;
+                        this.TabControlHostView.CurrentTabPage = this;
                     }
                 }
             }
         }
 
-        protected TabPageViewModelBase(RelationshipEditorViewModel editorViewModel)
+        protected TabPageViewModelBase(ITabControlHostViewModel tabControlHostView)
             : base(true)
         {
-            this.EditorViewModel = editorViewModel;
+            this.TabControlHostView = tabControlHostView;
         }
 
         public abstract void LoadContext();
