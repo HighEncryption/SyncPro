@@ -1,10 +1,9 @@
 namespace SyncPro.UnitTests
 {
     using System;
+    using System.Diagnostics;
     using System.IO;
     using System.Security.Cryptography.X509Certificates;
-
-    using JsonLog;
 
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -567,6 +566,19 @@ namespace SyncPro.UnitTests
             }
 
             return buffer;
+        }
+    }
+
+    public static class Logger
+    {
+        public static void Info(string message)
+        {
+            Debug.WriteLine("[INFO]: {0}", message);
+        }
+
+        public static void Info(string message, params object[] args)
+        {
+            Debug.WriteLine("[INFO]: " + message, args);
         }
     }
 }

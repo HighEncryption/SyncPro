@@ -2,8 +2,6 @@
 {
     using System.IO;
 
-    using JsonLog;
-
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     using SyncPro.Adapters;

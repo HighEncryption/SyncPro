@@ -8,8 +8,6 @@ namespace SyncPro.UnitTests
     using System.Linq;
     using System.Threading;
 
-    using JsonLog;
-
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     using SyncPro.Adapters;

@@ -5,8 +5,6 @@ namespace SyncPro.UnitTests
     using System.IO;
     using System.Linq;
 
-    using JsonLog;
-
     using SyncPro.Adapters.MicrosoftOneDrive;
     using SyncPro.Adapters.WindowsFileSystem;
     using SyncPro.Configuration;
