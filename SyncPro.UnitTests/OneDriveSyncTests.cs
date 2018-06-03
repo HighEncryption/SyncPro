@@ -17,15 +17,12 @@ namespace SyncPro.UnitTests
     using SyncPro.Adapters.MicrosoftOneDrive;
     using SyncPro.Adapters.MicrosoftOneDrive.DataModel;
     using SyncPro.Adapters.WindowsFileSystem;
-    using SyncPro.Data;
     using SyncPro.OAuth;
     using SyncPro.Runtime;
 
     [TestClass]
-    public class OneDriveSyncTests
+    public class OneDriveSyncTests : AdapterTestsBase<OneDriveAdapter>
     {
-        public TestContext TestContext { get; set; }
-
         private static TokenResponse classCurrentToken;
 
         [ClassInitialize]
@@ -93,6 +90,40 @@ namespace SyncPro.UnitTests
             //testContext.Properties["CurrentToken"] = token;
             classCurrentToken = token;
         }
+
+        protected override OneDriveAdapter CreateSourceAdapter_BasicSyncDownloadOnly(SyncRelationship newRelationship)
+        {
+            TokenResponse currentToken = this.GetCurrentToken();
+
+            OneDriveAdapter sourceAdapter = new OneDriveAdapter(newRelationship)
+            {
+                CurrentToken = currentToken,
+            };
+
+            sourceAdapter.Config.TargetPath = "OneDrive/SyncTest";
+            sourceAdapter.Config.IsOriginator = true;
+
+            sourceAdapter.InitializeClient().Wait();
+
+            return sourceAdapter;
+        }
+
+        protected override OneDriveAdapter CreateSourceAdapter_BasicAnalyzeOnly(SyncRelationship newRelationship)
+        {
+            TokenResponse currentToken = this.GetCurrentToken();
+
+            OneDriveAdapter sourceAdapter = new OneDriveAdapter(newRelationship)
+            {
+                CurrentToken = currentToken,
+            };
+
+            sourceAdapter.Configuration.IsOriginator = true;
+            sourceAdapter.Config.TargetPath = "OneDrive/SyncTest";
+            sourceAdapter.InitializeClient().Wait();
+
+            return sourceAdapter;
+        }
+
 
         [TestMethod]
         public void BasicSyncLocalToOneDrive()
@@ -466,6 +497,7 @@ namespace SyncPro.UnitTests
             }
         }
 
+        /*
         [TestMethod]
         public void BasicAnalyzeOnly()
         {
@@ -635,6 +667,7 @@ namespace SyncPro.UnitTests
                 }
             }
         }
+        */
 
         [TestMethod]
         public void BasicSyncUploadOnly()

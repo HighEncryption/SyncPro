@@ -113,7 +113,7 @@ namespace SyncPro.UI.Navigation
             {
                 if (this.SetProperty(ref this.selectedSyncEntry, value))
                 {
-                    this.selectedSyncEntry.LoadThumbnails();
+                    selectedSyncEntry?.LoadThumbnails();
                 }
             }
         }

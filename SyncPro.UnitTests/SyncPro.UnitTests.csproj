@@ -73,6 +73,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="AdapterTestsBase.cs" />
     <Compile Include="BackblazeB2AccountInfo.cs" />
     <Compile Include="BackblazeB2SyncTests.cs" />
     <Compile Include="ComponentTests.cs" />
