@@ -409,11 +409,19 @@
                     await ThumbnailCache.GetThumbnailsAsync(
                         this.syncRelationship,
                         this.adapterEntryId,
-                        this.sourceAdapterId);
+                        this.sourceAdapterId,
+                        this.RelativePath);
 
                 this.ShowPreviewLoading = false;
 
-                App.DispatcherInvoke(() => { this.PreviewImage = thumbnail.Image; });
+                if (thumbnail == null)
+                {
+                    this.ShowPreviewLoading = false;
+                }
+                else
+                {
+                    App.DispatcherInvoke(() => { this.PreviewImage = thumbnail.Image; });
+                }
             });
         }
     }

@@ -682,7 +682,7 @@
             Logger.Debug("Finished CalculateRelationshipMetadataAsync. Duration=" + stopwatch.Elapsed);
         }
 
-        public async Task<byte[]> GetThumbnailAsync(int sourceAdapterId, string adapterEntryId)
+        public async Task<byte[]> GetThumbnailAsync(int sourceAdapterId, string adapterEntryId, string relativePath)
         {
             var adapter = this.BaseModel.Adapters.FirstOrDefault(a => a.Configuration.Id == sourceAdapterId);
 
@@ -691,7 +691,7 @@
                 return null;
             }
 
-            return await adapter.GetItemThumbnail(adapterEntryId).ConfigureAwait(false);
+            return await adapter.GetItemThumbnail(adapterEntryId, relativePath).ConfigureAwait(false);
         }
     }
 }

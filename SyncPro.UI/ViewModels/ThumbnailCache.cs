@@ -13,7 +13,8 @@
         public static async Task<Thumbnail> GetThumbnailsAsync(
             SyncRelationshipViewModel syncRelationship, 
             string adapterEntryId, 
-            int sourceAdapterId)
+            int sourceAdapterId,
+            string relativePath)
         {
             string key = string.Format(
                 "{0}_{1}",
@@ -23,10 +24,17 @@
             if (!ThumbnailCache.Cache.ContainsKey(key))
             {
                 byte[] result1 = await syncRelationship
-                    .GetThumbnailAsync(sourceAdapterId, adapterEntryId)
+                    .GetThumbnailAsync(sourceAdapterId, adapterEntryId, relativePath)
                     .ConfigureAwait(false);
 
-                ThumbnailCache.Cache[key] = new Thumbnail(FromByteArray(result1));
+                if (result1 == null)
+                {
+                    ThumbnailCache.Cache[key] = null;
+                }
+                else
+                {
+                    ThumbnailCache.Cache[key] = new Thumbnail(FromByteArray(result1));
+                }
             }
 
             return ThumbnailCache.Cache[key];

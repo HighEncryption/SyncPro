@@ -2,6 +2,8 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Drawing;
+    using System.Drawing.Imaging;
     using System.IO;
     using System.Linq;
     using System.Security.Cryptography;
@@ -366,9 +368,27 @@
             throw new NotImplementedException("Unknown hash type");
         }
 
-        public override async Task<byte[]> GetItemThumbnail(string itemId)
+        public override Task<byte[]> GetItemThumbnail(string itemId, string relativePath)
         {
-            return null;
+            var fullPath = Path.Combine(this.Config.RootDirectory, relativePath);
+
+            using (Image sourceImage = Image.FromFile(fullPath))
+            {
+                var thumbnailImage = sourceImage.GetThumbnailImage(
+                    400, 
+                    200, 
+                    () => false, 
+                    IntPtr.Zero);
+
+                using (thumbnailImage)
+                {
+                    using (MemoryStream ms = new MemoryStream())
+                    {
+                        thumbnailImage.Save(ms, ImageFormat.Png);
+                        return Task.FromResult(ms.ToArray());
+                    }
+                }
+            }
         }
 
         public override void FinalizeItemWrite(Stream stream, EntryUpdateInfo updateInfo)

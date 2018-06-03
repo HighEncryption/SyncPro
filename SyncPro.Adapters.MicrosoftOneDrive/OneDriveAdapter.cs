@@ -466,7 +466,7 @@
             return null;
         }
 
-        public override async Task<byte[]> GetItemThumbnail(string itemId)
+        public override async Task<byte[]> GetItemThumbnail(string itemId, string relativePath)
         {
             ThumbnailSet thumbnailSet = await this.oneDriveClient.GetThumbnailsAsync(itemId).ConfigureAwait(false);
 

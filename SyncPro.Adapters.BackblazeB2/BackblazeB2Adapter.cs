@@ -223,7 +223,7 @@
             return null;
         }
 
-        public override async Task<byte[]> GetItemThumbnail(string itemId)
+        public override async Task<byte[]> GetItemThumbnail(string itemId, string relativePath)
         {
             return null;
         }

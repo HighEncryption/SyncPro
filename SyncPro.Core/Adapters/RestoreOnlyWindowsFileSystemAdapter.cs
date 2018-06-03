@@ -117,7 +117,7 @@ namespace SyncPro.Adapters
             throw new NotImplementedException();
         }
 
-        public override Task<byte[]> GetItemThumbnail(string itemId)
+        public override Task<byte[]> GetItemThumbnail(string itemId, string relativePath)
         {
             throw new NotImplementedException();
         }
