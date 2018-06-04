@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
 
   <?if $(var.Platform) = x64 ?>
     <?define PlatformProgramFilesFolder = "ProgramFiles64Folder" ?>
@@ -32,7 +33,44 @@
 
     <Feature Id="ProductFeature" Title="SyncPro" Level="1">
       <ComponentRef Id="RemoveAppFolder" />
-      <ComponentRef Id="SyncProApp" />
+
+      <ComponentRef Id="EntityFramework_dll_component" />
+      <ComponentRef Id="EntityFramework_SqlServer_dll_component" />
+      <ComponentRef Id="Hardcodet_Wpf_TaskbarNotification_dll_component" />
+      <ComponentRef Id="Hardcodet_Wpf_TaskbarNotification_pdb_component" />
+      <ComponentRef Id="JetBrains_Annotations_dll_component" />
+      <ComponentRef Id="Microsoft_Diagnostics_Tracing_EventSource_dll_component" />
+      <ComponentRef Id="Microsoft_Expression_Interactions_dll_component" />
+      <ComponentRef Id="Newtonsoft_Json_dll_component" />
+      <ComponentRef Id="SyncPro_Adapters_BackblazeB2_dll_component" />
+      <ComponentRef Id="SyncPro_Adapters_BackblazeB2_pdb_component" />
+      <ComponentRef Id="SyncPro_Adapters_GoogleDrive_dll_component" />
+      <ComponentRef Id="SyncPro_Adapters_GoogleDrive_pdb_component" />
+      <ComponentRef Id="SyncPro_Adapters_MicrosoftOneDrive_dll_component" />
+      <ComponentRef Id="SyncPro_Adapters_MicrosoftOneDrive_pdb_component" />
+      <ComponentRef Id="SyncPro_Adapters_WindowsFileSystem_dll_component" />
+      <ComponentRef Id="SyncPro_Adapters_WindowsFileSystem_pdb_component" />
+      <ComponentRef Id="SyncPro_Certificates_dll_component" />
+      <ComponentRef Id="SyncPro_Certificates_pdb_component" />
+      <ComponentRef Id="SyncPro_Core_dll_component" />
+      <ComponentRef Id="SyncPro_Core_dll_config_component" />
+      <ComponentRef Id="SyncPro_Core_pdb_component" />
+      <ComponentRef Id="SyncPro_Tracing_dll_component" />
+      <ComponentRef Id="SyncPro_Tracing_pdb_component" />
+      <ComponentRef Id="SyncPro_UI_exe_component" />
+      <ComponentRef Id="SyncPro_UI_exe_config_component" />
+      <ComponentRef Id="SyncPro_UI_pdb_component" />
+      <ComponentRef Id="System_Windows_Interactivity_dll_component" />
+      <ComponentRef Id="version_txt_component" />
+      <ComponentRef Id="Xceed_Wpf_AvalonDock_dll_component" />
+      <ComponentRef Id="Xceed_Wpf_AvalonDock_Themes_Aero_dll_component" />
+      <ComponentRef Id="Xceed_Wpf_AvalonDock_Themes_Metro_dll_component" />
+      <ComponentRef Id="Xceed_Wpf_AvalonDock_Themes_VS2010_dll_component" />
+      <ComponentRef Id="Xceed_Wpf_DataGrid_dll_component" />
+      <ComponentRef Id="Xceed_Wpf_Toolkit_dll_component" />
+
+      <ComponentRef Id="SyncPro_Tracing_SyncPro_Tracing_etwManifest_dll_component" />
+      <ComponentRef Id="SyncPro_Tracing_SyncPro_Tracing_etwManifest_man_component" />
     </Feature>
 
     <Directory Id="TARGETDIR" Name="SourceDir">
@@ -47,45 +85,234 @@
             <RemoveFile Id="RemoveFilesFromAppDirectory" Name="*.*" On="uninstall" />
           </Component>
 
-          <Component Id="SyncProApp" Guid="b61d941c-8e80-4d14-be43-3cba2bb0e9f0">
-            <!-- UI exe is the keypath -->
-            <File Id="SyncPro_UI_exe" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.UI.exe" KeyPath="yes" />
-            
-            <!-- All other files should be kept in alphabetical order -->
-            <File Id="EntityFramework_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\EntityFramework.dll" />
-            <File Id="EntityFramework_SqlServer_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\EntityFramework.SqlServer.dll" />
-            <File Id="Hardcodet_Wpf_TaskbarNotification_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\Hardcodet.Wpf.TaskbarNotification.dll" />
-            <File Id="Hardcodet_Wpf_TaskbarNotification_pdb" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\Hardcodet.Wpf.TaskbarNotification.pdb" />
-            <File Id="JetBrains_Annotations_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\JetBrains.Annotations.dll" />
-            <File Id="Microsoft_Diagnostics_Tracing_EventSource_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\Microsoft.Diagnostics.Tracing.EventSource.dll" />
-            <File Id="Microsoft_Expression_Interactions_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\Microsoft.Expression.Interactions.dll" />
-            <File Id="Newtonsoft_Json_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\Newtonsoft.Json.dll" />
-            <File Id="SyncPro_Adapters_BackblazeB2_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Adapters.BackblazeB2.dll" />
-            <File Id="SyncPro_Adapters_BackblazeB2_pdb" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Adapters.BackblazeB2.pdb" />
-            <File Id="SyncPro_Adapters_GoogleDrive_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Adapters.GoogleDrive.dll" />
-            <File Id="SyncPro_Adapters_GoogleDrive_pdb" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Adapters.GoogleDrive.pdb" />
-            <File Id="SyncPro_Adapters_MicrosoftOneDrive_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Adapters.MicrosoftOneDrive.dll" />
-            <File Id="SyncPro_Adapters_MicrosoftOneDrive_pdb" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Adapters.MicrosoftOneDrive.pdb" />
-            <File Id="SyncPro_Adapters_WindowsFileSystem_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Adapters.WindowsFileSystem.dll" />
-            <File Id="SyncPro_Adapters_WindowsFileSystem_pdb" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Adapters.WindowsFileSystem.pdb" />
-            <File Id="SyncPro_Certificates_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Certificates.dll" />
-            <File Id="SyncPro_Certificates_pdb" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Certificates.pdb" />
-            <File Id="SyncPro_Core_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Core.dll" />
-            <File Id="SyncPro_Core_dll_config" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Core.dll.config" />
-            <File Id="SyncPro_Core_pdb" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Core.pdb" />
-            <File Id="SyncPro_Tracing_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Tracing.dll" />
-            <File Id="SyncPro_Tracing_pdb" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Tracing.pdb" />
-            <File Id="SyncPro_UI_exe_config" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.UI.exe.config" />
-            <File Id="SyncPro_UI_pdb" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.UI.pdb" />
-            <File Id="System_Windows_Interactivity_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\System.Windows.Interactivity.dll" />
-            <File Id="Xceed_Wpf_AvalonDock_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\Xceed.Wpf.AvalonDock.dll" />
-            <File Id="Xceed_Wpf_AvalonDock_Themes_Aero_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\Xceed.Wpf.AvalonDock.Themes.Aero.dll" />
-            <File Id="Xceed_Wpf_AvalonDock_Themes_Metro_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\Xceed.Wpf.AvalonDock.Themes.Metro.dll" />
-            <File Id="Xceed_Wpf_AvalonDock_Themes_VS2010_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\Xceed.Wpf.AvalonDock.Themes.VS2010.dll" />
-            <File Id="Xceed_Wpf_DataGrid_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\Xceed.Wpf.DataGrid.dll" />
-            <File Id="Xceed_Wpf_Toolkit_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\Xceed.Wpf.Toolkit.dll" />
+          <!-- 
+            Components for each file installed in the ProgramFiles directory
+          -->
+          <Component Id="EntityFramework_dll_component"
+                     Guid="f570987f-2668-4c62-bf8e-5e847305d253">
+            <File Id="EntityFramework_dll"
+                  Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\EntityFramework.dll"
+                  KeyPath="yes" />
           </Component>
+          <Component Id="EntityFramework_SqlServer_dll_component"
+                     Guid="61a65da5-f2e0-4b17-a42b-9cd722e13521">
+            <File Id="EntityFramework_SqlServer_dll"
+                  Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\EntityFramework.SqlServer.dll"
+                  KeyPath="yes" />
+          </Component>
+          <Component Id="Hardcodet_Wpf_TaskbarNotification_dll_component"
+                     Guid="b5d60114-344b-4ff8-94a3-7f9b79c03f5a">
+            <File Id="Hardcodet_Wpf_TaskbarNotification_dll"
+                  Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\Hardcodet.Wpf.TaskbarNotification.dll"
+                  KeyPath="yes" />
+          </Component>
+          <Component Id="Hardcodet_Wpf_TaskbarNotification_pdb_component"
+                     Guid="2062caec-c90e-4241-9081-f07daf3df889">
+            <File Id="Hardcodet_Wpf_TaskbarNotification_pdb"
+                  Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\Hardcodet.Wpf.TaskbarNotification.pdb"
+                  KeyPath="yes" />
+          </Component>
+          <Component Id="JetBrains_Annotations_dll_component"
+                     Guid="fc4c4b51-0aca-4a4c-963b-ee7f25583b8e">
+            <File Id="JetBrains_Annotations_dll"
+                  Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\JetBrains.Annotations.dll"
+                  KeyPath="yes" />
+          </Component>
+          <Component Id="Microsoft_Diagnostics_Tracing_EventSource_dll_component"
+                     Guid="3086d122-1072-4cf2-93a6-ee3259030269">
+            <File Id="Microsoft_Diagnostics_Tracing_EventSource_dll"
+                  Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\Microsoft.Diagnostics.Tracing.EventSource.dll"
+                  KeyPath="yes" />
+          </Component>
+          <Component Id="Microsoft_Expression_Interactions_dll_component"
+                     Guid="009a065a-459b-4057-a2fe-a72e38e2fabb">
+            <File Id="Microsoft_Expression_Interactions_dll"
+                  Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\Microsoft.Expression.Interactions.dll"
+                  KeyPath="yes" />
+          </Component>
+          <Component Id="Newtonsoft_Json_dll_component"
+                     Guid="5686bc75-1fc2-42cb-85b6-56c01750a5d4">
+            <File Id="Newtonsoft_Json_dll"
+                  Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\Newtonsoft.Json.dll"
+                  KeyPath="yes" />
+          </Component>
+          <Component Id="SyncPro_Adapters_BackblazeB2_dll_component"
+                     Guid="275fa70d-2763-49cb-a153-7920f178b690">
+            <File Id="SyncPro_Adapters_BackblazeB2_dll"
+                  Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Adapters.BackblazeB2.dll"
+                  KeyPath="yes" />
+          </Component>
+          <Component Id="SyncPro_Adapters_BackblazeB2_pdb_component"
+                     Guid="0ee8e2b7-26ca-47a0-a565-43f628c3ec21">
+            <File Id="SyncPro_Adapters_BackblazeB2_pdb"
+                  Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Adapters.BackblazeB2.pdb"
+                  KeyPath="yes" />
+          </Component>
+          <Component Id="SyncPro_Adapters_GoogleDrive_dll_component"
+                     Guid="271cb145-3c7f-4386-9e35-b5c1e973d327">
+            <File Id="SyncPro_Adapters_GoogleDrive_dll"
+                  Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Adapters.GoogleDrive.dll"
+                  KeyPath="yes" />
+          </Component>
+          <Component Id="SyncPro_Adapters_GoogleDrive_pdb_component"
+                     Guid="25139a59-1a0a-474d-a086-ab410b15f57c">
+            <File Id="SyncPro_Adapters_GoogleDrive_pdb"
+                  Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Adapters.GoogleDrive.pdb"
+                  KeyPath="yes" />
+          </Component>
+          <Component Id="SyncPro_Adapters_MicrosoftOneDrive_dll_component"
+                     Guid="d2cc3a9f-8f01-49c9-9fda-124b2481f5b2">
+            <File Id="SyncPro_Adapters_MicrosoftOneDrive_dll"
+                  Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Adapters.MicrosoftOneDrive.dll"
+                  KeyPath="yes" />
+          </Component>
+          <Component Id="SyncPro_Adapters_MicrosoftOneDrive_pdb_component"
+                     Guid="d732dd35-6380-4b19-90f0-45f8db3904e3">
+            <File Id="SyncPro_Adapters_MicrosoftOneDrive_pdb"
+                  Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Adapters.MicrosoftOneDrive.pdb"
+                  KeyPath="yes" />
+          </Component>
+          <Component Id="SyncPro_Adapters_WindowsFileSystem_dll_component"
+                     Guid="0c6ca868-9e10-45ba-9069-39fe1a5a0810">
+            <File Id="SyncPro_Adapters_WindowsFileSystem_dll"
+                  Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Adapters.WindowsFileSystem.dll"
+                  KeyPath="yes" />
+          </Component>
+          <Component Id="SyncPro_Adapters_WindowsFileSystem_pdb_component"
+                     Guid="c37ce6f0-4dd7-4f28-a052-c021ceb5454f">
+            <File Id="SyncPro_Adapters_WindowsFileSystem_pdb"
+                  Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Adapters.WindowsFileSystem.pdb"
+                  KeyPath="yes" />
+          </Component>
+          <Component Id="SyncPro_Certificates_dll_component"
+                     Guid="225c0e79-b289-4649-be50-b6e36ce4db66">
+            <File Id="SyncPro_Certificates_dll"
+                  Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Certificates.dll"
+                  KeyPath="yes" />
+          </Component>
+          <Component Id="SyncPro_Certificates_pdb_component"
+                     Guid="fd555f4e-6b33-4d17-a1c4-214b10334182">
+            <File Id="SyncPro_Certificates_pdb"
+                  Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Certificates.pdb"
+                  KeyPath="yes" />
+          </Component>
+          <Component Id="SyncPro_Core_dll_component"
+                     Guid="d888e995-1d15-4983-99e1-09413ee427a2">
+            <File Id="SyncPro_Core_dll"
+                  Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Core.dll"
+                  KeyPath="yes" />
+          </Component>
+          <Component Id="SyncPro_Core_dll_config_component"
+                     Guid="013d1b11-86e8-4261-a292-f8a5119a68e3">
+            <File Id="SyncPro_Core_dll_config"
+                  Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Core.dll.config"
+                  KeyPath="yes" />
+          </Component>
+          <Component Id="SyncPro_Core_pdb_component"
+                     Guid="7e5044b9-7e2b-46fa-bee8-6fd62df3d834">
+            <File Id="SyncPro_Core_pdb"
+                  Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Core.pdb"
+                  KeyPath="yes" />
+          </Component>
+          <Component Id="SyncPro_Tracing_dll_component"
+                     Guid="d2334b67-80d5-4599-9967-9ea2263aa79d">
+            <File Id="SyncPro_Tracing_dll"
+                  Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Tracing.dll"
+                  KeyPath="yes" />
+          </Component>
+          <Component Id="SyncPro_Tracing_pdb_component"
+                     Guid="af5aff85-8d32-421a-be83-b6c4d9718826">
+            <File Id="SyncPro_Tracing_pdb"
+                  Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Tracing.pdb"
+                  KeyPath="yes" />
+          </Component>
+          <Component Id="SyncPro_UI_exe_component"
+                     Guid="bc3a6883-5ed2-4aad-b601-a8c1c5a1169b">
+            <File Id="SyncPro_UI_exe"
+                  Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.UI.exe"
+                  KeyPath="yes" />
+          </Component>
+          <Component Id="SyncPro_UI_exe_config_component"
+                     Guid="889e8ead-2c3b-4fc7-a2f3-f418f1d97bcf">
+            <File Id="SyncPro_UI_exe_config"
+                  Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.UI.exe.config"
+                  KeyPath="yes" />
+          </Component>
+          <Component Id="SyncPro_UI_pdb_component"
+                     Guid="ea5e4d62-df94-489f-b663-1d5dfc557eae">
+            <File Id="SyncPro_UI_pdb"
+                  Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.UI.pdb"
+                  KeyPath="yes" />
+          </Component>
+          <Component Id="System_Windows_Interactivity_dll_component"
+                     Guid="80c7c42a-d889-4dc0-94e7-3cc400ee7169">
+            <File Id="System_Windows_Interactivity_dll"
+                  Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\System.Windows.Interactivity.dll"
+                  KeyPath="yes" />
+          </Component>
+          <Component Id="version_txt_component"
+                     Guid="2d72bc01-ed12-43d4-beaf-47e1bc91cde3">
+            <File Id="version_txt"
+                  Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\version.txt"
+                  KeyPath="yes" />
+          </Component>
+          <Component Id="Xceed_Wpf_AvalonDock_dll_component"
+                     Guid="29c9843a-decf-4eb2-9caa-26d8131527b2">
+            <File Id="Xceed_Wpf_AvalonDock_dll"
+                  Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\Xceed.Wpf.AvalonDock.dll"
+                  KeyPath="yes" />
+          </Component>
+          <Component Id="Xceed_Wpf_AvalonDock_Themes_Aero_dll_component"
+                     Guid="81fb083f-0df6-42d1-a65f-43a8a73edd94">
+            <File Id="Xceed_Wpf_AvalonDock_Themes_Aero_dll"
+                  Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\Xceed.Wpf.AvalonDock.Themes.Aero.dll"
+                  KeyPath="yes" />
+          </Component>
+          <Component Id="Xceed_Wpf_AvalonDock_Themes_Metro_dll_component"
+                     Guid="1986dc34-6d7f-4cd1-884d-80fb6551d194">
+            <File Id="Xceed_Wpf_AvalonDock_Themes_Metro_dll"
+                  Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\Xceed.Wpf.AvalonDock.Themes.Metro.dll"
+                  KeyPath="yes" />
+          </Component>
+          <Component Id="Xceed_Wpf_AvalonDock_Themes_VS2010_dll_component"
+                     Guid="b8f58b99-9c25-47d6-905b-aa00579ade54">
+            <File Id="Xceed_Wpf_AvalonDock_Themes_VS2010_dll"
+                  Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\Xceed.Wpf.AvalonDock.Themes.VS2010.dll"
+                  KeyPath="yes" />
+          </Component>
+          <Component Id="Xceed_Wpf_DataGrid_dll_component"
+                     Guid="a889b1d5-81cd-40f7-8c78-0a4727b3ae42">
+            <File Id="Xceed_Wpf_DataGrid_dll"
+                  Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\Xceed.Wpf.DataGrid.dll"
+                  KeyPath="yes" />
+          </Component>
+          <Component Id="Xceed_Wpf_Toolkit_dll_component"
+                     Guid="f1d17dff-3640-4474-aef5-d875a25bf698">
+            <File Id="Xceed_Wpf_Toolkit_dll"
+                  Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\Xceed.Wpf.Toolkit.dll"
+                  KeyPath="yes" />
+          </Component>
+        </Directory>
+      </Directory>
 
+      <Directory Id="CommonAppDataFolder">
+        <Directory Id="SyncProAppDataFolder" 
+                   Name="SyncPro">
+          <Component Id="SyncPro_Tracing_SyncPro_Tracing_etwManifest_dll_component" 
+                     Guid="03b48f78-af95-4fe0-8939-070b2b0d9cbf">
+            <File Id="SyncPro_Tracing_SyncPro_Tracing_etwManifest_dll"
+                  Source="$(var.ProjectDir)..\SyncPro.Tracing\bin\$(var.Configuration)\SyncPro.Tracing.SyncPro-Tracing.etwManifest.dll"
+                  KeyPath="yes" />
+          </Component>
+          <Component Id="SyncPro_Tracing_SyncPro_Tracing_etwManifest_man_component" 
+                     Guid="8fe4e560-d4a3-428a-a796-df05ba47bd7d">
+            <File Id="SyncPro_Tracing_SyncPro_Tracing_etwManifest_man" 
+                  Source="$(var.ProjectDir)..\SyncPro.Tracing\bin\$(var.Configuration)\SyncPro.Tracing.SyncPro-Tracing.etwManifest.man" 
+                  KeyPath="yes">
+              <util:EventManifest MessageFile="[SyncPro_Tracing_SyncPro_Tracing_etwManifest_dll]" 
+                                  ResourceFile="[SyncPro_Tracing_SyncPro_Tracing_etwManifest_dll]" />
+            </File>
+          </Component>
         </Directory>
       </Directory>
     </Directory>
