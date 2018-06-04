@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+
+  <?if $(var.Platform) = x64 ?>
+    <?define PlatformProgramFilesFolder = "ProgramFiles64Folder" ?>
+  <?else ?>
+    <?define PlatformProgramFilesFolder = "ProgramFilesFolder" ?>
+  <?endif ?>
+
+  <Product Id="*" 
+           Name="SyncPro" 
+           Language="1033" 
+           Version="!(bind.FileVersion.SyncPro_UI_exe)" 
+           Manufacturer="Ryan Sizemore"
+           UpgradeCode="afdb15a0-21fc-4b96-a80e-f9ad7cd63ff0">
+
+    <Package InstallerVersion="200" 
+             Compressed="yes" 
+             InstallScope="perMachine" />
+
+    <UIRef Id="WixUI_Minimal" />
+
+    <WixVariable Id="WixUILicenseRtf" 
+                 Value="$(var.ProjectDir)\EULA.rtf" />
+
+    <Icon Id="icon.ico" SourceFile="$(var.ProjectDir)..\SyncPro.UI\Resources\Graphics\SyncProIcon.ico"/>
+    <Property Id="ARPPRODUCTICON" Value="icon.ico" />
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+
+    <MediaTemplate EmbedCab="yes" />
+
+    <Feature Id="ProductFeature" Title="SyncPro" Level="1">
+      <ComponentRef Id="RemoveAppFolder" />
+      <ComponentRef Id="SyncProApp" />
+    </Feature>
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="$(var.PlatformProgramFilesFolder)">
+        <Directory Id="INSTALLFOLDER" Name="SyncPro">
+          <!-- 
+            Installation directory as a component so it can be emptied during uninstall (by default files added by 
+            someone other than Windows Installer are not removed) 
+          -->
+          <Component Id="RemoveAppFolder" Guid="c8009d5a-3312-453f-9729-34f8763c5b53">
+            <CreateFolder />
+            <RemoveFile Id="RemoveFilesFromAppDirectory" Name="*.*" On="uninstall" />
+          </Component>
+
+          <Component Id="SyncProApp" Guid="b61d941c-8e80-4d14-be43-3cba2bb0e9f0">
+            <!-- UI exe is the keypath -->
+            <File Id="SyncPro_UI_exe" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.UI.exe" KeyPath="yes" />
+            
+            <!-- All other files should be kept in alphabetical order -->
+            <File Id="EntityFramework_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\EntityFramework.dll" />
+            <File Id="EntityFramework_SqlServer_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\EntityFramework.SqlServer.dll" />
+            <File Id="Hardcodet_Wpf_TaskbarNotification_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\Hardcodet.Wpf.TaskbarNotification.dll" />
+            <File Id="Hardcodet_Wpf_TaskbarNotification_pdb" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\Hardcodet.Wpf.TaskbarNotification.pdb" />
+            <File Id="JetBrains_Annotations_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\JetBrains.Annotations.dll" />
+            <File Id="Microsoft_Diagnostics_Tracing_EventSource_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\Microsoft.Diagnostics.Tracing.EventSource.dll" />
+            <File Id="Microsoft_Expression_Interactions_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\Microsoft.Expression.Interactions.dll" />
+            <File Id="Newtonsoft_Json_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\Newtonsoft.Json.dll" />
+            <File Id="SyncPro_Adapters_BackblazeB2_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Adapters.BackblazeB2.dll" />
+            <File Id="SyncPro_Adapters_BackblazeB2_pdb" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Adapters.BackblazeB2.pdb" />
+            <File Id="SyncPro_Adapters_GoogleDrive_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Adapters.GoogleDrive.dll" />
+            <File Id="SyncPro_Adapters_GoogleDrive_pdb" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Adapters.GoogleDrive.pdb" />
+            <File Id="SyncPro_Adapters_MicrosoftOneDrive_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Adapters.MicrosoftOneDrive.dll" />
+            <File Id="SyncPro_Adapters_MicrosoftOneDrive_pdb" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Adapters.MicrosoftOneDrive.pdb" />
+            <File Id="SyncPro_Adapters_WindowsFileSystem_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Adapters.WindowsFileSystem.dll" />
+            <File Id="SyncPro_Adapters_WindowsFileSystem_pdb" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Adapters.WindowsFileSystem.pdb" />
+            <File Id="SyncPro_Certificates_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Certificates.dll" />
+            <File Id="SyncPro_Certificates_pdb" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Certificates.pdb" />
+            <File Id="SyncPro_Core_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Core.dll" />
+            <File Id="SyncPro_Core_dll_config" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Core.dll.config" />
+            <File Id="SyncPro_Core_pdb" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Core.pdb" />
+            <File Id="SyncPro_Tracing_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Tracing.dll" />
+            <File Id="SyncPro_Tracing_pdb" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Tracing.pdb" />
+            <File Id="SyncPro_UI_exe_config" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.UI.exe.config" />
+            <File Id="SyncPro_UI_pdb" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.UI.pdb" />
+            <File Id="System_Windows_Interactivity_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\System.Windows.Interactivity.dll" />
+            <File Id="Xceed_Wpf_AvalonDock_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\Xceed.Wpf.AvalonDock.dll" />
+            <File Id="Xceed_Wpf_AvalonDock_Themes_Aero_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\Xceed.Wpf.AvalonDock.Themes.Aero.dll" />
+            <File Id="Xceed_Wpf_AvalonDock_Themes_Metro_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\Xceed.Wpf.AvalonDock.Themes.Metro.dll" />
+            <File Id="Xceed_Wpf_AvalonDock_Themes_VS2010_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\Xceed.Wpf.AvalonDock.Themes.VS2010.dll" />
+            <File Id="Xceed_Wpf_DataGrid_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\Xceed.Wpf.DataGrid.dll" />
+            <File Id="Xceed_Wpf_Toolkit_dll" Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\Xceed.Wpf.Toolkit.dll" />
+          </Component>
+
+        </Directory>
+      </Directory>
+    </Directory>
+  </Product>
+</Wix>
