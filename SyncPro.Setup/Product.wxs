@@ -25,6 +25,8 @@
                  Value="$(var.ProjectDir)\EULA.rtf" />
 
     <Icon Id="icon.ico" SourceFile="$(var.ProjectDir)..\SyncPro.UI\Resources\Graphics\SyncProIcon.ico"/>
+    <Icon Id="logViewerIcon.ico" SourceFile="$(var.ProjectDir)..\SyncProLogViewer\Resources\list-search.ico"/>
+
     <Property Id="ARPPRODUCTICON" Value="icon.ico" />
 
     <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
@@ -69,11 +71,32 @@
       <ComponentRef Id="Xceed_Wpf_DataGrid_dll_component" />
       <ComponentRef Id="Xceed_Wpf_Toolkit_dll_component" />
 
+      <ComponentRef Id="Microsoft_Diagnostics_Tracing_TraceEvent_dll_component" />
+      <ComponentRef Id="SyncProLogViewer_exe_component" />
+      <ComponentRef Id="SyncProLogViewer_exe_config_component" />
+      <ComponentRef Id="SyncProLogViewer_pdb_component" />
+
       <ComponentRef Id="SyncPro_Tracing_SyncPro_Tracing_etwManifest_dll_component" />
       <ComponentRef Id="SyncPro_Tracing_SyncPro_Tracing_etwManifest_man_component" />
+
+      <ComponentRef Id="ProgramMenuDir" />
     </Feature>
 
     <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramMenuFolder" Name="Programs">
+        <Directory Id="ApplicationProgramsFolder" Name="SyncPro">
+          <Component Id="ProgramMenuDir" Guid="fa23c50b-0748-45b6-bd2f-b24362f8f4f3">
+            <RemoveFolder Id="ProgramMenuDir" On="uninstall"/>
+            <RegistryValue Root="HKCU" 
+                           Key="Software\SyncPro\WixSetup"
+                           Type="integer" 
+                           Value="1" 
+                           Name="installed" 
+                           KeyPath="yes" />
+          </Component>
+        </Directory>
+      </Directory>
+
       <Directory Id="$(var.PlatformProgramFilesFolder)">
         <Directory Id="INSTALLFOLDER" Name="SyncPro">
           <!-- 
@@ -86,7 +109,7 @@
           </Component>
 
           <!-- 
-            Components for each file installed in the ProgramFiles directory
+            SyncPro Components for each file installed in the ProgramFiles directory
           -->
           <Component Id="EntityFramework_dll_component"
                      Guid="f570987f-2668-4c62-bf8e-5e847305d253">
@@ -230,7 +253,15 @@
                      Guid="bc3a6883-5ed2-4aad-b601-a8c1c5a1169b">
             <File Id="SyncPro_UI_exe"
                   Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.UI.exe"
-                  KeyPath="yes" />
+                  KeyPath="yes">
+              <Shortcut Id="SyncPro_UI_exe_StartMenuShotcut" 
+                        Directory="ApplicationProgramsFolder"
+                        Name="SyncPro" 
+                        WorkingDirectory="INSTALLFOLDER"
+                        Icon="icon.ico" 
+                        IconIndex="0" 
+                        Advertise="yes" />
+            </File>
           </Component>
           <Component Id="SyncPro_UI_exe_config_component"
                      Guid="889e8ead-2c3b-4fc7-a2f3-f418f1d97bcf">
@@ -290,6 +321,42 @@
                      Guid="f1d17dff-3640-4474-aef5-d875a25bf698">
             <File Id="Xceed_Wpf_Toolkit_dll"
                   Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\Xceed.Wpf.Toolkit.dll"
+                  KeyPath="yes" />
+          </Component>
+        
+          <!-- 
+              SyncProLogViewer Components for each file installed in the ProgramFiles directory
+          -->
+          <Component Id="Microsoft_Diagnostics_Tracing_TraceEvent_dll_component"
+                    Guid="f1815370-74f6-469d-963c-1b11fae59118">
+            <File Id="Microsoft_Diagnostics_Tracing_TraceEvent_dll"
+                  Source="$(var.ProjectDir)..\SyncProLogViewer\bin\$(var.Configuration)\Microsoft.Diagnostics.Tracing.TraceEvent.dll"
+                  KeyPath="yes" />
+          </Component>
+          <Component Id="SyncProLogViewer_exe_component"
+                    Guid="7b38b469-cae9-4653-9049-71aa04429fe1">
+            <File Id="SyncProLogViewer_exe"
+                  Source="$(var.ProjectDir)..\SyncProLogViewer\bin\$(var.Configuration)\SyncProLogViewer.exe"
+                  KeyPath="yes">
+              <Shortcut Id="SyncProLogViewer_exe_StartMenuShotcut" 
+                        Directory="ApplicationProgramsFolder"
+                        Name="SyncPro Log Viewer" 
+                        WorkingDirectory="INSTALLFOLDER"
+                        Icon="logViewerIcon.ico" 
+                        IconIndex="0" 
+                        Advertise="yes" />
+              </File>
+          </Component>
+          <Component Id="SyncProLogViewer_exe_config_component"
+                    Guid="3f3c5236-8cc7-4af8-ad3d-686f0fbd71b0">
+            <File Id="SyncProLogViewer_exe_config"
+                  Source="$(var.ProjectDir)..\SyncProLogViewer\bin\$(var.Configuration)\SyncProLogViewer.exe.config"
+                  KeyPath="yes" />
+          </Component>
+          <Component Id="SyncProLogViewer_pdb_component"
+                    Guid="518a31a8-bd8e-4793-b35c-b9fa6dfab055">
+            <File Id="SyncProLogViewer_pdb"
+                  Source="$(var.ProjectDir)..\SyncProLogViewer\bin\$(var.Configuration)\SyncProLogViewer.pdb"
                   KeyPath="yes" />
           </Component>
         </Directory>
