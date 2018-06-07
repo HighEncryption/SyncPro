@@ -83,6 +83,8 @@
     </Feature>
 
     <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="DesktopFolder" Name="Desktop" />
+
       <Directory Id="ProgramMenuFolder" Name="Programs">
         <Directory Id="ApplicationProgramsFolder" Name="SyncPro">
           <Component Id="ProgramMenuDir" Guid="fa23c50b-0748-45b6-bd2f-b24362f8f4f3">
@@ -254,8 +256,15 @@
             <File Id="SyncPro_UI_exe"
                   Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.UI.exe"
                   KeyPath="yes">
-              <Shortcut Id="SyncPro_UI_exe_StartMenuShotcut" 
+              <Shortcut Id="SyncPro_UI_exe_StartMenuShortcut" 
                         Directory="ApplicationProgramsFolder"
+                        Name="SyncPro" 
+                        WorkingDirectory="INSTALLFOLDER"
+                        Icon="icon.ico" 
+                        IconIndex="0" 
+                        Advertise="yes" />
+              <Shortcut Id="SyncPro_UI_exe_DesktopShortcut" 
+                        Directory="DesktopFolder"
                         Name="SyncPro" 
                         WorkingDirectory="INSTALLFOLDER"
                         Icon="icon.ico" 
@@ -362,6 +371,9 @@
         </Directory>
       </Directory>
 
+      <!--
+        Install the ETW files into a dedicated directory in C:\ProgramData
+      -->
       <Directory Id="CommonAppDataFolder">
         <Directory Id="SyncProAppDataFolder" 
                    Name="SyncPro">
@@ -376,6 +388,9 @@
             <File Id="SyncPro_Tracing_SyncPro_Tracing_etwManifest_man" 
                   Source="$(var.ProjectDir)..\SyncPro.Tracing\bin\$(var.Configuration)\SyncPro.Tracing.SyncPro-Tracing.etwManifest.man" 
                   KeyPath="yes">
+              <!--
+                This will handle the manifest registration
+              -->
               <util:EventManifest MessageFile="[SyncPro_Tracing_SyncPro_Tracing_etwManifest_dll]" 
                                   ResourceFile="[SyncPro_Tracing_SyncPro_Tracing_etwManifest_dll]" />
             </File>

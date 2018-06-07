@@ -178,8 +178,11 @@ namespace SyncPro.Runtime
                 // Finalize the file transfer at the adapter-level. This method allows the adapter to call
                 // any necessary method to complete the transfer. Note that this method MUST be called in the 
                 // finally block (so that it is called even when the transfer throws an exception) and before 
-                // disposing of the streams.
-                this.toAdapter.FinalizeItemWrite(toStream, this.updateInfo);
+                // disposing of the streams, except when the stream failed to open.
+                if (toStream != null)
+                {
+                    this.toAdapter.FinalizeItemWrite(toStream, this.updateInfo);
+                }
 
                 this.encryptionManager?.Dispose();
 

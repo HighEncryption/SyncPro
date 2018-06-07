@@ -1,10 +1,14 @@
 ﻿namespace SyncPro.UnitTests
 {
+    using System;
     using System.IO;
+    using System.Security.AccessControl;
+    using System.Security.Principal;
 
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     using SyncPro.Adapters;
+    using SyncPro.Adapters.WindowsFileSystem;
     using SyncPro.Runtime;
 
     [TestClass]
@@ -113,6 +117,68 @@
                 .VerifySyncSuccess()
                 .VerifyAnalyzeEntryCount(6)
                 .VerifyDatabaseHashes();
+        }
+
+        [TestMethod]
+        public void SyncException()
+        {
+            var testWrapper = TestWrapperFactory
+                .CreateLocalToLocal(this.TestContext)
+                .SaveRelationship()
+                .CreateBasicSourceStructure();
+
+            // First sync job
+            testWrapper
+                .CreateSyncJob()
+                .RunToCompletion()
+                .VerifySyncSuccess()
+                .VerifyResultContainsAllFiles()
+                .VerifyDatabaseHashes();
+
+            Logger.Info("Logging database before delete:");
+            using (var db = testWrapper.Relationship.GetDatabase())
+            {
+                TestHelper.LogConfiguration(testWrapper.Relationship.Configuration);
+                TestHelper.LogDatabase(db);
+            }
+
+            // Create a new file
+            string relativePath = TestHelper.CreateFile(
+                testWrapper.SourceAdapter.Config.RootDirectory, 
+                "dir1\\file4.txt");
+
+            string filePath = Path.Combine(
+                testWrapper.SourceAdapter.Config.RootDirectory, 
+                relativePath);
+
+            // Run an analyze path to detect the file
+            var analyzeResult = testWrapper
+                .CreateAnalyzeJob()
+                .RunToCompletion()
+                .GetAnalyzeResult();
+
+            // Change the permissions of the file
+            FileSecurity fileSecurity = File.GetAccessControl(filePath);
+
+            if (fileSecurity == null)
+            {
+                throw new Exception("Failed to create file security");
+            }
+
+            // Create a new rule denying ready access to the current user
+            FileSystemAccessRule newRule = new FileSystemAccessRule(
+                WindowsIdentity.GetCurrent().User,
+                FileSystemRights.Read,
+                AccessControlType.Deny);
+
+            fileSecurity.AddAccessRule(newRule);
+            File.SetAccessControl(filePath, fileSecurity);
+
+            // Second sync job
+            testWrapper
+                .CreateSyncJob(analyzeResult)
+                .RunToCompletion()
+                .VerifySyncSuccess();
         }
 
         [TestMethod]

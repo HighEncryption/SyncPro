@@ -601,12 +601,19 @@
                 }
                 else if (task.Exception != null)
                 {
+                    Exception ex = task.Exception;
+                    if (task.Exception.InnerExceptions.Count == 1 && 
+                        task.Exception.InnerException != null)
+                    {
+                        ex = task.Exception.InnerException;
+                    }
+
                     Logger.Warning(
                         "Processing failed with {0}: {1}",
-                        task.Exception.GetType().FullName,
-                        task.Exception.Message);
+                        ex.GetType().FullName,
+                        ex.Message);
 
-                    ctx.EntryUpdateInfo.ErrorMessage = task.Exception.Message;
+                    ctx.EntryUpdateInfo.ErrorMessage = ex.Message;
                     ctx.EntryUpdateInfo.State = EntryUpdateState.Failed;
 
                     message = "An error occurred while synchronzing the changed.";

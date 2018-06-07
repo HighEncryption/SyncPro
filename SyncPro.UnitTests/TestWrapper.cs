@@ -152,8 +152,6 @@ namespace SyncPro.UnitTests
             return this;
         }
 
-        public SyncJob CurrentSyncJob { get; set; }
-
         public TestRunWrapper<TSource, TDestination> CreateSyncJob()
         {
             AnalyzeJob newAnalyzeJob = new AnalyzeJob(this.Relationship);
@@ -164,6 +162,16 @@ namespace SyncPro.UnitTests
             };
 
             return new TestRunWrapper<TSource, TDestination>(this, newAnalyzeJob);
+        }
+
+        public TestRunWrapper<TSource, TDestination> CreateSyncJob(AnalyzeRelationshipResult analyzeResult)
+        {
+            var syncJob = new SyncJob(this.Relationship, analyzeResult)
+            {
+                TriggerType = SyncTriggerType.Manual
+            };
+
+            return new TestRunWrapper<TSource, TDestination>(this, syncJob);
         }
 
         public TestRunWrapper<TSource, TDestination> CreateAnalyzeJob()
@@ -280,6 +288,11 @@ namespace SyncPro.UnitTests
             return this;
         }
 
+        public AnalyzeRelationshipResult GetAnalyzeResult()
+        {
+            return ((AnalyzeJob) this.CurrentJob).AnalyzeResult;
+        }
+
         public TestRunWrapper<TSource, TDestination> Set(Action<JobBase> run)
         {
             run(this.CurrentJob);
@@ -302,6 +315,16 @@ namespace SyncPro.UnitTests
 
             Assert.IsTrue(syncJob.HasFinished);
             Assert.AreEqual(JobResult.Success, syncJob.JobResult);
+
+            return this;
+        }
+
+        public TestRunWrapper<TSource, TDestination> VerifySyncFailed()
+        {
+            SyncJob syncJob = (SyncJob)((AnalyzeJob) this.CurrentJob).ContinuationJob;
+
+            Assert.IsTrue(syncJob.HasFinished);
+            Assert.AreEqual(JobResult.Error, syncJob.JobResult);
 
             return this;
         }
