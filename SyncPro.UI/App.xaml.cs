@@ -18,6 +18,7 @@
     using SyncPro.Adapters.GoogleDrive;
     using SyncPro.Adapters.MicrosoftOneDrive;
     using SyncPro.Adapters.WindowsFileSystem;
+    using SyncPro.Data;
     using SyncPro.Runtime;
     using SyncPro.Tracing;
     using SyncPro.UI.Framework.MVVM;
@@ -192,6 +193,8 @@
                     }
 
                     Global.SyncRelationships.Add(relationship);
+
+                    SyncDatabase.UpdateIfNeeded(relationship.Configuration.RelationshipId);
                     
                     //relationship.BeginInitialize();
 

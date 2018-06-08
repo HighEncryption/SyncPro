@@ -79,7 +79,7 @@
 
         public Task<SyncDatabase> GetDatabaseAsync()
         {
-            return Task.Run(() => this.GetDatabase());
+            return Task.FromResult(this.GetDatabase());
         }
 
         /// <summary>
