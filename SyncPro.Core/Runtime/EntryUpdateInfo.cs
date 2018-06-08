@@ -232,6 +232,7 @@
             return new SyncHistoryEntryData()
             {
                 Result = this.State,
+                ErrorDetails = this.ErrorMessage,
                 Flags = this.Flags,
                 Timestamp = DateTime.Now,
 

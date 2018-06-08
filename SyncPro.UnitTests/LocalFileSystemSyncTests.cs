@@ -2,6 +2,7 @@
 {
     using System;
     using System.IO;
+    using System.Linq;
     using System.Security.AccessControl;
     using System.Security.Principal;
 
@@ -175,10 +176,17 @@
             File.SetAccessControl(filePath, fileSecurity);
 
             // Second sync job
-            testWrapper
+            var syncRun = testWrapper
                 .CreateSyncJob(analyzeResult)
                 .RunToCompletion()
-                .VerifySyncSuccess();
+                .VerifySyncFailed();
+
+            var syncAnalyzeResult = syncRun.GetAnalyzeResult();
+
+            var entryResult = syncAnalyzeResult.AdapterResults.First().Value.EntryResults[0];
+
+            Assert.AreEqual("file4.txt", entryResult.Entry.Name);
+            Assert.IsTrue(!string.IsNullOrWhiteSpace(entryResult.ErrorMessage));
         }
 
         [TestMethod]

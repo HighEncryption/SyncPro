@@ -41,6 +41,8 @@
         /// </summary>
         public EntryUpdateState Result { get; set; }
 
+        public string ErrorDetails { get; set; }
+
         /// <summary>
         /// The timestamp when the change was applied (and this <see cref="SyncHistoryEntryData"/> was created).
         /// </summary>

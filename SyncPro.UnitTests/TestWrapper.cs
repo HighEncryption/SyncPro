@@ -290,6 +290,11 @@ namespace SyncPro.UnitTests
 
         public AnalyzeRelationshipResult GetAnalyzeResult()
         {
+            if (this.CurrentJob is SyncJob)
+            {
+                return ((SyncJob) this.CurrentJob).AnalyzeResult;
+            }
+
             return ((AnalyzeJob) this.CurrentJob).AnalyzeResult;
         }
 
@@ -321,7 +326,21 @@ namespace SyncPro.UnitTests
 
         public TestRunWrapper<TSource, TDestination> VerifySyncFailed()
         {
-            SyncJob syncJob = (SyncJob)((AnalyzeJob) this.CurrentJob).ContinuationJob;
+            SyncJob syncJob;
+
+            if (this.CurrentJob is SyncJob)
+            {
+                syncJob = (SyncJob)this.CurrentJob;
+            }
+            else if (this.CurrentJob is AnalyzeJob)
+            {
+                syncJob = (SyncJob) ((AnalyzeJob) this.CurrentJob).ContinuationJob;
+            }
+            else
+            {
+                throw new InvalidOperationException("CurrentJob is not AnalyzeJob or SyncJob");
+            }
+                
 
             Assert.IsTrue(syncJob.HasFinished);
             Assert.AreEqual(JobResult.Error, syncJob.JobResult);
