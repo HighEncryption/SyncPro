@@ -132,7 +132,7 @@
 
         public override async Task<byte[]> GetItemThumbnail(string itemId, string relativePath)
         {
-            return null;
+            return await Task.FromResult<byte[]>(null);
         }
 
         public override void FinalizeItemWrite(Stream stream, EntryUpdateInfo updateInfo)
