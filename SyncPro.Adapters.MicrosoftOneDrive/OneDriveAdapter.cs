@@ -137,6 +137,11 @@
 
         public override async Task InitializeAsync()
         {
+            Logger.InitializeAdapterStart(
+                this.Relationship.Configuration.RelationshipId,
+                this.Configuration.AdapterTypeId,
+                this.Configuration.Id);
+
             try
             {
                 await this.InitializeClient().ConfigureAwait(false);
@@ -157,6 +162,13 @@
                 }
 
                 this.FaultInformation = new OneDriveInitializationFault(this, selectedException);
+            }
+            finally
+            {
+                Logger.InitializeAdapterStop(
+                    this.Relationship.Configuration.RelationshipId,
+                    this.Configuration.AdapterTypeId,
+                    this.Configuration.Id);
             }
         }
 

@@ -150,5 +150,35 @@
         {
             adapterLoaded(BuildEventMessageWithProperties(message, properties));
         }
+
+        public static void InitializeRelationshipStart(string name, Guid relationshipId)
+        {
+            SyncProEventSource.Log.InitializeRelationshipStart(name, relationshipId, "Initialize Relationship");
+        }
+
+        public static void InitializeRelationshipStop(string name, Guid relationshipId)
+        {
+            SyncProEventSource.Log.InitializeRelationshipStop(name, relationshipId);
+        }
+
+        public static void InitializeApplicationStart()
+        {
+            SyncProEventSource.Log.InitializeApplicationStart("Initialize Application");
+        }
+
+        public static void InitializeApplicationStop()
+        {
+            SyncProEventSource.Log.InitializeApplicationStop();
+        }
+
+        public static void InitializeAdapterStart(Guid relationshipId, Guid adapterTypeId, int adapterId)
+        {
+            SyncProEventSource.Log.InitializeAdapterStart(relationshipId, adapterTypeId, adapterId, "Initialize Adapter");
+        }
+
+        public static void InitializeAdapterStop(Guid relationshipId, Guid adapterTypeId, int adapterId)
+        {
+            SyncProEventSource.Log.InitializeAdapterStop(relationshipId, adapterTypeId, adapterId);
+        }
     }
 }

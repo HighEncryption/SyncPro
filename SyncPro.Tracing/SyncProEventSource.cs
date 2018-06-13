@@ -1,6 +1,7 @@
 namespace SyncPro.Tracing
 {
-    using Microsoft.Diagnostics.Tracing;
+    using System;
+    using System.Diagnostics.Tracing;
 
     [EventSource(Name = "SyncPro-Tracing")]
     public sealed class SyncProEventSource : EventSource
@@ -209,11 +210,20 @@ namespace SyncPro.Tracing
             public const int SynchronizeChangesStart = 17;
             public const int SynchronizeChangesEnd = 18;
             public const int ChangeSynchronized = 19;
+            public const int InitializeRelationshipStart = 20;
+            public const int InitializeRelationshipStop = 21;
+            public const int InitializeApplicationStart = 22;
+            public const int InitializeApplicationStop = 23;
+            public const int InitializeAdapterStart = 24;
+            public const int InitializeAdapterStop = 25;
         }
 
         public class Tasks
         {
             public const EventTask General = (EventTask)0x01;
+            public const EventTask InitializeRelationship = (EventTask)0x02;
+            public const EventTask InitializeApplication = (EventTask)0x03;
+            public const EventTask InitializeAdapter = (EventTask)0x04;
         }
 
         public class Opcodes
@@ -224,6 +234,81 @@ namespace SyncPro.Tracing
             public const EventOpcode Informational = (EventOpcode) 0x0e;
             public const EventOpcode Verbose = (EventOpcode) 0x0f;
             public const EventOpcode Debug = (EventOpcode) 0x10;
+        }
+
+        [Event(
+            EventIDs.InitializeRelationshipStart,
+            Channel = EventChannel.Operational,
+            Level = EventLevel.Informational,
+            Opcode = EventOpcode.Start,
+            Task = Tasks.InitializeRelationship,
+            Message = "Initialize() called for relationship {0} ({1})")]
+        public void InitializeRelationshipStart(string name, Guid relationshipId, string activityName)
+        {
+            this.WriteEvent(EventIDs.InitializeRelationshipStart, name, relationshipId, activityName);
+        }
+
+        [Event(
+            EventIDs.InitializeRelationshipStop,
+            Channel = EventChannel.Operational,
+            Level = EventLevel.Informational,
+            Opcode = EventOpcode.Stop,
+            Task = Tasks.InitializeRelationship,
+            Message = "Initialize() complete for relationship {0} ({1})")]
+        public void InitializeRelationshipStop(string name, Guid relationshipId)
+        {
+            
+            this.WriteEvent(EventIDs.InitializeRelationshipStop, name, relationshipId);
+        }
+
+        [Event(
+            EventIDs.InitializeApplicationStart,
+            Channel = EventChannel.Operational,
+            Level = EventLevel.Informational,
+            Opcode = EventOpcode.Start,
+            Task = Tasks.InitializeApplication,
+            Message = "Beginning application initialization")]
+        public void InitializeApplicationStart(string activityName)
+        {
+            this.WriteEvent(EventIDs.InitializeApplicationStart, activityName);
+        }
+
+        [Event(
+            EventIDs.InitializeApplicationStop,
+            Channel = EventChannel.Operational,
+            Level = EventLevel.Informational,
+            Opcode = EventOpcode.Stop,
+            Task = Tasks.InitializeApplication,
+            Message = "Finished application initialization")]
+        public void InitializeApplicationStop()
+        {
+            
+            this.WriteEvent(EventIDs.InitializeApplicationStop);
+        }
+
+        [Event(
+            EventIDs.InitializeAdapterStart,
+            Channel = EventChannel.Operational,
+            Level = EventLevel.Informational,
+            Opcode = EventOpcode.Start,
+            Task = Tasks.InitializeAdapter,
+            Message = "Beginning initialization of adapter {0} ({1}) on relationship {2}")]
+        public void InitializeAdapterStart(Guid relationshipId, Guid adapterTypeId, int adapterId, string activityName)
+        {
+            this.WriteEvent(EventIDs.InitializeAdapterStart, relationshipId, adapterTypeId, adapterId, activityName);
+        }
+
+        [Event(
+            EventIDs.InitializeAdapterStop,
+            Channel = EventChannel.Operational,
+            Level = EventLevel.Informational,
+            Opcode = EventOpcode.Stop,
+            Task = Tasks.InitializeAdapter,
+            Message = "Finished initialization of adapter {0} ({1}) on relationship {2}")]
+        public void InitializeAdapterStop(Guid relationshipId, Guid adapterTypeId, int adapterId)
+        {
+            
+            this.WriteEvent(EventIDs.InitializeAdapterStop, relationshipId, adapterTypeId, adapterId);
         }
     }
 }

@@ -20,6 +20,9 @@
         [JsonProperty("m")]
         public string Message { get; set; }
 
+        [JsonProperty("ap")]
+        public string ActivityPath { get; set; }
+
         public static string Serialize(LogEntry entry)
         {
             StringBuilder sb = new StringBuilder();
@@ -40,6 +43,9 @@
 
                 writer.WritePropertyName("m");
                 writer.WriteValue(entry.Message);
+
+                writer.WritePropertyName("ap");
+                writer.WriteValue(entry.ActivityPath);
 
                 writer.WriteEndObject();
             }
@@ -89,6 +95,11 @@
                 if (reader.TokenType == JsonToken.String && currentProperty == "m")
                 {
                     entry.Message = reader.Value.ToString();
+                }
+
+                if (reader.TokenType == JsonToken.String && currentProperty == "ap")
+                {
+                    entry.ActivityPath = reader.Value.ToString();
                 }
             }
 

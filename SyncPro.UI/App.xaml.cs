@@ -162,6 +162,8 @@
 
         private void LoadSettings()
         {
+            Logger.InitializeApplicationStart();
+
             string localAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             this.AppDataRoot = Path.Combine(localAppDataPath, "SyncPro");
 
@@ -221,6 +223,8 @@
             {
                 this.mainWindowViewModel.NavigationItems.First().IsSelected = true;
             }
+
+            Logger.InitializeApplicationStop();
         }
 
         private void Initialize(object runInBackground)

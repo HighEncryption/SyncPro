@@ -545,7 +545,7 @@
         {
             this.State = SyncRelationshipState.Initializing;
 
-            Logger.Debug("Initialize() called for relationship {0} ({1})", this.Name, this.Configuration.RelationshipId);
+            Logger.InitializeRelationshipStart(this.Name, this.Configuration.RelationshipId);
 
             List<Task> tasks = new List<Task>(this.Adapters.Count);
             foreach (AdapterBase adapter in this.Adapters)
@@ -553,17 +553,16 @@
                 Logger.Debug("SyncRelationship: Calling adapter.Initialize for adapter {0}", adapter.Configuration.Id);
 
                 tasks.Add(adapter.InitializeAsync());
-                //adapter.Initialize();
             }
 
             // This call will throw an AggregateException if any of the tasks threw an exception during initialization
             Task.WaitAll(tasks.ToArray());
-
-            Logger.Debug("Initialize() complete for relationship {0} ({1})", this.Name, this.Configuration.RelationshipId);
         }
 
         private void InitializeComplete(Task initializeTask)
         {
+            Logger.InitializeRelationshipStop(this.Name, this.Configuration.RelationshipId);
+
             if (initializeTask.IsFaulted)
             {
                 Logger.Error("Relationship initialization finished in a faulted state.");

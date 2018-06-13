@@ -1,0 +1,12 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:converters="clr-namespace:SyncProLogViewer.Converters">
+    <converters:ObjectToVisibilityConverter x:Key="ObjectToVisibility" />
+    <converters:ObjectToVisibilityConverter x:Key="ObjectToVisibilityCollapsed" CollapsedWhenFalse="True" />
+    <converters:ObjectToVisibilityConverter x:Key="ObjectToVisibilityCollapsedReversed" CollapsedWhenFalse="True" ReverseValue="True" />
+
+    <converters:StringToBooleanConverter x:Key="StringToBoolean" />
+    <converters:StringToBooleanConverter x:Key="StringToBooleanReversed" ReverseValue="True" />
+
+    <converters:LevelToIndentConverter x:Key="LevelToIndent" InitialIndentSize="0.0" IndentSize="16.0" />
+</ResourceDictionary>
