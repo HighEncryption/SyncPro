@@ -216,6 +216,8 @@ namespace SyncPro.Tracing
             public const int InitializeApplicationStop = 23;
             public const int InitializeAdapterStart = 24;
             public const int InitializeAdapterStop = 25;
+            public const int JobStart = 26;
+            public const int JobStop = 27;
         }
 
         public class Tasks
@@ -224,6 +226,8 @@ namespace SyncPro.Tracing
             public const EventTask InitializeRelationship = (EventTask)0x02;
             public const EventTask InitializeApplication = (EventTask)0x03;
             public const EventTask InitializeAdapter = (EventTask)0x04;
+            public const EventTask ExecuteJob = (EventTask)0x05;
+            public const EventTask AnalyzeChangesWorker = (EventTask)0x06;
         }
 
         public class Opcodes
@@ -307,8 +311,31 @@ namespace SyncPro.Tracing
             Message = "Finished initialization of adapter {0} ({1}) on relationship {2}")]
         public void InitializeAdapterStop(Guid relationshipId, Guid adapterTypeId, int adapterId)
         {
-            
             this.WriteEvent(EventIDs.InitializeAdapterStop, relationshipId, adapterTypeId, adapterId);
+        }
+
+        [Event(
+            EventIDs.JobStart,
+            Channel = EventChannel.Operational,
+            Level = EventLevel.Informational,
+            Opcode = EventOpcode.Start,
+            Task = Tasks.ExecuteJob,
+            Message = "Started job {0} for relationship {1}")]
+        public void JobStart(string name, Guid relationshipId, string activityName)
+        {
+            this.WriteEvent(EventIDs.JobStart, name, relationshipId, activityName);
+        }
+
+        [Event(
+            EventIDs.JobStop,
+            Channel = EventChannel.Operational,
+            Level = EventLevel.Informational,
+            Opcode = EventOpcode.Stop,
+            Task = Tasks.ExecuteJob,
+            Message = "Finished job {0} for relationship {1}")]
+        public void JobStop(string name, Guid relationshipId)
+        {
+            this.WriteEvent(EventIDs.JobStop, name, relationshipId);
         }
     }
 }

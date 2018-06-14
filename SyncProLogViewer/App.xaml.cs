@@ -54,8 +54,6 @@
                 task.Start();
                 app.Run();
             }
-
-
         }
 
         private void Initialize()

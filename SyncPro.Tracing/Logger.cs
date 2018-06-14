@@ -180,5 +180,15 @@
         {
             SyncProEventSource.Log.InitializeAdapterStop(relationshipId, adapterTypeId, adapterId);
         }
+
+        public static void JobStart(string name, Guid relationshipId)
+        {
+            SyncProEventSource.Log.JobStart(name, relationshipId, "Execute Job [" + name + "]");
+        }
+
+        public static void JobStop(string name, Guid relationshipId)
+        {
+            SyncProEventSource.Log.JobStop(name, relationshipId);
+        }
     }
 }

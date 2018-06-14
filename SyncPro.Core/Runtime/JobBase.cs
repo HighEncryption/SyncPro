@@ -4,6 +4,8 @@ namespace SyncPro.Runtime
     using System.Threading;
     using System.Threading.Tasks;
 
+    using SyncPro.Tracing;
+
     /// <summary>
     /// Enumeration of the options for the result of a job
     /// </summary>
@@ -90,6 +92,10 @@ namespace SyncPro.Runtime
 
             this.Started?.Invoke(this, new JobStartedEventArgs(this));
 
+            Logger.JobStart(
+                this.GetType().Name,
+                this.Relationship.Configuration.RelationshipId);
+
             Task task = Task.Run(this.ExecuteTask, this.cancellationTokenSource.Token)
                 .ContinueWith(this.ExecuteTaskComplete);
 
@@ -104,6 +110,10 @@ namespace SyncPro.Runtime
             {
                 this.EndTime = DateTime.Now;
             }
+
+            Logger.JobStop(
+                this.GetType().Name,
+                this.Relationship.Configuration.RelationshipId);
 
             this.Relationship.State = SyncRelationshipState.Idle;
             this.Relationship.ActiveJob = null;
