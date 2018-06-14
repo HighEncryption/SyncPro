@@ -81,22 +81,14 @@
                 properties);
         }
 
-        public static void AnalyzeChangesStart(
-            IEnumerable<KeyValuePair<string, object>> properties)
+        public static void AnalyzeChangesStart(Guid runId, int adapterId)
         {
-            LogMessageWithProperties(
-                SyncProEventSource.Log.AnalyzeChangesStart,
-                "Beginning AnalyzeChangesFromAdapter",
-                properties);
+            SyncProEventSource.Log.AnalyzeChangesStart(runId, adapterId, "Analyze Changes Worker");
         }
 
-        public static void AnalyzeChangesEnd(
-            IEnumerable<KeyValuePair<string, object>> properties)
+        public static void AnalyzeChangesStop(Guid runId, int adapterId)
         {
-            LogMessageWithProperties(
-                SyncProEventSource.Log.AnalyzeChangesStart,
-                "Finished AnalyzeChangesFromAdapter",
-                properties);
+            SyncProEventSource.Log.AnalyzeChangesStop(runId, adapterId);
         }
 
         public static void SyncAnalyzerChangeFound(string message)

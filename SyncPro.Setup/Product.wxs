@@ -41,7 +41,6 @@
       <ComponentRef Id="Hardcodet_Wpf_TaskbarNotification_dll_component" />
       <ComponentRef Id="Hardcodet_Wpf_TaskbarNotification_pdb_component" />
       <ComponentRef Id="JetBrains_Annotations_dll_component" />
-      <ComponentRef Id="Microsoft_Diagnostics_Tracing_EventSource_dll_component" />
       <ComponentRef Id="Microsoft_Expression_Interactions_dll_component" />
       <ComponentRef Id="Newtonsoft_Json_dll_component" />
       <ComponentRef Id="SyncPro_Adapters_BackblazeB2_dll_component" />
@@ -141,12 +140,6 @@
                      Guid="fc4c4b51-0aca-4a4c-963b-ee7f25583b8e">
             <File Id="JetBrains_Annotations_dll"
                   Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\JetBrains.Annotations.dll"
-                  KeyPath="yes" />
-          </Component>
-          <Component Id="Microsoft_Diagnostics_Tracing_EventSource_dll_component"
-                     Guid="3086d122-1072-4cf2-93a6-ee3259030269">
-            <File Id="Microsoft_Diagnostics_Tracing_EventSource_dll"
-                  Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\Microsoft.Diagnostics.Tracing.EventSource.dll"
                   KeyPath="yes" />
           </Component>
           <Component Id="Microsoft_Expression_Interactions_dll_component"

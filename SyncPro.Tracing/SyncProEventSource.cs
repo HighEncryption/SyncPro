@@ -133,26 +133,6 @@ namespace SyncPro.Tracing
         }
 
         [Event(
-            EventIDs.AnalyzeChangesStart,
-            Channel = EventChannel.Operational,
-            Level = EventLevel.Informational,
-            Message = "{0}")]
-        public void AnalyzeChangesStart(string message)
-        {
-            this.WriteEvent(EventIDs.AnalyzeChangesStart, message);
-        }
-
-        [Event(
-            EventIDs.AnalyzeChangesEnd,
-            Channel = EventChannel.Operational,
-            Level = EventLevel.Informational,
-            Message = "{0}")]
-        public void AnalyzeChangesEnd(string message)
-        {
-            this.WriteEvent(EventIDs.AnalyzeChangesEnd, message);
-        }
-
-        [Event(
             EventIDs.AnalyzeChangesFoundChange,
             Channel = EventChannel.Operational,
             Level = EventLevel.Informational,
@@ -205,7 +185,7 @@ namespace SyncPro.Tracing
             public const int RelationshipSaved = 12;
             public const int RelationshipLoaded = 13;
             public const int AnalyzeChangesStart = 14;
-            public const int AnalyzeChangesEnd = 15;
+            public const int AnalyzeChangesStop = 15;
             public const int AnalyzeChangesFoundChange = 16;
             public const int SynchronizeChangesStart = 17;
             public const int SynchronizeChangesEnd = 18;
@@ -261,7 +241,6 @@ namespace SyncPro.Tracing
             Message = "Initialize() complete for relationship {0} ({1})")]
         public void InitializeRelationshipStop(string name, Guid relationshipId)
         {
-            
             this.WriteEvent(EventIDs.InitializeRelationshipStop, name, relationshipId);
         }
 
@@ -286,7 +265,6 @@ namespace SyncPro.Tracing
             Message = "Finished application initialization")]
         public void InitializeApplicationStop()
         {
-            
             this.WriteEvent(EventIDs.InitializeApplicationStop);
         }
 
@@ -337,5 +315,31 @@ namespace SyncPro.Tracing
         {
             this.WriteEvent(EventIDs.JobStop, name, relationshipId);
         }
+
+        [Event(
+            EventIDs.AnalyzeChangesStart,
+            Channel = EventChannel.Operational,
+            Level = EventLevel.Informational,
+            Opcode = EventOpcode.Start,
+            Task = Tasks.AnalyzeChangesWorker,
+            Message = "AnalyzeJobWorker started with Id {0} for adapter {1}")]
+        public void AnalyzeChangesStart(Guid runId, int adapterId, string activityName)
+        {
+            this.WriteEvent(EventIDs.AnalyzeChangesStart, runId, adapterId, activityName);
+        }
+
+        [Event(
+            EventIDs.AnalyzeChangesStop,
+            Channel = EventChannel.Operational,
+            Level = EventLevel.Informational,
+            Opcode = EventOpcode.Stop,
+            Task = Tasks.AnalyzeChangesWorker,
+            Message = "AnalyzeJobWorker finished with Id {0} for adapter {1}")]
+        public void AnalyzeChangesStop(Guid runId, int adapterId)
+        {
+            this.WriteEvent(EventIDs.AnalyzeChangesStop, runId, adapterId);
+        }
+
+
     }
 }

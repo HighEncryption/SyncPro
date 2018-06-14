@@ -92,35 +92,49 @@ namespace SyncPro.Runtime
 
             this.Started?.Invoke(this, new JobStartedEventArgs(this));
 
-            Logger.JobStart(
-                this.GetType().Name,
-                this.Relationship.Configuration.RelationshipId);
-
-            Task task = Task.Run(this.ExecuteTask, this.cancellationTokenSource.Token)
-                .ContinueWith(this.ExecuteTaskComplete);
+            Task task = Task.Run(
+                this.ExecuteTaskWrapper,
+                this.cancellationTokenSource.Token);
 
             task.ConfigureAwait(false);
 
             return task;
         }
 
-        private void ExecuteTaskComplete(Task obj)
+        private async Task ExecuteTaskWrapper()
         {
-            if (this.EndTime == null)
-            {
-                this.EndTime = DateTime.Now;
-            }
-
-            Logger.JobStop(
+            Logger.JobStart(
                 this.GetType().Name,
                 this.Relationship.Configuration.RelationshipId);
 
-            this.Relationship.State = SyncRelationshipState.Idle;
-            this.Relationship.ActiveJob = null;
+            try
+            {
+                await this.ExecuteTask();
+            }
+            catch (Exception exception)
+            {
+                Logger.LogException(
+                    exception,
+                    "Job failed with unhandled exception. This should not happen.");
+            }
+            finally
+            {
+                if (this.EndTime == null)
+                {
+                    this.EndTime = DateTime.Now;
+                }
 
-            this.Finished?.Invoke(this, new JobFinishedEventArgs(this));
+                Logger.JobStop(
+                    this.GetType().Name,
+                    this.Relationship.Configuration.RelationshipId);
 
-            this.ContinuationJob?.Start();
+                this.Relationship.State = SyncRelationshipState.Idle;
+                this.Relationship.ActiveJob = null;
+
+                this.Finished?.Invoke(this, new JobFinishedEventArgs(this));
+
+                this.ContinuationJob?.Start();
+            }
         }
 
         protected abstract Task ExecuteTask();

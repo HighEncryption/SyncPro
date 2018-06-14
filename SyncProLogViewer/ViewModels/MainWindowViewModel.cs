@@ -17,7 +17,6 @@
     public class MainWindowViewModel : ViewModelBase, IDisposable
     {
         private TraceEventSession listener;
-        private string logFilePath;
 
         public ViewerConfiguration Config { get; }
 
@@ -59,7 +58,15 @@
                     existingActivity = list.FirstOrDefault(a => a.Id == id);
                     if (existingActivity == null)
                     {
-                        object objActName = traceEvent.PayloadByName("activityName");
+                        object objActName = "(unknown)";
+                        try
+                        {
+                            objActName = traceEvent.PayloadByName("activityName");
+                        }
+                        catch
+                        {
+                        }
+
                         StringBuilder sb = new StringBuilder();
                         sb.Append("/");
                         for (int j = 0; j <= i; j++)
@@ -85,9 +92,6 @@
             };
 
             existingActivity?.Children.Add(new ActivityInfo(logEntry));
-
-            string line = LogEntry.Serialize(logEntry);
-            File.AppendAllLines(this.logFilePath, new[] { line });
 
             App.DispatcherInvoke(() =>
             {
@@ -123,7 +127,7 @@
             }
         }
 
-        public MainWindowViewModel()
+        public MainWindowViewModel(bool logToFile = false)
         {
             this.Entries = new ObservableCollection<LogEntry>();
 
@@ -135,34 +139,57 @@
                 o => this.SelectedActivityInfo = null, 
                 o => this.SelectedActivityInfo != null);
 
-            // Initialize the session listener to receive the log messages
-            this.listener = new TraceEventSession("MyViewerSession");
-            this.listener.Source.Dynamic.All += this.DynamicOnAll;
+            if (logToFile)
+            {
+                var appDataDir = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    "SyncPro",
+                    "logs");
 
-            listener.EnableProvider(
+                if (!Directory.Exists(appDataDir))
+                {
+                    Directory.CreateDirectory(appDataDir);
+                }
+
+                string logFile = Path.Combine(
+                    appDataDir,
+                    string.Format("SyncPro-{0:yyyyMMdd-HHmmss}.etl", DateTime.Now));
+
+                this.Entries.Add(new LogEntry()
+                {
+                    Message = "Tracing will be logged to " + logFile
+                });
+
+                // Initialize the session listener to receive the log messages
+                this.listener = new TraceEventSession(
+                    "MyViewerSession",
+                    logFile);
+            }
+            else
+            {
+                // Initialize the session listener to receive the log messages
+                this.listener = new TraceEventSession("MyViewerSession");
+
+                this.listener.Source.Dynamic.All += this.DynamicOnAll;
+            }
+
+            this.listener.StopOnDispose = true;
+
+            this.listener.EnableProvider(
                 TplEtwProviderTraceEventParser.ProviderGuid,
                 providerLevel: TraceEventLevel.Informational,
                 matchAnyKeywords: (ulong)TplEtwProviderTraceEventParser.Keywords.TasksFlowActivityIds);
 
             Guid eventSourceGuid = TraceEventProviders.GetEventSourceGuidFromName(
                 "SyncPro-Tracing"); // Get the unique ID for the eventSouce. 
-            this.listener.EnableProvider(eventSourceGuid);
+            this.listener.EnableProvider(
+                eventSourceGuid,
+                providerLevel: TraceEventLevel.Informational);
 
-            var appDataDir = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "SyncPro",
-                "logs");
-
-            if (!Directory.Exists(appDataDir))
+            if (!logToFile)
             {
-                Directory.CreateDirectory(appDataDir);
+                Task.Factory.StartNew(() => { this.listener.Source.Process(); });
             }
-
-            this.logFilePath = Path.Combine(
-                appDataDir, 
-                string.Format("SyncPro-{0:yyyyMMdd-HHmmss}.log", DateTime.Now));
-
-            Task.Factory.StartNew(() => { this.listener.Source.Process(); });
         }
 
         public void Dispose()

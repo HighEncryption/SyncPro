@@ -105,12 +105,18 @@ namespace SyncPro.Runtime
         public async Task AnalyzeChangesAsync()
         {
             Logger.AnalyzeChangesStart(
-                new Dictionary<string, object>()
-                {
-                    { "SyncAnalysisRunId", this.analyzeRelationshipResult.Id },
-                    { "AdapterId", sourceAdapter.Configuration.Id },
-                    { "SupportChangeTracking", sourceAdapter.SupportChangeTracking() }
-                });
+                this.analyzeRelationshipResult.Id,
+                sourceAdapter.Configuration.Id);
+
+            Logger.Info(
+                Logger.BuildEventMessageWithProperties(
+                    "AnalyzeJobWorker started with the following properties:",
+                    new Dictionary<string, object>()
+                    {
+                        { "SyncAnalysisRunId", this.analyzeRelationshipResult.Id },
+                        { "AdapterId", sourceAdapter.Configuration.Id },
+                        { "SupportChangeTracking", sourceAdapter.SupportChangeTracking() }
+                    }));
 
             try
             {
@@ -195,15 +201,21 @@ namespace SyncPro.Runtime
                     this.db = null;
                 }
 
-                Logger.AnalyzeChangesEnd(
-                    new Dictionary<string, object>()
-                    {
-                        { "SyncAnalysisRunId", this.analyzeRelationshipResult.Id },
-                        { "AdapterId", sourceAdapter.Configuration.Id },
-                        { "IsUpToDate", !this.AnalyzeResult.EntryResults.Any() },
-                        { "TotalSyncEntries", this.AnalyzeResult.EntryResults.Count },
-                        { "TotalChangedEntriesCount", this.analyzeRelationshipResult.TotalChangedEntriesCount },
-                    });
+                Logger.Info(
+                    Logger.BuildEventMessageWithProperties(
+                        "Analyzed changes worker finished with the following properties:",
+                        new Dictionary<string, object>()
+                        {
+                            {"SyncAnalysisRunId", this.analyzeRelationshipResult.Id},
+                            {"AdapterId", sourceAdapter.Configuration.Id},
+                            {"IsUpToDate", !this.AnalyzeResult.EntryResults.Any()},
+                            {"TotalSyncEntries", this.AnalyzeResult.EntryResults.Count},
+                            {"TotalChangedEntriesCount", this.analyzeRelationshipResult.TotalChangedEntriesCount},
+                        }));
+
+                Logger.AnalyzeChangesStop(
+                    this.analyzeRelationshipResult.Id,
+                    sourceAdapter.Configuration.Id);
             }
         }
 
