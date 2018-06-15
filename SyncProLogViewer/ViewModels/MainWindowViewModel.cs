@@ -16,7 +16,9 @@
 
     public class MainWindowViewModel : ViewModelBase, IDisposable
     {
-        private TraceEventSession listener;
+        private TraceEventSession logToFileSession;
+        
+        private TraceEventSession realTimeSession;
 
         public ViewerConfiguration Config { get; }
 
@@ -127,7 +129,7 @@
             }
         }
 
-        public MainWindowViewModel(bool logToFile = false)
+        public MainWindowViewModel()
         {
             this.Entries = new ObservableCollection<LogEntry>();
 
@@ -139,68 +141,71 @@
                 o => this.SelectedActivityInfo = null, 
                 o => this.SelectedActivityInfo != null);
 
-            if (logToFile)
+            var appDataDir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "SyncPro",
+                "logs");
+
+            if (!Directory.Exists(appDataDir))
             {
-                var appDataDir = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    "SyncPro",
-                    "logs");
-
-                if (!Directory.Exists(appDataDir))
-                {
-                    Directory.CreateDirectory(appDataDir);
-                }
-
-                string logFile = Path.Combine(
-                    appDataDir,
-                    string.Format("SyncPro-{0:yyyyMMdd-HHmmss}.etl", DateTime.Now));
-
-                this.Entries.Add(new LogEntry()
-                {
-                    Message = "Tracing will be logged to " + logFile
-                });
-
-                // Initialize the session listener to receive the log messages
-                this.listener = new TraceEventSession(
-                    "MyViewerSession",
-                    logFile);
-            }
-            else
-            {
-                // Initialize the session listener to receive the log messages
-                this.listener = new TraceEventSession("MyViewerSession");
-
-                this.listener.Source.Dynamic.All += this.DynamicOnAll;
+                Directory.CreateDirectory(appDataDir);
             }
 
-            this.listener.StopOnDispose = true;
+            string logFile = Path.Combine(
+                appDataDir,
+                string.Format("SyncPro-{0:yyyyMMdd-HHmmss}.etl", DateTime.Now));
 
-            this.listener.EnableProvider(
+            this.Entries.Add(new LogEntry()
+            {
+                Message = "Tracing will be logged to " + logFile
+            });
+
+            // Initialize the session listener to receive the log messages
+            this.logToFileSession = new TraceEventSession(
+                "SyncProLogViewerFileSession",
+                logFile);
+
+            EnableProviders(this.logToFileSession);
+
+            // Initialize the session listener to receive the log messages
+            this.realTimeSession = new TraceEventSession("SyncProLogViewerRealtimeSession");
+            EnableProviders(this.realTimeSession);
+
+            this.realTimeSession.Source.Dynamic.All += this.DynamicOnAll;
+
+            Task.Factory.StartNew(() => { this.realTimeSession.Source.Process(); });
+        }
+
+        private static void EnableProviders(TraceEventSession session)
+        {
+            session.EnableProvider(
                 TplEtwProviderTraceEventParser.ProviderGuid,
                 providerLevel: TraceEventLevel.Informational,
                 matchAnyKeywords: (ulong)TplEtwProviderTraceEventParser.Keywords.TasksFlowActivityIds);
 
             Guid eventSourceGuid = TraceEventProviders.GetEventSourceGuidFromName(
-                "SyncPro-Tracing"); // Get the unique ID for the eventSouce. 
-            this.listener.EnableProvider(
+                "SyncPro-Tracing");
+
+            session.EnableProvider(
                 eventSourceGuid,
                 providerLevel: TraceEventLevel.Informational);
-
-            if (!logToFile)
-            {
-                Task.Factory.StartNew(() => { this.listener.Source.Process(); });
-            }
         }
 
         public void Dispose()
         {
-            if (this.listener != null)
+            if (this.logToFileSession != null)
             {
-                this.listener.Dispose();
-                this.listener = null;
-
-                this.Config.Save(App.Current.ConfigDirectoryPath);
+                this.logToFileSession.Dispose();
+                this.logToFileSession = null;
             }
+
+            if (this.realTimeSession != null)
+            {
+                this.realTimeSession.Dispose();
+                this.realTimeSession = null;
+            }
+
+            this.Config.Save(App.Current.ConfigDirectoryPath);
         }
     }
 }

@@ -40,7 +40,7 @@
             for(int i = 0; i < elements.Length; i++)
             {
                 int id = int.Parse(elements[i]);
-                activityInfo = list.OfType<ActivityInfo>().FirstOrDefault(a => a.Id == id);
+                activityInfo = list.FirstOrDefault(a => a.Id == id);
                 if (activityInfo == null)
                 {
                     // Not Found?
