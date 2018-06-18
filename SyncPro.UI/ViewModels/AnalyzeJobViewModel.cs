@@ -12,6 +12,31 @@ namespace SyncPro.UI.ViewModels
     using SyncPro.Adapters;
     using SyncPro.Data;
     using SyncPro.Runtime;
+    using SyncPro.UI.Framework;
+
+    public class ErrorViewModel
+    {
+        public bool IsWarning { get; }
+        public string Header { get; }
+        public string Message { get; }
+
+        public ErrorViewModel(
+            bool isWarning,
+            string header,
+            string message)
+        {
+            this.IsWarning = isWarning;
+            Header = header;
+            Message = message;
+        }
+    }
+
+    public enum ProgressState
+    {
+        None,
+        Warning,
+        Error
+    }
 
     public class AnalyzeJobViewModel : JobViewModel
     {
@@ -24,9 +49,14 @@ namespace SyncPro.UI.ViewModels
 
         public string AnalyzeStatusString
         {
-            get { return this.analyzeStatusString; }
-            set { this.SetProperty(ref this.analyzeStatusString, value); }
+            get => this.analyzeStatusString;
+            set => this.SetProperty(ref this.analyzeStatusString, value);
         }
+
+        private ObservableCollection<ErrorViewModel> errorMessages;
+
+        public ObservableCollection<ErrorViewModel> ErrorMessages =>
+            this.errorMessages ?? (this.errorMessages = new ObservableCollection<ErrorViewModel>());
 
         private CancellationTokenSource metadataUpdateCancellationToken;
 
@@ -53,6 +83,9 @@ namespace SyncPro.UI.ViewModels
         private void StartInternal()
         {
             this.StartTime = this.AnalyzeJob.StartTime;
+            this.ProgressValue = 0;
+            this.IsProgressIndeterminate = true;
+
             this.metadataUpdateCancellationToken = new CancellationTokenSource();
 
             Task t = new Task(async () =>
@@ -77,10 +110,32 @@ namespace SyncPro.UI.ViewModels
         {
             this.EndTime = this.AnalyzeJob.EndTime.Value;
 
+            this.ProgressValue = 1;
+            this.IsProgressIndeterminate = false;
+
             // Calculate unchanges files and folders
             this.ChangeMetricsList[0].Unchanged = this.AnalyzeJob.AnalyzeResult.UnchangedFileCount;
             this.ChangeMetricsList[1].Unchanged = this.AnalyzeJob.AnalyzeResult.UnchangedFolderCount;
             this.ChangeMetricsList[2].Unchanged = this.AnalyzeJob.AnalyzeResult.UnchangedFileBytes;
+
+            List<Exception> exceptions = 
+                this.AnalyzeJob.AnalyzeResult.AdapterResults
+                    .Select(r => r.Value.Exception)
+                    .ToList();
+
+            if (exceptions.Any())
+            {
+                foreach (Exception exception in exceptions)
+                {
+                    this.ErrorMessages.Add(
+                        new ErrorViewModel(
+                            false,
+                            exception.Message,
+                            exception.ToString()));
+                }
+
+                this.ProgressState = ProgressState.Error;
+            }
 
             this.metadataUpdateCancellationToken.Cancel();
 
@@ -96,8 +151,25 @@ namespace SyncPro.UI.ViewModels
         {
             App.Current.Dispatcher.Invoke(() =>
             {
-                this.AnalyzeStatusString =
-                    string.Format("Analyzing. Found {0} changes", progressInfo.FilesTotal);
+                if (progressInfo.Activity != null)
+                {
+                    this.AnalyzeStatusString = progressInfo.Activity;
+                }
+                else
+                {
+                    this.AnalyzeStatusString =
+                        string.Format("Analyzing. Found {0} changes", progressInfo.FilesTotal);
+                }
+
+                if (progressInfo.ProgressValue == null)
+                {
+                    this.IsProgressIndeterminate = true;
+                }
+                else
+                {
+                    this.IsProgressIndeterminate = false;
+                    this.ProgressValue = progressInfo.ProgressValue.Value;
+                }
 
                 if (!this.EntryUpdatesTreeList.Any() && progressInfo.UpdateInfo != null)
                 {
@@ -229,7 +301,7 @@ namespace SyncPro.UI.ViewModels
         {
             this.AnalyzeJob.Started += this.OnJobStarted;
             this.AnalyzeJob.Finished += this.OnJobFinished;
-            this.AnalyzeJob.ChangeDetected += this.SyncJobOnProgressChanged;
+            this.AnalyzeJob.ProgressChanged += this.SyncJobOnProgressChanged;
 
             this.ChangeMetricsList = new List<ChangeMetrics>()
             {

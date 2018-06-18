@@ -9,7 +9,7 @@ namespace SyncPro.Runtime
 
     public class AnalyzeJob : JobBase
     {
-        public EventHandler<AnalyzeJobProgressInfo> ChangeDetected;
+        public EventHandler<AnalyzeJobProgressInfo> ProgressChanged;
 
         public AnalyzeRelationshipResult AnalyzeResult { get; }
 
@@ -42,7 +42,7 @@ namespace SyncPro.Runtime
                             this.AnalyzeResult,
                             this.CancellationToken);
 
-                    worker.ChangeDetected += this.ChangeDetected;
+                    worker.ProgressChanged += this.ProgressChanged;
 
                     workers.Add(worker);
                 }
@@ -60,6 +60,13 @@ namespace SyncPro.Runtime
                 {
                     this.AnalyzeResult.IsComplete = true;
                 }
+
+                this.ProgressChanged(
+                    this, 
+                    new AnalyzeJobProgressInfo(
+                        "Analysis Complete",
+                        1.0,
+                        0));
             });
 
             // The analyze logic only determines the number of files that are new or have changed. Once

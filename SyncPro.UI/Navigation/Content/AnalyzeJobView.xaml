@@ -200,6 +200,30 @@
         </Grid.RowDefinitions>
 
         <StackPanel>
+            <TextBlock Text="Analysis Progress" FontSize="20" FontFamily="Segoe UI Light" Foreground="#888888"
+                       Margin="16,4,16,8" />
+
+            <Grid Margin="16,0"
+                  Height="70">
+                <StackPanel>
+                    <TextBlock Text="{Binding Path=AnalyzeJobViewModel.AnalyzeStatusString}"
+                               Margin="0,0,0,4"/>
+                    <ProgressBar Height="8" 
+                                 IsIndeterminate="{Binding Path=AnalyzeJobViewModel.IsProgressIndeterminate}" 
+                                 Value="{Binding Path=AnalyzeJobViewModel.ProgressValue}"
+                                 Minimum="0" Maximum="1" />
+
+                    <ItemsControl ItemsSource="{Binding Path=AnalyzeJobViewModel.ErrorMessages}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="viewModels:ErrorViewModel">
+                                <TextBlock Text="{Binding Path=Header}"
+                                           ToolTip="{Binding Path=Message}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Grid>
+
             <TextBlock Text="Analysis Summary" FontSize="20" FontFamily="Segoe UI Light" Foreground="#888888"
                        Margin="16,4,16,8" />
 

@@ -65,7 +65,7 @@ namespace SyncPro.Runtime
         /// <summary>
         /// Invoked when a new change is detected during analysis.
         /// </summary>
-        public EventHandler<AnalyzeJobProgressInfo> ChangeDetected;
+        public EventHandler<AnalyzeJobProgressInfo> ProgressChanged;
 
         /// <summary>
         /// Contains the results of analysis
@@ -138,11 +138,13 @@ namespace SyncPro.Runtime
                     IChangeTracking changeTracking = (IChangeTracking) sourceAdapter;
 
                     // Get the tracked changes from the adapter
+                    this.RaiseActivityChanged(this.sourceAdapter.Configuration.Id, "Retrieving tracked changes");
                     TrackedChange trackedChange = await changeTracking.GetChangesAsync().ConfigureAwait(false);
 
                     this.AnalyzeResult.TrackedChanges = trackedChange;
 
                     // Perform the internal analysis on the changes to determine what/how to apply the changes
+                    this.RaiseActivityChanged(this.sourceAdapter.Configuration.Id, "Analyzing changes");
                     this.AnalyzeChangesWithChangeTracking();
                 }
                 else
@@ -293,6 +295,8 @@ namespace SyncPro.Runtime
         {
             TrackedChange trackedChange = this.AnalyzeResult.TrackedChanges;
 
+            int changeCount = trackedChange.Changes.Count;
+
             Logger.Debug(
                 Logger.BuildEventMessageWithProperties(
                     "AnalyzeChangesWithChangeTracking called with following properties:",
@@ -303,7 +307,7 @@ namespace SyncPro.Runtime
                         { "RootName", rootIndexEntry.Name },
                         { "RootId", rootIndexEntry.Id },
                         { "TrackedChangeState", trackedChange.State },
-                        { "TrackedChangeCount", trackedChange.Changes.Count },
+                        { "TrackedChangeCount", changeCount },
                     }));
 
             // When analyzing changes with change tracking, it is possible that changes arrive out of order (such as a
@@ -320,6 +324,7 @@ namespace SyncPro.Runtime
             int skipCount = 0;
             Dictionary<string, SyncEntry> knownSyncEntries = new Dictionary<string, SyncEntry>();
 
+            int processedCount = 0;
             while (pendingChanges.Any() && !this.cancellationToken.IsCancellationRequested)
             {
                 IChangeTrackedAdapterItem changeAdapterItem = pendingChanges.Dequeue();
@@ -328,6 +333,11 @@ namespace SyncPro.Runtime
                 {
                     // Change change was successfully analyzed. Reset the skip counter.
                     skipCount = 0;
+                    processedCount++;
+                    this.RaiseActivityChanged(
+                        this.sourceAdapter.Configuration.Id,
+                        "Analyzing changes",
+                        (double)processedCount / changeCount);
                 }
                 else
                 {
@@ -1111,14 +1121,26 @@ namespace SyncPro.Runtime
 
             throw new InvalidOperationException("Cannot create flags for unknown item type.");
         }
+
+        private void RaiseActivityChanged(int adapterId, string status, double? progressValue = null)
+        {
+            this.ProgressChanged?.Invoke(
+                this, 
+                new AnalyzeJobProgressInfo(
+                    status, 
+                    progressValue,
+                    adapterId));
+        }
+
         private void RaiseChangeDetected(int adapterId, EntryUpdateInfo updateInfo)
         {
             this.AnalyzeResult.EntryResults.Add(updateInfo);
-            this.ChangeDetected?.Invoke(
+            this.ProgressChanged?.Invoke(
                 this, 
                 new AnalyzeJobProgressInfo(
                     updateInfo, 
                     adapterId,
+                    "Analyzing files",
                     this.AnalyzeResult.EntryResults.Count,
                     0));
         }

@@ -31,8 +31,43 @@ namespace SyncPro.UI.ViewModels
 
         public DateTime EndTime
         {
-            get { return this.endTime; }
-            set { this.SetProperty(ref this.endTime, value); }
+            get => this.endTime;
+            set
+            {
+                if (this.SetProperty(ref this.endTime, value))
+                {
+                    this.RaisePropertyChanged(nameof(this.IsFinished));
+                }
+            }
+        }
+
+        public bool IsFinished => this.EndTime != DateTime.MinValue;
+
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private bool isProgressIndeterminate;
+
+        public bool IsProgressIndeterminate
+        {
+            get { return this.isProgressIndeterminate; }
+            set { this.SetProperty(ref this.isProgressIndeterminate, value); }
+        }
+
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private double progressValue;
+
+        public double ProgressValue
+        {
+            get { return this.progressValue; }
+            set { this.SetProperty(ref this.progressValue, value); }
+        }
+
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private ProgressState progressState;
+
+        public ProgressState ProgressState
+        {
+            get { return this.progressState; }
+            set { this.SetProperty(ref this.progressState, value); }
         }
 
         protected JobViewModel(JobBase job, SyncRelationshipViewModel relationship)

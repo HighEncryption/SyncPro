@@ -3,9 +3,15 @@ namespace SyncPro.Runtime
     public class AnalyzeJobProgressInfo
     {
         /// <summary>
-        /// Indicates the value of progress from 0.00 to 1.00. A value of  -1.0 indicates that progress is indeterminate.
+        /// Described the current activity being performed. This string will be shown as a status when the progress
+        /// is indeterminate.
         /// </summary>
-        public double ProgressValue { get; }
+        public string Activity { get; }
+
+        /// <summary>
+        /// Indicates the value of progress from 0.00 to 1.00. A value of null indicates that progress is indeterminate.
+        /// </summary>
+        public double? ProgressValue { get; }
 
         /// <summary>
         /// The total number of files to be synced.
@@ -21,9 +27,25 @@ namespace SyncPro.Runtime
 
         public int SourceAdapterId { get; }
 
-        public AnalyzeJobProgressInfo(EntryUpdateInfo updateInfo, int sourceAdapterId, int filesTotal, long bytesTotal)
+        public AnalyzeJobProgressInfo(
+            string activity,
+            double? progressValue,
+            int adapterId)
         {
-            this.ProgressValue = double.PositiveInfinity;
+            this.Activity = activity;
+            this.ProgressValue = progressValue;
+            this.SourceAdapterId = adapterId;
+        }
+
+        public AnalyzeJobProgressInfo(
+            EntryUpdateInfo updateInfo, 
+            int sourceAdapterId, 
+            string activity,
+            int filesTotal, 
+            long bytesTotal)
+        {
+            this.Activity = activity;
+            this.ProgressValue = null;
             this.SourceAdapterId = sourceAdapterId;
             this.FilesTotal = filesTotal;
             this.BytesTotal = bytesTotal;
