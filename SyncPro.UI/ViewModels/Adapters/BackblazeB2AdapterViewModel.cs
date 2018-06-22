@@ -160,7 +160,12 @@ namespace SyncPro.UI.ViewModels.Adapters
                 return model;
             }
 
-            return relationship.CreateAdapterViewModel<BackblazeB2AdapterViewModel>();
+            BackblazeB2AdapterViewModel adapterViewModel = relationship.CreateAdapterViewModel<BackblazeB2AdapterViewModel>();
+
+            // If we are creating a new adapter view model (and adapter), set the IsOriginator property
+            adapterViewModel.Adapter.Configuration.IsOriginator = isSourceAdapter;
+
+            return adapterViewModel;
         }
 
         private void AddAccountInfo(object obj)

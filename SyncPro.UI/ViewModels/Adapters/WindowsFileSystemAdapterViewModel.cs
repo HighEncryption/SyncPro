@@ -64,7 +64,13 @@
             }
 
             // Create a temporary adapter. This will only be committed to the DB when the user actually creates the relationship.
-            return relationship.CreateAdapterViewModel<WindowsFileSystemAdapterViewModel>();
+            WindowsFileSystemAdapterViewModel adapterViewModel = relationship.CreateAdapterViewModel<WindowsFileSystemAdapterViewModel>();
+
+            // If we are creating a new adapter view model (and adapter), set the IsOriginator property
+            adapterViewModel.Adapter.Configuration.IsOriginator = isSourceAdapter;
+
+            return adapterViewModel;
+
         }
 
         private FolderBrowserViewModel viewModel;
@@ -73,7 +79,13 @@
             FolderBrowserWindow window = new FolderBrowserWindow();
             if (this.viewModel == null)
             {
-                this.viewModel = new FolderBrowserViewModel(this.AdapterBase) { Message = "Select the destination folder" };
+                this.viewModel = new FolderBrowserViewModel(this.AdapterBase)
+                {
+                    Message = this.Adapter.Configuration.IsOriginator ?
+                        "Select the source folder" :
+                        "Select the destination folder"
+                };
+
                 if (!string.IsNullOrWhiteSpace(this.DestinationPath))
                 {
                     // TODO: Fix

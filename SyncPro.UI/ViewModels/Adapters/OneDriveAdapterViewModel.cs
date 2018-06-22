@@ -107,7 +107,13 @@
             FolderBrowserWindow window = new FolderBrowserWindow();
             if (this.viewModel == null)
             {
-                this.viewModel = new FolderBrowserViewModel(this.AdapterBase) { Message = "Select the destination folder" };
+                this.viewModel = new FolderBrowserViewModel(this.AdapterBase)
+                {
+                    Message = this.Adapter.Configuration.IsOriginator ?
+                        "Select the source folder" :
+                        "Select the destination folder"
+                };
+
                 if (!string.IsNullOrWhiteSpace(this.DestinationPath))
                 {
                     //this.viewModel.SelectedPath = this.DestinationPath;
@@ -262,7 +268,12 @@
                 return model;
             }
 
-            return relationship.CreateAdapterViewModel<OneDriveAdapterViewModel>();
+            OneDriveAdapterViewModel adapterViewModel = relationship.CreateAdapterViewModel<OneDriveAdapterViewModel>();
+
+            // If we are creating a new adapter view model (and adapter), set the IsOriginator property
+            adapterViewModel.Adapter.Configuration.IsOriginator = isSourceAdapter;
+
+            return adapterViewModel;
         }
 
         public override void LoadContext()
