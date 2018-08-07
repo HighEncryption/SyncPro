@@ -118,24 +118,57 @@ namespace SyncPro.UI.ViewModels
             this.ChangeMetricsList[1].Unchanged = this.AnalyzeJob.AnalyzeResult.UnchangedFolderCount;
             this.ChangeMetricsList[2].Unchanged = this.AnalyzeJob.AnalyzeResult.UnchangedFileBytes;
 
-            List<Exception> exceptions = 
-                this.AnalyzeJob.AnalyzeResult.AdapterResults
-                    .Select(r => r.Value.Exception)
-                    .ToList();
-
-            if (exceptions.Any())
+            int entryErrorCount = 0;
+            foreach (KeyValuePair<int, AnalyzeAdapterResult> adapterResult in this.AnalyzeJob.AnalyzeResult.AdapterResults)
             {
-                foreach (Exception exception in exceptions)
+                if (adapterResult.Value.Exception != null)
                 {
                     this.ErrorMessages.Add(
                         new ErrorViewModel(
                             false,
-                            exception.Message,
-                            exception.ToString()));
+                            adapterResult.Value.Exception.Message,
+                            adapterResult.Value.Exception.ToString()));
+
+                    this.ProgressState = ProgressState.Error;
                 }
 
-                this.ProgressState = ProgressState.Error;
+                entryErrorCount +=
+                    adapterResult.Value.EntryResults.Count(e => e.HasSyncEntryFlag(SyncEntryChangedFlags.Exception));
             }
+
+            if (entryErrorCount > 0)
+            {
+                var errorViewModel = new ErrorViewModel(
+                    false,
+                    string.Format(
+                        "Error were encountered while analyzing {0} items. These items will not be synchronized.",
+                        entryErrorCount),
+                    null);
+
+                App.DispatcherInvoke(() => this.ErrorMessages.Add(errorViewModel));
+            }
+
+            //// Performance of this call isn't great, but there shouldn't be a large number of exceptions
+            //// to process in this way.
+            //List<Exception> exceptions = 
+            //    this.AnalyzeJob.AnalyzeResult.AdapterResults
+            //        .Where(r => r.Value.Exception != null)
+            //        .Select(r => r.Value.Exception)
+            //        .ToList();
+
+            //if (exceptions.Any())
+            //{
+            //    foreach (Exception exception in exceptions)
+            //    {
+            //        this.ErrorMessages.Add(
+            //            new ErrorViewModel(
+            //                false,
+            //                exception.Message,
+            //                exception.ToString()));
+            //    }
+
+            //    this.ProgressState = ProgressState.Error;
+            //}
 
             this.metadataUpdateCancellationToken.Cancel();
 

@@ -681,10 +681,39 @@ namespace SyncPro.Runtime
                 // TODO: Query the adapter somehow to see if the file should be suppressed (sparse file, for example).
                 // TODO: Further note - this would be the right place to implement an inclusion/exclusion behavior.
 
-                // Check if there was an error reading the item from the adapter. If so, skip the item.
+                // Check if there was an error reading the item from the adapter. Create a new EntryUpdateInfo object
+                // for this item so that we know it was found, but don't continue processing the item beyond this.
                 if (!string.IsNullOrEmpty(sourceAdapterChild.ErrorMessage))
                 {
-                    Logger.Info("Skipping adapter child '{0}' with error.", sourceAdapterChild.FullName);
+                    // Check if there is an entry in the database that matches the unique ID of the item
+                    SyncEntry sourceLogicalChildEx = logicalChildren?.FirstOrDefault(c => c.HasUniqueId(sourceAdapterChild.UniqueId));
+
+                    // There isn't a database entry for this item, so we will need to create one. It won't be added
+                    // to the database, but we will need it since other code expects it to be there.
+                    if (sourceLogicalChildEx == null)
+                    {
+                        sourceLogicalChildEx = new SyncEntry
+                        {
+                            Name = sourceAdapterChild.Name,
+                            AdapterEntries = new List<SyncEntryAdapterData>(),
+                            ParentEntry = logicalParent
+                        };
+                    }
+
+                    sourceLogicalChildEx.State = SyncEntryState.NotSynchronized;
+
+                    // Create the update info for the new entry. The only flag we want to set if Exception so that
+                    // it isn't processed in a sync job.
+                    sourceLogicalChildEx.UpdateInfo = new EntryUpdateInfo(
+                        sourceLogicalChildEx,
+                        sourceAdapter,
+                        SyncEntryChangedFlags.Exception,
+                        Path.Combine(relativePath, sourceLogicalChildEx.Name));
+
+                    this.RaiseChangeDetected(sourceAdapter.Configuration.Id, sourceLogicalChildEx.UpdateInfo);
+
+                    this.LogSyncAnalyzerChangeFound(sourceLogicalChildEx);
+
                     continue;
                 }
 

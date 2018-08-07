@@ -33,6 +33,12 @@
         /// The entry has been deleted from the adapter, but the entry remains in the database
         /// </summary>
         IsDeleted = 0x02,
+
+        /// <summary>
+        /// Indicates that an error occurred when reading this entry from the source adapter.
+        /// </summary>
+        Exception = 0x04,
+
         Undefined = 0xFF
     }
 

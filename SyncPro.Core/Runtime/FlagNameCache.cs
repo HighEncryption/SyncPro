@@ -98,6 +98,11 @@
                 sb.Append("Moved,");
             }
 
+            if ((flags & SyncEntryChangedFlags.Exception) != 0)
+            {
+                sb.Append("Exception,");
+            }
+
             return sb.ToString(0, sb.Length - 1);
         }
     }

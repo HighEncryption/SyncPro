@@ -33,7 +33,11 @@
             </Style>
 
             <DataTemplate x:Key="RelativePathCellTemplate" DataType="{x:Type viewModels:EntryUpdateInfoViewModel}">
-                <TextBlock x:Name="TextBox" Text="{Binding Path=RelativePath}" Style="{StaticResource TreeListItemStyle}" />
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock x:Name="TextBox" Text="{Binding Path=RelativePath}" Style="{StaticResource TreeListItemStyle}" />
+                    <Image Source="/Resources/Graphics/icon_exclaim.png" Height="16" Margin="4,0,0,0"
+                           Visibility="{Binding Path=Flags, Converter={StaticResource EnumToVisibility}, ConverterParameter=Exception}"/>
+                </StackPanel>
             </DataTemplate>
 
             <DataTemplate x:Key="ChangeTypeCellTemplate" DataType="{x:Type viewModels:EntryUpdateInfoViewModel}">
@@ -60,6 +64,9 @@
                         <Style TargetType="TextBlock" BasedOn="{StaticResource TreeListItemStyle}">
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding Path=IsDirectory}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Path=Flags, Converter={StaticResource EnumToBoolean}, ConverterParameter=Exception}" Value="True">
                                     <Setter Property="Visibility" Value="Collapsed" />
                                 </DataTrigger>
                             </Style.Triggers>
@@ -216,8 +223,29 @@
                     <ItemsControl ItemsSource="{Binding Path=AnalyzeJobViewModel.ErrorMessages}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate DataType="viewModels:ErrorViewModel">
-                                <TextBlock Text="{Binding Path=Header}"
-                                           ToolTip="{Binding Path=Message}" />
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition />
+                                    </Grid.ColumnDefinitions>
+
+                                    <Image Width="16">
+                                        <Image.Style>
+                                            <Style TargetType="Image">
+                                                <Style.Setters>
+                                                    <Setter Property="Source" Value="/Resources/Graphics/icon_exclaim.png" />
+                                                </Style.Setters>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Path=IsWarning}" Value="True">
+                                                        <Setter Property="Source" Value="/Resources/Graphics/warning_16.png" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Image.Style>
+                                    </Image>
+                                    <TextBlock Grid.Column="1" Text="{Binding Path=Header}"
+                                               ToolTip="{Binding Path=Message}" />
+                                </Grid>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>

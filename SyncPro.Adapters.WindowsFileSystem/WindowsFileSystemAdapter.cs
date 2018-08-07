@@ -217,8 +217,21 @@
             entry.EntryLastUpdatedDateTimeUtc = DateTime.UtcNow;
         }
 
+        /// <summary>
+        /// Get the <see cref="FileSystemFolder"/> items that are children to the provided
+        /// <see cref="FileSystemFolder"/>.
+        /// </summary>
+        /// <param name="folder">The parent folder</param>
+        /// <returns>The list of child items under the parent folder.</returns>
+        /// <remarks>
+        /// An errors encountered when querying for the list of child should be thrown for the
+        /// caller to handle. However, any errors related to querying the children themselves
+        /// should be caught and returned as error information for that child (the original 
+        /// call should not fail in this case).
+        /// </remarks>
         public override IEnumerable<IAdapterItem> GetAdapterItems(IAdapterItem folder)
         {
+            // If folder is null, return the list of top-level folders on the computer (aka drives).
             if (folder == null)
             {
                 DriveInfo[] allDrives = DriveInfo.GetDrives();

@@ -74,6 +74,11 @@ namespace SyncPro.Adapters
         Moved = 0x0800,
 
         /// <summary>
+        /// Indicates that there was an exception while reading this item
+        /// </summary>
+        Exception = 0x1000,
+
+        /// <summary>
         /// Indicates that the change is a new file or directory
         /// </summary>
         IsNew = NewFile | NewDirectory,

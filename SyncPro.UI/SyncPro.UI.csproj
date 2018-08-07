@@ -657,6 +657,9 @@
   <ItemGroup>
     <Resource Include="Resources\Graphics\help_20.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Graphics\warning_16.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>git describe --always --dirty &gt; $(ProjectDir)\version.txt</PreBuildEvent>

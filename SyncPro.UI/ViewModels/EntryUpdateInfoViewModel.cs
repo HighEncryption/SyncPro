@@ -391,6 +391,11 @@
                 changes.Add("Destination Exists");
             }
 
+            if ((flags & SyncEntryChangedFlags.Exception) == SyncEntryChangedFlags.Exception)
+            {
+                changes.Add("[Exception]");
+            }
+
             return changes;
         }
 
