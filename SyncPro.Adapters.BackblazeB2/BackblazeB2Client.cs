@@ -533,7 +533,7 @@
                 method,
                 this.connectionInfo.ApiUrl + urlPart);
 
-            request.Headers.Add(
+            request.Headers.TryAddWithoutValidation(
                 "Authorization",
                 this.connectionInfo.AuthorizationToken.GetDecrytped());
 

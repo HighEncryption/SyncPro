@@ -177,8 +177,6 @@
             {
                 this.TypedConfiguration.ConnectionInfo = e.ConnectionInfo;
                 this.AccountId = e.AccountId;
-
-                this.Relationship.SaveAsync().Wait();
             };
 
             // Call the initization method to build the connection info if needed.

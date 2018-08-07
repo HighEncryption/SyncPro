@@ -1,9 +1,10 @@
-namespace SyncPro.UI.Navigation.ViewModels
+namespace SyncPro.UI.Dialogs
 {
     using System.ComponentModel;
     using System.Diagnostics;
     using System.Windows.Input;
 
+    using SyncPro.Adapters.BackblazeB2;
     using SyncPro.UI.Framework;
     using SyncPro.UI.Framework.MVVM;
 
@@ -38,6 +39,9 @@ namespace SyncPro.UI.Navigation.ViewModels
             this.CloseWindowCommand = new DelegatedCommand(o => this.HandleClose(false));
             this.CancelCommand = new DelegatedCommand(o => this.HandleClose(false));
             this.OKCommand = new DelegatedCommand(o => this.HandleClose(true), this.CanOkCommandExecute);
+
+            // Create bucket type as private by default
+            this.BucketType = Constants.BucketTypes.Private;
         }
 
         private bool CanOkCommandExecute(object o)

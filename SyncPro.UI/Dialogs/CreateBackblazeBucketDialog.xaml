@@ -5,9 +5,10 @@
                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                          xmlns:mvvm="clr-namespace:SyncPro.UI.Framework.MVVM"
                          xmlns:viewModels="clr-namespace:SyncPro.UI.Navigation.ViewModels"
+                         xmlns:dialogs="clr-namespace:SyncPro.UI.Dialogs"
                          mc:Ignorable="d"
-                         Title="CreateBackblazeBucketDialog" Height="300" Width="500"
-                         d:DataContext="{d:DesignInstance viewModels:CreateBackblazeBucketDialogViewModel}">
+                         Title="Create Backblaze Bucket" Height="300" Width="500"
+                         d:DataContext="{d:DesignInstance dialogs:CreateBackblazeBucketDialogViewModel}">
     <mvvm:RequestCloseWindow.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -16,14 +17,26 @@
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </mvvm:RequestCloseWindow.Resources>
-    <Grid Margin="8">
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <Grid Grid.Row="1" VerticalAlignment="Top">
+        <StackPanel Margin="24,0">
+            <TextBlock FontSize="16" 
+                       FontWeight="SemiBold" 
+                       Foreground="#1F48A8"
+                       Margin="0,8"
+                       HorizontalAlignment="Center" Text="Create Backblaze Bucket" />
+
+            <TextBlock Margin="0,0,0,12" 
+                       TextWrapping="Wrap"
+                       Text="Files can be encrypted/decrypted when synchronized. Select the way that encryption should be performed below. Encryption cannot be enabled or disabled once a relationship is created." />
+        </StackPanel>
+
+        <Grid Grid.Row="1" VerticalAlignment="Top" Margin="24,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="8" />
@@ -41,7 +54,7 @@
 
             <TextBlock Grid.Column="0" Grid.Row="1" Text="Bucket Name" VerticalAlignment="Center" />
             <TextBox Grid.Column="2" Grid.Row="1" Width="300" HorizontalAlignment="Left"
-                     Height="26" Text="{Binding Path=BucketName}" />
+                     Height="28" Text="{Binding Path=BucketName}" />
 
             <TextBlock Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="2" 
                        Margin="0,16,0,8" TextWrapping="Wrap"
@@ -62,7 +75,7 @@
         </Grid>
 
         <Border Grid.Row="2" Background="{StaticResource WindowBackgroundBrush}"
-                BorderThickness="0" BorderBrush="#606060">
+                BorderThickness="0,1,0,0" BorderBrush="#606060">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Width="80" Height="24" Margin="6" Command="{Binding Path=OKCommand}">
                     <TextBlock Text="OK" />
