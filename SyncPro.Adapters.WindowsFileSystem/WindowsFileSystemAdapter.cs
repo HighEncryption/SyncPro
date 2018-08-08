@@ -383,6 +383,16 @@
 
         public override Task<byte[]> GetItemThumbnail(string itemId, string relativePath)
         {
+            string ext = relativePath.Split('.').LastOrDefault();
+
+            // Skip files that have an extension that we wont be able to process
+            if (!string.Equals(ext, "png", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(ext, "jpg", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(ext, "gif", StringComparison.OrdinalIgnoreCase))
+            {
+                return Task.FromResult(new byte[0]);
+            }
+
             var fullPath = Path.Combine(this.Config.RootDirectory, relativePath);
 
             using (Image sourceImage = Image.FromFile(fullPath))
