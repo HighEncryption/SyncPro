@@ -86,6 +86,12 @@
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Get a stream for writing the contents of an item
+        /// </summary>
+        /// <param name="entry">The entry representing the file to be uploaded</param>
+        /// <param name="length">The length of the file to be uploaded</param>
+        /// <returns>The <see cref="Stream"/>that the file's content can be written to</returns>
         public override Stream GetWriteStreamForEntry(SyncEntry entry, long length)
         {
             // Create a default session. By itself, the file will be uploaded to Backblaze when the stream
@@ -104,15 +110,25 @@
 
                 session.GetUploadPartUrlResponse =
                     this.backblazeClient.GetUploadPartUrl(session.StartLargeFileResponse.FileId).Result;
+
+                // Return the stream type dedicated to uploading large files (via parts)
+                return new BackblazeB2LargeUploadStream(
+                    this, 
+                    session, 
+                    Constants.LimitPartMaximumSize,
+                    length);
             }
 
+            // The file size is below the large-file limit, so upload directly
             return new BackblazeB2UploadStream(this, session);
         }
 
-        public async Task<BackblazeB2FileUploadResponse> UploadFileDirect(SyncEntry entry, Stream contentStream)
+        public async Task<BackblazeB2FileUploadResponse> UploadFileDirect(
+            SyncEntry entry, 
+            Stream contentStream,
+            byte[] sha1Hash)
         {
             long size = entry.GetSize(this.Relationship, SyncEntryPropertyLocation.Destination);
-            byte[] sha1Hash = entry.GetSha1Hash(this.Relationship, SyncEntryPropertyLocation.Destination);
 
             return await this.backblazeClient.UploadFile(
                     entry.GetRelativePath(null, "/"),
@@ -267,32 +283,43 @@
 
         public override void FinalizeItemWrite(Stream stream, EntryUpdateInfo updateInfo)
         {
-            BackblazeB2UploadStream uploadStream = (BackblazeB2UploadStream)stream;
+            string fileId;
 
-            if (uploadStream.Session.StartLargeFileResponse != null)
+            if (stream is BackblazeB2LargeUploadStream largeUploadStream)
             {
-                long size = uploadStream.Session.Entry.GetSize(this.Relationship, SyncEntryPropertyLocation.Destination);
-                if (uploadStream.Session.BytesUploaded != size)
+                long size = largeUploadStream.Session.Entry.GetSize(this.Relationship, SyncEntryPropertyLocation.Destination);
+                if (largeUploadStream.Session.BytesUploaded != size)
                 {
                     // TODO: Cancel the upload?
                     throw new Exception(
                         string.Format(
                             "File size if {0}, but uploaded {1}",
                             size,
-                            uploadStream.Session.BytesUploaded));
+                            largeUploadStream.Session.BytesUploaded));
                 }
 
                 // Allocate the hash array to contain exactly the expected number of hashes
-                string[] partSha1Array = new string[uploadStream.Session.CurrentPartNumber];
+                string[] partSha1Array = new string[largeUploadStream.Session.CurrentPartNumber];
 
-                for (int i = 1; i < uploadStream.Session.CurrentPartNumber; i++)
+                for (int i = 1; i < largeUploadStream.Session.CurrentPartNumber; i++)
                 {
-                    partSha1Array[i] = uploadStream.Session.PartHashes[i];
+                    partSha1Array[i] = largeUploadStream.Session.PartHashes[i];
                 }
 
                 this.backblazeClient.FinishLargeFile(
-                    uploadStream.Session.StartLargeFileResponse.FileId,
+                    largeUploadStream.Session.StartLargeFileResponse.FileId,
                     partSha1Array).Wait();
+
+                fileId = largeUploadStream.Session.UploadResponse.FileId;
+            }
+            else if (stream is BackblazeB2UploadStream uploadStream)
+            {
+                uploadStream.Flush();
+                fileId = uploadStream.Session.UploadResponse.FileId;
+            }
+            else
+            {
+                throw new NotImplementedException();
             }
 
             SyncEntryAdapterData adapterData =
@@ -305,9 +332,11 @@
                     SyncEntry = updateInfo.Entry,
                     AdapterId = this.Configuration.Id
                 };
+
+                updateInfo.Entry.AdapterEntries.Add(adapterData);
             }
 
-            adapterData.AdapterEntryId = uploadStream.Session.UploadResponse.FileId;
+            adapterData.AdapterEntryId = fileId;
         }
 
         public async Task<Bucket> CreateBucket(string bucketName, string bucketType)

@@ -5,6 +5,17 @@ namespace SyncPro.Adapters.BackblazeB2
     using System.IO;
     using System.Linq;
 
+    /// <summary>
+    /// Base class for creating a buffered stream of data for uploading files to a provider
+    /// </summary>
+    /// <remarks>
+    /// The <see cref="BufferedUploadStream"/> is a write-only stream that allows a caller to write
+    /// data at any rate (in any block size). As data is written, it is stored internally within the
+    /// the <see cref="BufferedUploadStream"/> instance. A derived class will set a desired minimum
+    /// size for data to be uploaded to a provider. Once enought data has been written, the UploadPart
+    /// method will be invoked, flushing the current set of buffers and writing the current contents
+    /// of the cache data to the provider.
+    /// </remarks>
     public abstract class BufferedUploadStream : Stream
     {
         // The local list of buffers where data written to the stream is saved until enough data has accumulated.
@@ -43,7 +54,7 @@ namespace SyncPro.Adapters.BackblazeB2
             this.buffers.Add(localBuffer);
             this.totalSize += count;
 
-            // If the total size of the buffers is at least the part size, flush the data (sending it to OneDrive).
+            // If the total size of the buffers is at least the part size, flush the data (sending it via UploadPart).
             if (this.ArePartsAvailable())
             {
                 this.Flush();

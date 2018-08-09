@@ -249,7 +249,7 @@
             using (request)
             {
                 // Add the authorization header for the temporary authorization token
-                request.Headers.Add(
+                request.Headers.TryAddWithoutValidation(
                     "Authorization",
                     uploadUrlResponse.AuthorizationToken);
 
@@ -507,7 +507,10 @@
                 BackblazeErrorResponse errorResponse =
                     await response.Content.TryReadAsJsonAsync<BackblazeErrorResponse>();
 
-                if (errorResponse.Code == Constants.ErrorCodes.ExpiredAuthToken)
+                if (errorResponse.Code == Constants.ErrorCodes.ExpiredAuthToken ||
+                    // [2018/08/09][ It appears that if the access token is old enough, it will return 
+                    // a code of unauthorized instead of expired_auth_token.
+                    errorResponse.Code == "unauthorized")
                 {
                     // Refresh the auth token
                     await this.AuthorizeAccount();

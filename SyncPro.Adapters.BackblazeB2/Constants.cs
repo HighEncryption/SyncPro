@@ -18,9 +18,8 @@
         // Per the Backblaze spec, minimum and maximum part sizes are 5MB and 5GB, respectively
         // See: https://www.backblaze.com/b2/docs/large_files.html
         public const long LimitPartMinimumSize = 0x500000;
+        public const long LimitPartDefaultSize = 0x1000000;
         public const long LimitPartMaximumSize = 0x140000000;
-
-        public const string HexDigitsAtEnd = "hex_digits_at_end";
 
         public static class Headers
         {
