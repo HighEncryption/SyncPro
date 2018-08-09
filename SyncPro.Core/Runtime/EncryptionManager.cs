@@ -8,6 +8,24 @@ namespace SyncPro.Runtime
     using SyncPro.Adapters;
     using SyncPro.Configuration;
 
+    /// <summary>
+    /// This class manages the encryption/decryption of files along with the calculating of hashes
+    /// before/after encryption.
+    /// </summary>
+    /// <remarks>
+    /// The EncryptionManager class performs either encryption or decryption of files (known as
+    /// transforms) using the secrets contained in the X509Certificate2 provided. Each file that
+    /// is encrypted will have its own encryptor (key and IV) generated, which will be stored
+    /// in the transformed content. The encryptor is itself encrypted with the X509Certificate2
+    /// prior to being stored. This allows strong protection of each file, while allowing a single
+    /// certificate to be able to decrypted multiple files.
+    /// During the encryption/decryption process, the SHA1 and MD5 hashes of the content are
+    /// calculated as the content is transformed. Data is tranformed in blocks (as opposed to the
+    /// entire content at once), which allows for hashes to be calculated for both the pre-transform
+    /// and post-transform content, while eliminating the need to read the content multiple times.
+    /// An <see cref="EncryptionManager"/> instance SHOULD be created for each file so that a
+    /// unique encrypted or created. Without this, files will have reduced security.
+    /// </remarks>
     public class EncryptionManager : IDisposable
     {
         /// <summary>
@@ -21,18 +39,25 @@ namespace SyncPro.Runtime
         public const int DefaultCspBlockSize = 128;
 
         // An encrypted file will contain a 1k header plus one 16-byte block
-        private const int minimumEncryptedFileSize = 1040;
+        private const int MinimumEncryptedFileSize = 1040;
 
+        // The certificate that contains the secrets using for encryption.
         private readonly X509Certificate2 encryptionCertificate;
+
         private readonly long sourceFileSize;
 
+        // Hash algorithm managed resources. These will be used to hash the data 
+        // as is passes through the EncryptionManager.
         private readonly SHA1Cng sha1;
         private readonly MD5Cng md5;
 
+        // The stream where transformed content will be written
         private readonly Stream outputStream;
 
+        // Inidicates whether the first block of data has been transformed yet
         private bool firstBlockTransformed;
 
+        // CryptoServiceProvider object for performing encryption/decryption/hashing
         private RSACryptoServiceProvider rsa;
         private AesCryptoServiceProvider aes;
         private ICryptoTransform cryptoTransform;
@@ -43,6 +68,17 @@ namespace SyncPro.Runtime
 
         public byte[] Md5Hash => this.md5.Hash;
 
+        /// <summary>
+        /// Create a new instance of the <see cref="EncryptionManager"/> class
+        /// </summary>
+        /// <param name="encryptionCertificate">
+        /// The certificate that contains the secrets used for encryption. Note that
+        /// the private key must be present in this certificate in order for decryption
+        /// to be performed.
+        /// </param>
+        /// <param name="mode">The mode (encryption/decryption) of the encryption manager</param>
+        /// <param name="outputStream">The stream where the transformed content will be written</param>
+        /// <param name="sourceFileSize"></param>
         public EncryptionManager(
             X509Certificate2 encryptionCertificate, 
             EncryptionMode mode,
@@ -62,14 +98,21 @@ namespace SyncPro.Runtime
             this.sha1 = new SHA1Cng();
             this.md5 = new MD5Cng();
 
+            // Any valid encrypted file will have a minimum size (to include the header and minimal
+            // encrypted content). Ensure that the source file is at least this size.
             if (mode == EncryptionMode.Decrypt)
             {
-                Pre.Assert(sourceFileSize >= minimumEncryptedFileSize, "sourceFileSize >= minimumEncryptedFileSize");
+                Pre.Assert(sourceFileSize >= MinimumEncryptedFileSize, "sourceFileSize >= minimumEncryptedFileSize");
             }
 
             this.Initialize();
         }
 
+        /// <summary>
+        /// Initialize the <see cref="EncryptionManager"/>. This will initialize the CryptoServiceProvider
+        /// used to perform encryption, as well as to verify that the certificate is suitable for the
+        /// desired mode.
+        /// </summary>
         private void Initialize()
         {
             // Create the CSP. By default, this will generate a new Key and IV, so we need to ensure that we 
@@ -98,12 +141,22 @@ namespace SyncPro.Runtime
             }
         }
 
+        /// <summary>
+        /// Transform a block by encrypting/decrypting the file.
+        /// </summary>
+        /// <param name="buffer">The data to transform</param>
+        /// <param name="offset">The offset within the buffer to begin reading</param>
+        /// <param name="count">The number of bytes from the buffer to read</param>
+        /// <returns>The number of bytes transformed</returns>
         public int TransformBlock(byte[] buffer, int offset, int count)
         {
             Pre.Assert(count >= EncryptedFileHeader.HeaderSize + 16);
 
+            // Create a new memory stream that will hold the transformed content, as well as allow
+            // for hashes to be calculated as the data is streamed.
             using (MemoryStream bufferedOutputStream = new MemoryStream())
             {
+                // Call the appropriate method to encrypt/decrypt the data
                 if (this.Mode == EncryptionMode.Encrypt)
                 {
                     this.WriteEncrypted(bufferedOutputStream, buffer, offset, count);
@@ -113,27 +166,41 @@ namespace SyncPro.Runtime
                     this.ReadEncrypted(bufferedOutputStream, buffer, offset, count);
                 }
 
+                // Read the tranformed data as a byte array for each hash calculation.
                 byte[] transformedBuffer = bufferedOutputStream.ToArray();
 
+                // Compute the ongoing hash value
                 this.sha1.TransformBlock(transformedBuffer, 0, transformedBuffer.Length, null, 0);
                 this.md5.TransformBlock(transformedBuffer, 0, transformedBuffer.Length, null, 0);
 
+                // Write the transformed data to the output stream.
                 this.outputStream.Write(transformedBuffer, 0, transformedBuffer.Length);
 
                 return transformedBuffer.Length;
             }
         }
 
+        /// <summary>
+        /// Transform the final block of data.
+        /// </summary>
+        /// <param name="inputBuffer">The data to transform</param>
+        /// <param name="offset">The offset within the input buffer to start reading</param>
+        /// <param name="count">The number of bytes to read from the input buffer</param>
+        /// <returns>The number of bytes transformed</returns>
         public int TransformFinalBlock(byte[] inputBuffer, int offset, int count)
         {
             byte[] outputBuffer = new byte[0];
             int outputOffset = 0;
             short padding;
 
+            // If no data has been transformed yet (meaning that the data to be transformed was 
+            // small enough that TransformBlock was not called), then we need to perform steps
+            // that are performed there for handling the initial block of data.
             if (!this.firstBlockTransformed)
             {
                 if (this.Mode == EncryptionMode.Encrypt)
                 {
+                    // For encrypting, we need to write the encrypted file header
                     using (MemoryStream bufferedOutputStream = new MemoryStream())
                     {
                         this.WriteFirstEncryptedBlock(bufferedOutputStream);
@@ -143,6 +210,7 @@ namespace SyncPro.Runtime
                 }
                 else
                 {
+                    // For decrypting, we need to read the encrypted file header
                     this.ReadFirstEncryptedBlock(inputBuffer, ref offset, ref count);
                 }
             }
@@ -153,9 +221,12 @@ namespace SyncPro.Runtime
                 count -= padding;
             }
 
-            // Encrypt/decrypt the final block
+            // Encrypt/decrypt the final block. Note that unlike TransformBlock, the final block of
+            // transformed data is returned.
             byte[] finalBlock = this.cryptoTransform.TransformFinalBlock(inputBuffer, offset, count);
 
+            // Resize the output buffer to be long enough to fit the final transformed block and
+            // copy the final transformed block onto the end of the output buffer.
             Array.Resize(ref outputBuffer, outputBuffer.Length + finalBlock.Length);
             Buffer.BlockCopy(finalBlock, 0, outputBuffer, outputOffset, finalBlock.Length);
 
@@ -163,6 +234,8 @@ namespace SyncPro.Runtime
             this.sha1.TransformFinalBlock(outputBuffer, 0, outputBuffer.Length);
             this.md5.TransformFinalBlock(outputBuffer, 0, outputBuffer.Length);
 
+            // If we are encrypting data, the file needs to have a specific increment in size, which
+            // may require padding at the end of the file.
             if (this.Mode == EncryptionMode.Encrypt)
             {
                 CalculateEncryptedFileSize(this.sourceFileSize, out padding);
@@ -173,6 +246,7 @@ namespace SyncPro.Runtime
                 }
             }
 
+            // Write the final buffer of data to the output stream
             this.outputStream.Write(outputBuffer, 0, outputBuffer.Length);
 
             return outputBuffer.Length;
@@ -313,7 +387,7 @@ namespace SyncPro.Runtime
         /// <returns>The length of the encrypted data</returns>
         public static long CalculateDecryptedFileSize(long encryptedSize, out short padding)
         {
-            Pre.Assert(encryptedSize >= minimumEncryptedFileSize, "encryptedSize >= minimumEncryptedFileSize");
+            Pre.Assert(encryptedSize >= MinimumEncryptedFileSize, "encryptedSize >= minimumEncryptedFileSize");
 
             const int BlockSizeInBytes = DefaultCspBlockSize / 8;
 
