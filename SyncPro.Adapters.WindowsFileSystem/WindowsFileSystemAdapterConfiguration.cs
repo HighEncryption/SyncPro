@@ -8,6 +8,8 @@ namespace SyncPro.Adapters.WindowsFileSystem
     {
         public override Guid AdapterTypeId => WindowsFileSystemAdapter.TargetTypeId;
 
+        public override bool DirectoriesAreUniqueEntities => true;
+
         public string RootDirectory { get; set; }
     }
 }

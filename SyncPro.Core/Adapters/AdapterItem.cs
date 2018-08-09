@@ -9,7 +9,7 @@
     /// <summary>
     /// Represents an item exposed by an adapter, such as a file or directory.
     /// </summary>
-    [DebuggerDisplay("{FullName}")]
+    [DebuggerDisplay("{" + nameof(FullName) + "}")]
     public abstract class AdapterItem : IAdapterItem
     {
         /// <summary>

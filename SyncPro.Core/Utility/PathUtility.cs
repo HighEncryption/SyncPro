@@ -94,6 +94,22 @@
             return this;
         }
 
+        public JsonBuilder AddProperty(string name, int value)
+        {
+            this.jObject.Add(name, new JValue(value));
+            return this;
+        }
+
+        public JsonBuilder AddPropertyIfNotNull(string name, string value)
+        {
+            if (!string.IsNullOrEmpty(value))
+            {
+                this.jObject.Add(name, new JValue(value));
+            }
+
+            return this;
+        }
+
         public JsonBuilder AddArrayProperty(string name, object value)
         {
             this.jObject.Add(name, JArray.FromObject(value));

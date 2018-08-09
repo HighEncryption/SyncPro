@@ -9,6 +9,8 @@ namespace SyncPro.Adapters.MicrosoftOneDrive
     {
         public override Guid AdapterTypeId => OneDriveAdapter.TargetTypeId;
 
+        public override bool DirectoriesAreUniqueEntities => true;
+
         public TokenResponse CurrentToken { get; set; }
 
         public string CurrentWindowsLiveId { get; set; }

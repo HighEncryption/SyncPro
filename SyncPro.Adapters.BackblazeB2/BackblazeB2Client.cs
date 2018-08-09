@@ -7,6 +7,7 @@
     using System.Net;
     using System.Net.Http;
     using System.Net.Http.Headers;
+    using System.Reflection;
     using System.Security;
     using System.Text;
     using System.Threading.Tasks;
@@ -16,6 +17,8 @@
     using SyncPro.Adapters.BackblazeB2.DataModel;
     using SyncPro.Tracing;
     using SyncPro.Utility;
+
+    using File = SyncPro.Adapters.BackblazeB2.DataModel.File;
 
     public class BackblazeB2Client : IDisposable
     {
@@ -29,6 +32,8 @@
 
         public event EventHandler<ConnectionInfoChangedEventArgs> ConnectionInfoChanged;
 
+        private string userAgentString;
+
         public BackblazeB2Client(
             string accountId, 
             SecureString applicationKey, 
@@ -37,6 +42,10 @@
             this.accountId = accountId;
             this.applicationKey = applicationKey;
             this.connectionInfo = connectionInfo;
+
+            this.userAgentString = string.Format(
+                "SyncPro/{0}",
+                Assembly.GetEntryAssembly().GetName().Version);
         }
 
         public void Dispose()
@@ -148,6 +157,69 @@
             return response;
         }
 
+        public async Task<IList<File>> ListFileNamesAsync(
+            string bucketId,
+            string prefix, 
+            string delimiter)
+        {
+            ListFileNamesResponse response = await InternalListFileNamesAsync(
+                    bucketId,
+                    prefix,
+                    delimiter,
+                    null)
+                .ConfigureAwait(false);
+
+            List<File> files = new List<File>(response.Files);
+
+            while (!string.IsNullOrWhiteSpace(response.NextFileName))
+            {
+                response = await InternalListFileNamesAsync(
+                        bucketId,
+                        prefix,
+                        delimiter,
+                        response.NextFileName)
+                    .ConfigureAwait(false);
+
+                files.AddRange(response.Files);
+            }
+
+            return files;
+        }
+
+        private async Task<ListFileNamesResponse> InternalListFileNamesAsync(
+            string bucketId,
+            string prefix,
+            string delimiter,
+            string startFileName)
+        {
+            HttpRequestMessage request = this.BuildJsonRequest(
+                Constants.ApiListFileNamesUrl,
+                HttpMethod.Post, 
+                new JsonBuilder()
+                    .AddProperty("bucketId", bucketId)
+                    .AddProperty("maxFileCount", 1000)
+                    .AddPropertyIfNotNull("prefix", prefix)
+                    .AddPropertyIfNotNull("delimiter", delimiter)
+                    .AddPropertyIfNotNull("startFileName", startFileName)
+                    .ToString());
+
+            using (request)
+            {
+                HttpResponseMessage responseMessage =
+                    await this.SendRequestAsync(request).ConfigureAwait(false);
+
+                using (responseMessage)
+                {
+                    ListFileNamesResponse response =
+                        await responseMessage.Content
+                            .TryReadAsJsonAsync<ListFileNamesResponse>()
+                            .ConfigureAwait(false);
+
+                    return response;
+                }
+            }
+        }
+
         /// <summary>
         /// Upload a file to B2 in a single HTTP payload
         /// </summary>
@@ -170,7 +242,7 @@
 
             BackblazeB2FileUploadResponse uploadResponse;
 
-            HttpRequestMessage request = new HttpRequestMessage(
+            HttpRequestMessage request = CreateRequestMessage(
                 HttpMethod.Post,
                 uploadUrlResponse.UploadUrl);
 
@@ -376,14 +448,14 @@
         {
             UploadPartResponse uploadResponse;
 
-            HttpRequestMessage request = new HttpRequestMessage(
+            HttpRequestMessage request = CreateRequestMessage(
                 HttpMethod.Post,
                 uploadUrl);
 
             using (request)
             {
                 // Add the authorization header for the temporary authorization token
-                request.Headers.Add(
+                request.Headers.TryAddWithoutValidation(
                     "Authorization",
                     authorizationToken.GetDecrytped());
 
@@ -443,7 +515,7 @@
                     HttpRequestMessage newRequest = await request.Clone().ConfigureAwait(false);
 
                     newRequest.Headers.Remove("Authorization");
-                    newRequest.Headers.Add(
+                    newRequest.Headers.TryAddWithoutValidation(
                         "Authorization",
                         this.connectionInfo.AuthorizationToken.GetDecrytped());
                     LogRequest(newRequest, client.BaseAddress);
@@ -479,7 +551,7 @@
 
         private async Task AuthorizeAccount()
         {
-            HttpRequestMessage request = new HttpRequestMessage(
+            HttpRequestMessage request = CreateRequestMessage(
                 HttpMethod.Get,
                 Constants.DefaultApiUrl + Constants.ApiAuthorizeAccountUrl);
 
@@ -529,7 +601,7 @@
                 throw new Exception("The connection information has not been initialized.");
             }
 
-            HttpRequestMessage request = new HttpRequestMessage(
+            HttpRequestMessage request = CreateRequestMessage(
                 method,
                 this.connectionInfo.ApiUrl + urlPart);
 
@@ -568,6 +640,15 @@
                     (int)response.StatusCode, 
                     "unknown");
             }
+        }
+
+        private HttpRequestMessage CreateRequestMessage(HttpMethod method, string url)
+        {
+            HttpRequestMessage request = new HttpRequestMessage(method, url);
+
+            request.Headers.Add("UserAgent", this.userAgentString);
+
+            return request;
         }
 
         private static void LogRequest(HttpRequestMessage request, Uri defaultBaseAddress)

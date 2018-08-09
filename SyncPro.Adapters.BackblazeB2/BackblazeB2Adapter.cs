@@ -4,12 +4,14 @@
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Runtime.CompilerServices;
     using System.Threading.Tasks;
 
     using SyncPro.Adapters.BackblazeB2.DataModel;
-    using SyncPro.Configuration;
     using SyncPro.Data;
     using SyncPro.Runtime;
+
+    using File = SyncPro.Adapters.BackblazeB2.DataModel.File;
 
     public class BackblazeB2Adapter : AdapterBase
     {
@@ -60,15 +62,17 @@
             IList<Bucket> allBuckets = await this.backblazeClient.ListBucketsAsync();
             Bucket bucket = allBuckets.First(b => string.Equals(b.BucketId, this.TypedConfiguration.BucketId));
 
-            return new BackblazeB2BucketItem()
+            return new BackblazeB2AdapterItem(
+                bucket.BucketName,
+                null,
+                this,
+                SyncAdapterItemType.Directory,
+                bucket.BucketId,
+                0,
+                DateTime.MinValue,
+                DateTime.MinValue)
             {
-                Name = bucket.BucketName,
-                UniqueId = bucket.BucketId,
-                ItemType = SyncAdapterItemType.Directory,
-                FullName = bucket.BucketName,
-                CreationTimeUtc = DateTime.MinValue,
-                ModifiedTimeUtc = DateTime.MinValue,
-                Adapter = this
+                IsBucket = true
             };
         }
 
@@ -148,7 +152,42 @@
 
         public override IEnumerable<IAdapterItem> GetAdapterItems(IAdapterItem folder)
         {
-            throw new NotImplementedException();
+            BackblazeB2AdapterItem adapterItem = folder as BackblazeB2AdapterItem;
+            Pre.Assert(adapterItem != null, "adapterItem != null");
+
+            string prefix = string.Empty;
+
+            if (!adapterItem.IsBucket)
+            {
+                prefix = adapterItem.FullName + "/";
+            }
+
+            ConfiguredTaskAwaitable<IList<File>> filesTask = this.backblazeClient.ListFileNamesAsync(
+                this.TypedConfiguration.BucketId,
+                prefix,
+                "")
+                .ConfigureAwait(false);
+
+            IList<File> result = filesTask.GetAwaiter().GetResult();
+            List<BackblazeB2AdapterItem> childItems = new List<BackblazeB2AdapterItem>();
+
+            foreach (File file in result)
+            {
+                childItems.Add(
+                    new BackblazeB2AdapterItem(
+                        file.FullName.Split('/').Last(),
+                        folder,
+                        this,
+                        file.IsFileType ? 
+                            SyncAdapterItemType.File :
+                            SyncAdapterItemType.Directory,
+                        file.FileId,
+                        file.ContentLength,
+                        file.UploadTimestamp,
+                        file.FileInfo?.LastModified ?? file.UploadTimestamp));
+            }
+
+            return childItems;
         }
 
         public override bool IsEntryUpdated(SyncEntry childEntry, IAdapterItem adapterItem, out EntryUpdateResult result)
@@ -243,7 +282,7 @@
                             uploadStream.Session.BytesUploaded));
                 }
 
-                // Allocate the hash array to contain exactly the excpected number of hashes
+                // Allocate the hash array to contain exactly the expected number of hashes
                 string[] partSha1Array = new string[uploadStream.Session.CurrentPartNumber];
 
                 for (int i = 1; i < uploadStream.Session.CurrentPartNumber; i++)

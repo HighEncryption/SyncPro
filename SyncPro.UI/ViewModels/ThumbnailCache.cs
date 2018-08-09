@@ -27,7 +27,7 @@
                     .GetThumbnailAsync(sourceAdapterId, adapterEntryId, relativePath)
                     .ConfigureAwait(false);
 
-                if (result1 == null)
+                if (result1 == null || result1.Length == 0)
                 {
                     ThumbnailCache.Cache[key] = null;
                 }

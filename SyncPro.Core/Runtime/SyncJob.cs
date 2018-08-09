@@ -826,8 +826,18 @@
                 // Double-check that we have a legit parent ID
                 Pre.Assert(entryUpdateInfo.Entry.ParentId != null, "entryUpdateInfo.Entry.ParentId != null");
 
-                // Ensure that there are more than one adapter entry.
-                Pre.Assert(entryUpdateInfo.Entry.AdapterEntries.Count > 1, "entryUpdateInfo.Entry.AdapterEntries.Count > 1");
+                // Ensure that there are the correct number of adapter entries. Normally both files and directories
+                // will have an adapter entry. However, some provider do not store directories as entities, so for
+                // these adapter types we should not perform the check.
+                if (!destinationAdapter.Configuration.DirectoriesAreUniqueEntities &&
+                    entryUpdateInfo.Entry.Type == SyncEntryType.Directory)
+                {
+                    // Skipping assertion
+                }
+                else
+                {
+                    Pre.Assert(entryUpdateInfo.Entry.AdapterEntries.Count > 1, "entryUpdateInfo.Entry.AdapterEntries.Count > 1");
+                }
 
                 lock (this.dbLock)
                 {

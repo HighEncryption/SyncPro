@@ -61,7 +61,7 @@ namespace SyncPro.Utility
             object existingValue, 
             JsonSerializer serializer)
         {
-            if (reader == null || reader.Value == null)
+            if (reader?.Value == null)
             {
                 return serializer.Deserialize(reader, null);
             }

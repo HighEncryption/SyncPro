@@ -12,6 +12,8 @@ namespace SyncPro.Adapters.BackblazeB2
     {
         public override Guid AdapterTypeId => BackblazeB2Adapter.TargetTypeId;
 
+        public override bool DirectoriesAreUniqueEntities => false;
+
         public string AccountId { get; set; }
 
         [JsonConverter(typeof(SecureStringToProtectedDataConverter))]

@@ -135,6 +135,7 @@
     <Compile Include="..\SyncPro.Tracing\Properties\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Utility\UnixMillisecondsToDateTimeConverter.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

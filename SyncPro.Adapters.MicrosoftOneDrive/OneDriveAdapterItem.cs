@@ -14,6 +14,7 @@ namespace SyncPro.Adapters.MicrosoftOneDrive
         internal Item Item { get; set; }
 
         public bool IsDeleted { get; }
+
         public string ParentUniqueId { get; }
 
         internal OneDriveAdapterItem(Drive drive, AdapterBase adapter)

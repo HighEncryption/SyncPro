@@ -236,5 +236,7 @@
     public class GoogleDriveAdapterConfiguration : AdapterConfiguration
     {
         public override Guid AdapterTypeId => GoogleDriveAdapter.TargetTypeId;
+
+        public override bool DirectoriesAreUniqueEntities => true;
     }
 }

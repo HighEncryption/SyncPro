@@ -17,6 +17,17 @@ namespace SyncPro.Configuration
         public abstract Guid AdapterTypeId { get; }
 
         /// <summary>
+        /// Indicates whether directories are stored as unique entities for thie type of adapter.
+        /// </summary>
+        /// <remarks>
+        /// Some adapter types (Backblaze, Azure Storage) do not store directories as unique
+        /// entities. Rather, files are the only entities stored, and each file's name is the
+        /// full path of the file. For these adapter types, directories are logical and are
+        /// not actually stored by the provider.
+        /// </remarks>
+        public abstract bool DirectoriesAreUniqueEntities { get; }
+
+        /// <summary>
         /// The ID of the root entry in the index for this adapter. This property is only valid for originating adapters.
         /// </summary>
         public long? RootIndexEntryId { get; set; }
