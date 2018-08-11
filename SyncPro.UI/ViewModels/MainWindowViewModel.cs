@@ -9,6 +9,7 @@
     using System.Reflection;
     using System.Windows.Input;
 
+    using SyncPro.Configuration;
     using SyncPro.Runtime;
     using SyncPro.Tracing;
     using SyncPro.UI.Dialogs;
@@ -33,8 +34,39 @@
 
         public string WindowTitle
         {
-            get { return this.windowTitle; }
-            set { this.SetProperty(ref this.windowTitle, value); }
+            get => this.windowTitle;
+            set => this.SetProperty(ref this.windowTitle, value);
+        }
+
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private int windowHeight;
+
+        public int WindowHeight
+        {
+            get => this.windowHeight;
+            set
+            {
+                if (this.SetProperty(ref this.windowHeight, value))
+                {
+                    this.windowConfig.Height = value;
+                }
+            }
+
+        }
+
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private int windowWidth;
+
+        public int WindowWidth
+        {
+            get => this.windowWidth;
+            set
+            {
+                if (this.SetProperty(ref this.windowWidth, value))
+                {
+                    this.windowConfig.Width = value;
+                }
+            }
         }
 
         private ObservableCollection<ViewModelBase> syncRelationships;
@@ -117,8 +149,8 @@
 
         public NavigationNodeViewModel CurrentNavigationRoot
         {
-            get { return this.currentNavigationRoot; }
-            set { this.SetProperty(ref this.currentNavigationRoot, value); }
+            get => this.currentNavigationRoot;
+            set => this.SetProperty(ref this.currentNavigationRoot, value);
         }
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -126,11 +158,13 @@
 
         public string SearchText
         {
-            get { return this.searchText; }
-            set { this.SetProperty(ref this.searchText, value); }
+            get => this.searchText;
+            set => this.SetProperty(ref this.searchText, value);
         }
 
         public ICommand BeginSearchCommand { get; }
+
+        private readonly WindowConfiguration windowConfig;
 
         public MainWindowViewModel()
         {
@@ -141,6 +175,17 @@
             this.BeginSearchCommand = new DelegatedCommand(this.BeginSearch);
 
             this.UpdateWindowTitle();
+
+            windowConfig = Global.AppConfig.GetOrCreateWindowConfig(
+                "MainWindow",
+                () => new WindowConfiguration()
+                {
+                    Height = 600,
+                    Width = 1070
+                });
+
+            this.WindowHeight = windowConfig.Height;
+            this.WindowWidth = windowConfig.Width;
         }
 
         public void UpdateWindowTitle()

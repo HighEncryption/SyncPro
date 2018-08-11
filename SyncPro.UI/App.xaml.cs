@@ -69,7 +69,7 @@
         public App()
         {
             this.InitializeComponent();
-            this.ShutdownMode = System.Windows.ShutdownMode.OnExplicitShutdown;
+            this.ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
             this.ShowConfigureWindowCommand = new DelegatedCommand(o => this.ShowMainWindow());
             this.ShutdownApplicationCommand = new DelegatedCommand(o => this.Shutdown());
@@ -158,6 +158,8 @@
                 app.notifyIcon.Visibility = Visibility.Collapsed;
                 app.notifyIcon.Dispose();
             }
+
+            Global.SaveAppConfig();
         }
 
         private void LoadSettings()
@@ -247,7 +249,7 @@
 
         public static void DispatcherInvoke(Action action)
         {
-            App.Current.localDispatcher.Invoke(action);
+            Current.localDispatcher.Invoke(action);
         }
     }
 }

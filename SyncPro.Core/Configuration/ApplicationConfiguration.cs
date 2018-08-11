@@ -1,6 +1,8 @@
 ﻿namespace SyncPro.Configuration
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
     using System.Security;
 
     using Newtonsoft.Json;
@@ -17,7 +19,38 @@
     {
         public const string DefaultFileName = "applicationConfiguration.json";
 
+        public List<WindowConfiguration> WindowsConfigurations { get; set; }
+
         public EmailReportConfiguration EmailReporting { get; set; }
+
+        public WindowConfiguration GetOrCreateWindowConfig(
+            string id, 
+            Func<WindowConfiguration> createWindowConfig)
+        {
+            var config = this.WindowsConfigurations.FirstOrDefault(w => w.Id == id);
+            if (config == null)
+            {
+                config = createWindowConfig();
+                config.Id = id;
+                this.WindowsConfigurations.Add(config);
+            }
+
+            return config;
+        }
+
+        public ApplicationConfiguration()
+        {
+            this.WindowsConfigurations = new List<WindowConfiguration>();
+        }
+    }
+
+    public class WindowConfiguration
+    {
+        public string Id { get; set; }
+
+        public int Height { get; set; }
+
+        public int Width { get; set; }
     }
 
     public class EmailReportConfiguration

@@ -286,7 +286,6 @@
     <Compile Include="ViewModels\Adapters\WindowsFileSystemAdapterViewModel.cs" />
     <Compile Include="ViewModels\ThumbnailCache.cs" />
     <Compile Include="ViewModels\TabPageViewModelBase.cs" />
-    <Compile Include="WebBrowserWindow.cs" />
     <Page Include="Controls\AdapterErrorView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

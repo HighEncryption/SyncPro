@@ -20,41 +20,50 @@
             string localAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             Initialize(Path.Combine(localAppDataPath, "SyncPro"), testMode);
 
-            Global.IsInitialized = true;
+            IsInitialized = true;
         }
 
         // Test Hook
         internal static void Initialize(string root, bool isTestMode = false)
         {
-            Global.AppDataRoot = root;
+            AppDataRoot = root;
 
-            if (!Directory.Exists(Global.AppDataRoot))
+            if (!Directory.Exists(AppDataRoot))
             {
-                Directory.CreateDirectory(Global.AppDataRoot);
+                Directory.CreateDirectory(AppDataRoot);
             }
 
-            Global.AppConfigFilePath = Path.Combine(
+            AppConfigFilePath = Path.Combine(
                 root,
                 ApplicationConfiguration.DefaultFileName);
 
-            if (File.Exists(Global.AppConfigFilePath))
+            if (File.Exists(AppConfigFilePath))
             {
-                Global.AppConfig = JsonConvert.DeserializeObject<ApplicationConfiguration>(
-                    File.ReadAllText(Global.AppConfigFilePath));
+                AppConfig = JsonConvert.DeserializeObject<ApplicationConfiguration>(
+                    File.ReadAllText(AppConfigFilePath));
             }
             else
             {
-                Global.AppConfig = new ApplicationConfiguration();
+                AppConfig = new ApplicationConfiguration();
+                SaveAppConfig();
             }
 
             Logger.GlobalInitComplete(
                 Assembly.GetExecutingAssembly().Location,
-                Global.AppDataRoot);
+                AppDataRoot);
+        }
+
+        public static void SaveAppConfig()
+        {
+            string serializedConfig = JsonConvert.SerializeObject(
+                AppConfig,
+                Formatting.Indented);
+            File.WriteAllText(AppConfigFilePath, serializedConfig);
         }
 
         static Global()
         {
-            Global.SyncRelationships = new List<SyncRelationship>();
+            SyncRelationships = new List<SyncRelationship>();
         }
 
         public static string AppDataRoot { get; private set; }
