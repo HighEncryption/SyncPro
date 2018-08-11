@@ -19,6 +19,8 @@
     {
         public const string DefaultFileName = "applicationConfiguration.json";
 
+        public bool AcceptUsage { get; set; }
+
         public List<WindowConfiguration> WindowsConfigurations { get; set; }
 
         public EmailReportConfiguration EmailReporting { get; set; }

@@ -21,6 +21,7 @@
     using SyncPro.Data;
     using SyncPro.Runtime;
     using SyncPro.Tracing;
+    using SyncPro.UI.Dialogs;
     using SyncPro.UI.Framework.MVVM;
     using SyncPro.UI.Navigation;
     using SyncPro.UI.Navigation.ViewModels;
@@ -236,6 +237,8 @@
             {
                 this.localDispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(this.ShowMainWindow));
             }
+
+            this.localDispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(this.ShowFirstRunDialog));
         }
 
         private void ShowMainWindow()
@@ -244,6 +247,34 @@
             {
                 this.MainWindow = new MainWindow { DataContext = this.mainWindowViewModel };
                 this.MainWindow.Show();
+            }
+        }
+
+        private void ShowFirstRunDialog()
+        {
+            if (Global.AppConfig.AcceptUsage)
+            {
+                return;
+            }
+
+            FirstRunDialogViewModel viewModel = new FirstRunDialogViewModel();
+            var firstRunDialog = new FirstRunDialog()
+            {
+                DataContext = viewModel
+            };
+
+            //Current.localDispatcher.Invoke(() => { firstRunDialog.ShowDialog(); });
+            firstRunDialog.ShowDialog();
+
+            if (viewModel.AcceptUsage)
+            {
+                Global.AppConfig.AcceptUsage = true;
+                Global.SaveAppConfig();
+            }
+
+            if (!Global.AppConfig.AcceptUsage)
+            {
+                Application.Current.Shutdown();
             }
         }
 

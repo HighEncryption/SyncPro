@@ -164,6 +164,10 @@
     <Compile Include="Converters\SyncEntryChangedFlagsToVisibilityConverter.cs" />
     <Compile Include="DesignTimeData\MainWindowViewModel.cs" />
     <Compile Include="DesignTimeData\SyncRelationshipViewModel.cs" />
+    <Compile Include="Dialogs\FirstRunDialog.xaml.cs">
+      <DependentUpon>FirstRunDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\FirstRunDialogViewModel.cs" />
     <Compile Include="Dialogs\RestoreItemsDialog.xaml.cs">
       <DependentUpon>RestoreItemsDialog.xaml</DependentUpon>
     </Compile>
@@ -331,6 +335,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Converters.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialogs\FirstRunDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
