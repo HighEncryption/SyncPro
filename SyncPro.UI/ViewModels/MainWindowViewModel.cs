@@ -301,6 +301,7 @@
         {
             Logger.Info("Opening App Settings Window");
             var viewModel = new ApplicationSettingsViewModel();
+            viewModel.Load();
 
             ApplicationSettingsWindow appSettingsWindow = new ApplicationSettingsWindow()
             {

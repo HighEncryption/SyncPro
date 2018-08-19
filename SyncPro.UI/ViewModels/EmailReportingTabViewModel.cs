@@ -29,14 +29,13 @@
         {
         }
 
-
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private MailService mailService;
+        private bool enableEmail;
 
-        public MailService MailService
+        public bool EnableEmail
         {
-            get => this.mailService;
-            set => this.SetProperty(ref this.mailService, value);
+            get => this.enableEmail;
+            set => this.SetProperty(ref this.enableEmail, value);
         }
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -88,5 +87,53 @@
 
         public string ToAddresses { get; set; }
 
+        public void Load()
+        {
+            if (Global.AppConfig.EmailReporting == null || 
+                Global.AppConfig.EmailReporting.SmtpConfig == null)
+            {
+                this.EnableEmail = false;
+
+                // Nothing to load. Should we set fields to defaults?
+                return;
+            }
+
+            this.EnableEmail = true;
+
+            this.FromAddress = Global.AppConfig.EmailReporting.FromAddress;
+            this.ToAddresses = Global.AppConfig.EmailReporting.ToAddresses;
+
+            this.SmtpHost = Global.AppConfig.EmailReporting.SmtpConfig.Host;
+            this.SmtpPort = Global.AppConfig.EmailReporting.SmtpConfig.Port;
+            this.SmtpEnableSsl = Global.AppConfig.EmailReporting.SmtpConfig.EnableSsl;
+            this.SmtpUsername = Global.AppConfig.EmailReporting.SmtpConfig.Username;
+            this.SmtpPassword = Global.AppConfig.EmailReporting.SmtpConfig.Password;
+        }
+
+        public void Save()
+        {
+            if (this.EnableEmail == false)
+            {
+                Global.AppConfig.EmailReporting = null;
+                return;
+            }
+
+            if (Global.AppConfig.EmailReporting == null)
+            {
+                Global.AppConfig.EmailReporting = new EmailReportConfiguration();
+            }
+
+            Global.AppConfig.EmailReporting.FromAddress = this.FromAddress;
+            Global.AppConfig.EmailReporting.ToAddresses = this.ToAddresses;
+
+            Global.AppConfig.EmailReporting.SmtpConfig = new SmtpConfiguration
+            {
+                EnableSsl = this.SmtpEnableSsl,
+                Host = this.SmtpHost,
+                Port = this.SmtpPort,
+                Username = this.SmtpUsername,
+                Password = this.SmtpPassword
+            };
+        }
     }
 }

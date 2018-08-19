@@ -129,6 +129,9 @@
       <DependentUpon>AnalyzeJobStatusView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\BindableScrollViewer.cs" />
+    <Compile Include="Controls\EmailReportingTabView.xaml.cs">
+      <DependentUpon>EmailReportingTabView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\RestoreJobStatusView.xaml.cs">
       <DependentUpon>RestoreJobStatusView.xaml</DependentUpon>
     </Compile>
@@ -295,6 +298,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\AnalyzeJobStatusView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\EmailReportingTabView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

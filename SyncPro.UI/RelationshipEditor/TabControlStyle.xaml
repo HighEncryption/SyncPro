@@ -10,7 +10,7 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
-                        <Border BorderThickness="1,0,1,1" Name="Border1" BorderBrush="#d0d0d0" Margin="0,-12,0,0"
+                        <Border BorderThickness="1,1,1,1" Name="Border1" BorderBrush="#d0d0d0" Margin="0,-13,0,0"
                                         Grid.Row="1" Padding="4,16,4,4"
                                         Background="Transparent">
                             <Grid>

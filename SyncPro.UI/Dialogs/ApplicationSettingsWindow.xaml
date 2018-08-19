@@ -5,6 +5,7 @@
                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                          xmlns:mvvm="clr-namespace:SyncPro.UI.Framework.MVVM"
                          xmlns:viewModels="clr-namespace:SyncPro.UI.ViewModels"
+                         xmlns:controls="clr-namespace:SyncPro.UI.Controls"
                          mc:Ignorable="d"
                          ResizeMode="NoResize"
                          Title="SyncPro Settings" 
@@ -34,7 +35,7 @@
                     Margin="8">
             <TabControl.Resources>
                 <DataTemplate DataType="{x:Type viewModels:EmailReportingTabViewModel}">
-                    <Button Width="10" Height="10"></Button>
+                    <controls:EmailReportingTabView />
                 </DataTemplate>
                 <DataTemplate DataType="{x:Type viewModels:HelpTabViewModel}">
                     <Button Width="10" Height="10"></Button>

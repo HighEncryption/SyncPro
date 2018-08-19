@@ -6,6 +6,7 @@
     using System.Diagnostics;
     using System.Windows.Input;
 
+    using SyncPro.Configuration;
     using SyncPro.UI.Framework;
     using SyncPro.UI.Framework.MVVM;
 
@@ -26,8 +27,8 @@
 
         public TabPageViewModelBase CurrentTabPage
         {
-            get { return this.currentTabPage; }
-            set { this.SetProperty(ref this.currentTabPage, value); }
+            get => this.currentTabPage;
+            set => this.SetProperty(ref this.currentTabPage, value);
         }
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -44,8 +45,8 @@
 
         public HelpTabViewModel HelpPage
         {
-            get { return this.helpPage; }
-            set { this.SetProperty(ref this.helpPage, value); }
+            get => this.helpPage;
+            set => this.SetProperty(ref this.helpPage, value);
         }
 
         public ApplicationSettingsViewModel()
@@ -69,7 +70,9 @@
 
         public void Save()
         {
-            throw new NotImplementedException();
+            this.EmailReporting.Save();
+
+            Global.SaveAppConfig();
         }
         private void HandleClose(bool dialogResult)
         {
@@ -92,5 +95,10 @@
         public bool MustClose { get; set; }
 
         #endregion IRequestClose
+
+        public void Load()
+        {
+            this.EmailReporting.Load();
+        }
     }
 }
