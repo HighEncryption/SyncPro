@@ -18,6 +18,7 @@
     using SyncPro.Adapters.GoogleDrive;
     using SyncPro.Adapters.MicrosoftOneDrive;
     using SyncPro.Adapters.WindowsFileSystem;
+    using SyncPro.Counters;
     using SyncPro.Data;
     using SyncPro.Runtime;
     using SyncPro.Tracing;
@@ -84,6 +85,12 @@
             {
                 LogViewerHelper.LaunchLogViewer(null, false);
             }
+
+            // Start the counter manager before initializing the adapters in case the initialization
+            // causes any counters to be emitted.
+            CounterManager.Start();
+
+            CounterManager.LogCounter("AppStart", 1);
 
             AdapterRegistry.RegisterAdapter(
                 BackblazeB2Adapter.TargetTypeId,
@@ -160,6 +167,7 @@
                 app.notifyIcon.Dispose();
             }
 
+            CounterManager.Stop();
             Global.SaveAppConfig();
         }
 

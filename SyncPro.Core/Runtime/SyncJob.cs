@@ -34,7 +34,20 @@
         /// <summary>
         /// The unique Id of this sync job (unique within the relationship)
         /// </summary>
-        public int Id { get; set; }
+        public int Id
+        {
+            get
+            {
+                if (this.syncHistoryId == null)
+                {
+                    throw new InvalidOperationException();
+                }
+
+                return this.syncHistoryId.Value;
+            }
+
+            set => this.syncHistoryId = value;
+        }
 
         /// <summary>
         /// The analysis result indicating the items that are to be synchronized. 
@@ -136,6 +149,8 @@
             // Create a new sync history entry (except for analyze-only runs)
             this.CreateNewSyncJobHistory();
 
+            SyncJobContext.Current = new SyncJobContext(this);
+
             try
             {
                 if (this.AnalyzeResult.IsUpToDate)
@@ -177,6 +192,8 @@
                 {
                     Logger.LogException(e, "Failed to send report email.");
                 }
+
+                SyncJobContext.Reset();
             }
         }
 

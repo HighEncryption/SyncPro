@@ -78,6 +78,13 @@
     <Compile Include="Adapters\AdapterRegistration.cs" />
     <Compile Include="Adapters\AdapterRegistry.cs" />
     <Compile Include="Configuration\ApplicationConfiguration.cs" />
+    <Compile Include="Counters\CounterInstance.cs" />
+    <Compile Include="Counters\CounterManager.cs" />
+    <Compile Include="Counters\CounterType.cs" />
+    <Compile Include="Data\CounterDatabase.cs" />
+    <Compile Include="Data\CounterDimensionData.cs" />
+    <Compile Include="Data\CounterInstanceData.cs" />
+    <Compile Include="Data\CounterValueData.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="Runtime\AnalyzeJobProgressInfo.cs" />
     <Compile Include="Runtime\AnalyzeJobWorker.cs" />
@@ -91,6 +98,7 @@
     <Compile Include="Adapters\RestoreOnlyWindowsFileSystemAdapter.cs" />
     <Compile Include="Adapters\RestoreOnlyWindowsFileSystemAdapterConfiguration.cs" />
     <Compile Include="Runtime\RestoreJobProgressInfo.cs" />
+    <Compile Include="Runtime\SyncJobContext.cs" />
     <Compile Include="Utility\SecureStringConverter.cs" />
     <Compile Include="Utility\SecureStringToProtectedDataConverter.cs" />
     <Compile Include="Adapters\IChangeTracking.cs" />

@@ -15,6 +15,7 @@
     using Newtonsoft.Json.Linq;
 
     using SyncPro.Adapters.BackblazeB2.DataModel;
+    using SyncPro.Counters;
     using SyncPro.Tracing;
     using SyncPro.Utility;
 
@@ -498,6 +499,8 @@
         {
             LogRequest(request, client.BaseAddress);
 
+            LogApiCallCounter(request);
+
             HttpResponseMessage response = await client.SendAsync(request).ConfigureAwait(false);
             LogResponse(response);
 
@@ -525,6 +528,8 @@
 
                     // Dispose of the previous response before creating the new one
                     response.Dispose();
+
+                    LogApiCallCounter(newRequest);
 
                     response = await client.SendAsync(newRequest).ConfigureAwait(false);
                     LogResponse(response);
@@ -564,11 +569,13 @@
                     Encoding.UTF8.GetBytes(
                         this.accountId + ":" + this.applicationKey.GetDecrytped())));
 
+            LogApiCallCounter(request);
+
             using (HttpResponseMessage response = await this.httpClient.SendAsync(request).ConfigureAwait(false))
             {
                 await ThrowIfFatalResponse(response).ConfigureAwait(false);
 
-                JObject responseObject = 
+                JObject responseObject =  
                     await response.Content.ReadAsJObjectAsync().ConfigureAwait(false);
 
                 this.connectionInfo?.Dispose();
@@ -733,6 +740,18 @@
             {
                 Logger.Debug("   {0} = {1}", header.Key, header.Value);
             }
+        }
+
+        private static void LogApiCallCounter(HttpRequestMessage request)
+        {
+            string lastSegment = request.RequestUri.Segments.Last();
+
+            Pre.Assert(lastSegment.StartsWith("b2_"));
+
+            CounterManager.LogSyncJobCounter(
+                Constants.CounterNames.ApiCall,
+                1,
+                new CounterDimension(Constants.DimensionNames.ApiCallName, lastSegment));
         }
     }
 

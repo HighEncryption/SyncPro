@@ -55,6 +55,7 @@
   <ItemGroup>
     <Compile Include="CmdletCommon.cs" />
     <Compile Include="Commands\GetAnalyzeJob.cs" />
+    <Compile Include="Commands\GetCounter.cs" />
     <Compile Include="Commands\GetSyncEntry.cs" />
     <Compile Include="Commands\GetSyncHistory.cs" />
     <Compile Include="Commands\GetSyncHistoryEntry.cs" />

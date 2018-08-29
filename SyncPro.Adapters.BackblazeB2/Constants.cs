@@ -41,5 +41,16 @@
             public const string Public = "allPublic";
             public const string Private = "allPrivate";
         }
+
+        public static class CounterNames
+        {
+            public const string ApiCall = "BackblazeAdapterApiCall";
+        }
+
+        public static class DimensionNames
+        {
+            public const string ApiCallName = "ApiCallName";
+        }
+
     }
 }
