@@ -22,8 +22,8 @@
         private static BlockingCollection<CounterEmit> counterEmitQueue =
             new BlockingCollection<CounterEmit>();
 
-        private static Dictionary<string, CounterInstance> instanceByNameCache =
-            new Dictionary<string, CounterInstance>();
+        private static ConcurrentDictionary<string, CounterInstance> instanceByNameCache =
+            new ConcurrentDictionary<string, CounterInstance>();
 
         private static Task processingTask;
 
@@ -188,7 +188,7 @@
 
                     if (instance.CacheExpiryDateTime < now && !instance.Values.Any())
                     {
-                        instanceByNameCache.Remove(counterName);
+                        instanceByNameCache.TryRemove(counterName, out CounterInstance _);
                     }
                 }
 
@@ -239,7 +239,7 @@
 
                     // Add the newly created/retrieved counter instance to the cache
                     // TODO: Where does the TTL go???
-                    instanceByNameCache.Add(counterName, instance);
+                    instanceByNameCache.TryAdd(counterName, instance);
                 }
             }
 

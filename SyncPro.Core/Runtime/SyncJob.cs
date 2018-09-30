@@ -10,6 +10,7 @@
     using System.Threading.Tasks;
 
     using SyncPro.Adapters;
+    using SyncPro.Counters;
     using SyncPro.Data;
     using SyncPro.Tracing;
     using SyncPro.Utility;
@@ -645,6 +646,8 @@
                     if (task.Result)
                     {
                         Interlocked.Increment(ref this.filesCompleted);
+
+                        CounterManager.LogSyncJobCounter("SyncJob/FilesWritten", 1);
 
                         SyncHistoryEntryData historyEntry =
                             ctx.EntryUpdateInfo.CreateSyncHistoryEntryData();

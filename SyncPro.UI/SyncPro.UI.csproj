@@ -216,6 +216,7 @@
     <Compile Include="Navigation\MenuCommands\ClosePanelMenuCommand.cs" />
     <Compile Include="Navigation\MenuCommands\NavigationItemMenuCommand.cs" />
     <Compile Include="Navigation\MenuCommands\NewRelationshipMenuCommand.cs" />
+    <Compile Include="Navigation\MenuCommands\OpenFolderMenuCommand.cs" />
     <Compile Include="Navigation\MenuCommands\ReanalyzeMenuCommand.cs" />
     <Compile Include="Navigation\MenuCommands\RemoveRelationshipMenuCommand.cs" />
     <Compile Include="Navigation\MenuCommands\RestoreItemMenuCommand.cs" />

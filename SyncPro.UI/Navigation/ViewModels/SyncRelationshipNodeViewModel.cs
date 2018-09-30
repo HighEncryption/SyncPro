@@ -3,6 +3,7 @@ namespace SyncPro.UI.Navigation.ViewModels
     using System.Diagnostics;
     using System.Windows.Input;
 
+    using SyncPro.Adapters.WindowsFileSystem;
     using SyncPro.Runtime;
     using SyncPro.UI.Navigation.MenuCommands;
     using SyncPro.UI.ViewModels;
@@ -30,6 +31,18 @@ namespace SyncPro.UI.Navigation.ViewModels
             this.MenuCommands.Add(new RemoveRelationshipMenuCommand(relationship));
             this.MenuCommands.Add(new AnalyzeRelationshipMenuCommand(relationship));
             this.MenuCommands.Add(new BeginSyncMenuCommand(relationship));
+
+            if (this.Relationship.SyncSourceAdapter.AdapterBase is WindowsFileSystemAdapter)
+            {
+                this.MenuCommands.Add(
+                    new OpenFolderMenuCommand(this.Relationship.SyncSourceAdapter));
+            }
+
+            if (this.Relationship.SyncDestinationAdapter.AdapterBase is WindowsFileSystemAdapter)
+            {
+                this.MenuCommands.Add(
+                    new OpenFolderMenuCommand(this.Relationship.SyncDestinationAdapter));
+            }
 
             this.Relationship.PropertyChanged += (sender, args) =>
             {

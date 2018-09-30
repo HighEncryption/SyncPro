@@ -85,9 +85,9 @@
     {
         public long Sum { get; set; }
 
-        public uint Count { get; set; }
+        public int Count { get; set; }
 
-        public CounterValueSet(long sum, uint count)
+        public CounterValueSet(long sum, int count)
         {
             this.Sum = sum;
             this.Count = count;
