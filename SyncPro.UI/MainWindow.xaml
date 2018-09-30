@@ -425,7 +425,8 @@
                                          Visibility="{Binding Path=ShowProgress, Converter={StaticResource BooleanToVisibility}}"
                                          Value="{Binding Path=ProgressValue}"/>
 
-                            <Image Grid.Column="2" Source="{Binding Path=StatusIconImageSource, Converter={StaticResource NullImageConverter}}" Height="16" Margin="8,0,0,0"
+                            <Image Grid.Column="2" Source="{Binding Path=StatusIconImageSource, Converter={StaticResource NullImageConverter}}" 
+                                   Height="16" Margin="8,0,4,0"
                                    Visibility="{Binding Path=ShowStatusIcon, Converter={StaticResource BooleanToVisibilityCollapsed}}"/>
                         </Grid>
                     </HierarchicalDataTemplate>

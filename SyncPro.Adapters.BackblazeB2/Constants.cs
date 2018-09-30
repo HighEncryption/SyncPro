@@ -44,7 +44,7 @@
 
         public static class CounterNames
         {
-            public const string ApiCall = "BackblazeAdapterApiCall";
+            public const string ApiCall = "BackblazeAdapter/ApiCall";
         }
 
         public static class DimensionNames

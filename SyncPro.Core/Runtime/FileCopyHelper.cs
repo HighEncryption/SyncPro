@@ -10,6 +10,7 @@ namespace SyncPro.Runtime
 
     using SyncPro.Adapters;
     using SyncPro.Configuration;
+    using SyncPro.Counters;
 
     internal class FileCopyHelper
     {
@@ -79,15 +80,13 @@ namespace SyncPro.Runtime
 
                 if (this.EncryptionMode == EncryptionMode.Encrypt)
                 {
-                    short padding;
                     readStreamLength = this.updateInfo.Entry.OriginalSize;
-                    writeStreamLength = EncryptionManager.CalculateEncryptedFileSize(readStreamLength, out padding);
+                    writeStreamLength = EncryptionManager.CalculateEncryptedFileSize(readStreamLength, out short _);
                 }
                 else if (this.EncryptionMode == EncryptionMode.Decrypt)
                 {
-                    short padding;
                     readStreamLength = this.updateInfo.Entry.EncryptedSize;
-                    writeStreamLength = EncryptionManager.CalculateDecryptedFileSize(readStreamLength, out padding);
+                    writeStreamLength = EncryptionManager.CalculateDecryptedFileSize(readStreamLength, out short _);
                 }
 
                 fromStream = this.fromAdapter.GetReadStreamForEntry(this.updateInfo.Entry);
@@ -245,8 +244,13 @@ namespace SyncPro.Runtime
                     // Read data from the source adapter
                     int read = sourceStream.Read(buffer, 0, buffer.Length);
 
+                    CounterManager.LogSyncJobCounter(
+                        "SyncJob/BytesRead",
+                        read);
+
                     // Increment the total number of bytes read from the source adapter
                     readTotal += read;
+                    int bytesWritten;
 
                     if (read < buffer.Length)
                     {
@@ -256,14 +260,20 @@ namespace SyncPro.Runtime
 
                         if (this.encryptionManager != null)
                         {
-                            writtenTotal += this.encryptionManager.TransformFinalBlock(buffer, 0, read);
+                            bytesWritten = this.encryptionManager.TransformFinalBlock(buffer, 0, read);
                         }
                         else
                         {
                             destinationStream.Write(buffer, 0, read);
                             destinationStream.Flush();
-                            writtenTotal += buffer.Length;
+                            bytesWritten = buffer.Length;
                         }
+
+                        CounterManager.LogSyncJobCounter(
+                            "SyncJob/BytesWritten",
+                            read);
+
+                        writtenTotal += bytesWritten;
 
                         // Increment the total number of bytes written to the desination adapter
                         this.bytesCompleted += read;
@@ -281,13 +291,19 @@ namespace SyncPro.Runtime
                     // Write the data to the destination adapter
                     if (this.encryptionManager != null)
                     {
-                        writtenTotal += this.encryptionManager.TransformBlock(buffer, 0, read);
+                        bytesWritten = this.encryptionManager.TransformBlock(buffer, 0, read);
                     }
                     else
                     {
                         destinationStream.Write(buffer, 0, read);
-                        writtenTotal += buffer.Length;
+                        bytesWritten = buffer.Length;
                     }
+
+                    CounterManager.LogSyncJobCounter(
+                        "SyncJob/BytesWritten",
+                        read);
+
+                    writtenTotal += bytesWritten;
 
                     // Increment the total number of bytes written to the desination adapter
                     this.bytesCompleted += read;

@@ -56,11 +56,14 @@
     <Compile Include="CmdletCommon.cs" />
     <Compile Include="Commands\GetAnalyzeJob.cs" />
     <Compile Include="Commands\GetCounter.cs" />
+    <Compile Include="Commands\GetCounterValue.cs" />
     <Compile Include="Commands\GetSyncEntry.cs" />
     <Compile Include="Commands\GetSyncHistory.cs" />
     <Compile Include="Commands\GetSyncHistoryEntry.cs" />
     <Compile Include="Commands\GetSyncRelationship.cs" />
     <Compile Include="Commands\GetSyncJob.cs" />
+    <Compile Include="Commands\SyncProCounterInstance.cs" />
+    <Compile Include="Commands\SyncProCounterValue.cs" />
     <Compile Include="NoSelectedRelationshipException.cs" />
     <Compile Include="NotConnectedException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
