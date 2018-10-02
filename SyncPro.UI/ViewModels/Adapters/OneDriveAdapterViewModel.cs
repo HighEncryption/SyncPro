@@ -200,10 +200,13 @@
                     // We were directed back to the redirect URI. Extract the code from the query string
                     Dictionary<string, string> queryParametes = args.Uri.GetQueryParameters();
 
-                    authenticationResult = new AuthenticationResult()
+                    if (queryParametes.ContainsKey("code"))
                     {
-                        Code = queryParametes["code"]
-                    };
+                        authenticationResult = new AuthenticationResult()
+                        {
+                            Code = queryParametes["code"]
+                        };
+                    }
 
                     // All done. Close the window.
                     authWindow.Close();
@@ -295,32 +298,5 @@
         {
             return typeof(OneDriveAdapter);
         }
-    }
-
-    public class PlaceholderAdapterViewModel : SyncAdapterViewModel
-    {
-        public PlaceholderAdapterViewModel() 
-            : base(null)
-        {
-        }
-
-        public override void LoadContext()
-        {
-        }
-
-        public override void SaveContext()
-        {
-        }
-
-        public override Type GetAdapterType()
-        {
-            return null;
-        }
-
-        public override string DisplayName => "Select a provider...";
-
-        public override string ShortDisplayName => string.Empty;
-
-        public override string DestinationPath { get; set; }
     }
 }

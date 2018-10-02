@@ -481,6 +481,9 @@
 
                 this.CurrentToken = JsonConvert.DeserializeObject<TokenResponse>(responseContent);
 
+                // We just acquired a new token through a refresh, so update the acquire time accordingly.
+                this.CurrentToken.AcquireTime = DateTime.Now;
+
                 this.TokenRefreshed?.Invoke(this, new TokenRefreshedEventArgs { NewToken = this.CurrentToken });
             }
         }

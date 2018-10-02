@@ -50,6 +50,21 @@
             }
         }
 
+        public static void BreakIf(bool condition)
+        {
+            if (!condition)
+            {
+                return;
+            }
+
+#if DEBUG
+            if (Debugger.IsAttached)
+            {
+                Debugger.Break();
+            }
+#endif
+        }
+
         [ContractAnnotation("condition:false=>halt")]
         public static void Assert(bool condition)
         {

@@ -32,7 +32,8 @@
         public string Description { get; set; }
 
         /// <summary>
-        /// The date/time when the relationship was initially created
+        /// The date/time when the relationship was initially created. If this value is equal to
+        /// DateTime.MinValue, then the relationship has not been 'created' yet.
         /// </summary>
         public DateTime InitiallyCreatedUtc { get; set; }
 

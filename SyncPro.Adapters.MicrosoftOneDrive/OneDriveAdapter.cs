@@ -401,6 +401,12 @@
 
             // Create the OneDrive client, set the token refresh callback to save new tokens.
             await this.InitializeClient().ConfigureAwait(false);
+
+            if (this.Relationship.Configuration.InitiallyCreatedUtc != DateTime.MinValue)
+            {
+                Logger.Debug("OneDriveAdapter SignIn successful. Saving relationship configuration.");
+                await this.Relationship.SaveAsync().ConfigureAwait(false);
+            }
         }
 
         public async Task InitializeClient()

@@ -273,6 +273,7 @@
     <Compile Include="ViewModels\Adapters\BackblazeB2AdapterViewModel.cs" />
     <Compile Include="ViewModels\Adapters\GoogleDriveAdapterViewModel.cs" />
     <Compile Include="ViewModels\Adapters\OneDriveAdapterViewModel.cs" />
+    <Compile Include="ViewModels\Adapters\PlaceholderAdapterViewModel.cs" />
     <Compile Include="ViewModels\AnalyzeJobViewModel.cs" />
     <Compile Include="ViewModels\ApplicationSettingsViewModel.cs" />
     <Compile Include="ViewModels\ChangeMetrics.cs" />

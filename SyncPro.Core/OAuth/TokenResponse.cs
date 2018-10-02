@@ -71,6 +71,8 @@
 
         public TokenResponse DuplicateToken()
         {
+            Pre.BreakIf(this.AcquireTime == DateTime.MinValue);
+
             return new TokenResponse()
             {
                 TokenType = this.TokenType,
@@ -105,7 +107,7 @@
 
         public string GetRefreshTokenHash()
         {
-            var input = Encoding.ASCII.GetBytes(this.AccessToken);
+            var input = Encoding.ASCII.GetBytes(this.RefreshToken);
             using (var sha1 = new SHA1CryptoServiceProvider())
             {
                 var output = sha1.ComputeHash(input);
