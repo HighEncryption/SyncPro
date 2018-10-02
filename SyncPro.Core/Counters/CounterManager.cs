@@ -36,7 +36,7 @@
             Pre.Assert(folderPath != null, "folderPath != null");
             Directory.CreateDirectory(folderPath);
 
-            processingTask = Task.Run(async () => { await ProcessCounterEmitsMain(); });
+            processingTask = Task.Run(() => { ProcessCounterEmitsMain(); });
         }
 
         public static void Stop()
@@ -121,7 +121,7 @@
                 });
         }
 
-        private static async Task ProcessCounterEmitsMain()
+        private static void ProcessCounterEmitsMain()
         {
             Stopwatch lastFlushTime = Stopwatch.StartNew();
 
@@ -246,6 +246,8 @@
             long ts = Convert.ToInt64(Math.Floor(emit.Timestamp.Subtract(Epoch).TotalSeconds));
 
             CounterValueSet valueSet;
+
+            // Check if there is a valueSet for this particular timestamp. If not, add one
             if (!instance.Values.TryGetValue(ts, out valueSet))
             {
                 valueSet = new CounterValueSet(emit.Value, 1);

@@ -163,7 +163,7 @@
             string prefix, 
             string delimiter)
         {
-            ListFileNamesResponse response = await InternalListFileNamesAsync(
+            ListFileNamesResponse response = await this.InternalListFileNamesAsync(
                     bucketId,
                     prefix,
                     delimiter,
@@ -174,7 +174,7 @@
 
             while (!string.IsNullOrWhiteSpace(response.NextFileName))
             {
-                response = await InternalListFileNamesAsync(
+                response = await this.InternalListFileNamesAsync(
                         bucketId,
                         prefix,
                         delimiter,
@@ -243,7 +243,7 @@
 
             BackblazeB2FileUploadResponse uploadResponse;
 
-            HttpRequestMessage request = CreateRequestMessage(
+            HttpRequestMessage request = this.CreateRequestMessage(
                 HttpMethod.Post,
                 uploadUrlResponse.UploadUrl);
 
@@ -254,8 +254,8 @@
                     "Authorization",
                     uploadUrlResponse.AuthorizationToken);
 
-                // Add the B2 require headers
-                request.Headers.Add(Constants.Headers.FileName, fileName);
+                // Add the B2 require headers. Note that the filename needs to be URL encoded
+                request.Headers.Add(Constants.Headers.FileName, UrlEncode(fileName));
                 request.Headers.Add(Constants.Headers.ContentSha1, sha1Hash);
 
                 request.Content = new DelayedDisposeStreamContent(stream);
@@ -290,7 +290,7 @@
                     HttpMethod.Post,
                     new JsonBuilder()
                         .AddProperty("bucketId", bucketId)
-                        .AddProperty("fileName", filename)
+                        .AddProperty("fileName", UrlEncode(filename))
                         .AddProperty("contentType", "b2/x-auto")
                         .ToString());
 
@@ -449,7 +449,7 @@
         {
             UploadPartResponse uploadResponse;
 
-            HttpRequestMessage request = CreateRequestMessage(
+            HttpRequestMessage request = this.CreateRequestMessage(
                 HttpMethod.Post,
                 uploadUrl);
 
@@ -559,7 +559,7 @@
 
         private async Task AuthorizeAccount()
         {
-            HttpRequestMessage request = CreateRequestMessage(
+            HttpRequestMessage request = this.CreateRequestMessage(
                 HttpMethod.Get,
                 Constants.DefaultApiUrl + Constants.ApiAuthorizeAccountUrl);
 
@@ -611,7 +611,7 @@
                 throw new Exception("The connection information has not been initialized.");
             }
 
-            HttpRequestMessage request = CreateRequestMessage(
+            HttpRequestMessage request = this.CreateRequestMessage(
                 method,
                 this.connectionInfo.ApiUrl + urlPart);
 
@@ -659,6 +659,26 @@
             request.Headers.Add("UserAgent", this.userAgentString);
 
             return request;
+        }
+
+        private static string UrlEncode(string str)
+        {
+            if (str == "/")
+            {
+                return str;
+            }
+
+            return Uri.EscapeDataString(str);
+        }
+
+        private static string UrlDecode(string str)
+        {
+            if (str == "+")
+            {
+                return " ";
+            }
+
+            return Uri.UnescapeDataString(str);
         }
 
         private static void LogRequest(HttpRequestMessage request, Uri defaultBaseAddress)
@@ -744,14 +764,36 @@
 
         private static void LogApiCallCounter(HttpRequestMessage request)
         {
-            string lastSegment = request.RequestUri.Segments.Last();
+            // A backblaze API request should have the following formats:
+            // https://<domain>/b2api/v1/b2_authorize_account
+            // https://<domain>/b2api/v1/b2_upload_file/foo/bar
+            // We want to isolate the 'b2_' segment and extract the operation name
 
-            Pre.Assert(lastSegment.StartsWith("b2_"));
+            // Find the segment containing "b2api/"
+            var segments = request.RequestUri.Segments;
+            int idx = segments.IndexOf("b2api/", true);
+
+            if (idx < 0)
+            {
+                throw new Exception("Failed to locate 'b2api' segment in URI " + request.RequestUri);
+            }
+
+            // The op name will be 2 segments after the b2api/ segment. Ensure that it exists
+            if (segments.Length <= idx + 2)
+            {
+                throw new Exception("URI "+ request.RequestUri + " is not formatted correctly (idx=" + idx  + ")");
+            }
+
+            // Isoate the segment
+            string opNameSegment = segments[idx + 2];
+
+            // Ensure it starts with b2_ in case there is a strange call
+            Pre.Assert(opNameSegment.StartsWith("b2_"));
 
             CounterManager.LogSyncJobCounter(
                 Constants.CounterNames.ApiCall,
                 1,
-                new CounterDimension(Constants.DimensionNames.ApiCallName, lastSegment));
+                new CounterDimension(Constants.DimensionNames.ApiCallName, opNameSegment.Trim('/')));
         }
     }
 

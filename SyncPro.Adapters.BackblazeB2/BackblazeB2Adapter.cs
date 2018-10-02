@@ -10,6 +10,7 @@
     using SyncPro.Adapters.BackblazeB2.DataModel;
     using SyncPro.Data;
     using SyncPro.Runtime;
+    using SyncPro.Tracing;
 
     using File = SyncPro.Adapters.BackblazeB2.DataModel.File;
 
@@ -158,6 +159,12 @@
 
         public override void UpdateItem(EntryUpdateInfo updateInfo, SyncEntryChangedFlags changeFlags)
         {
+            if (updateInfo.Entry.Type == SyncEntryType.Directory)
+            {
+                Logger.Debug("Suppressing UpdateItem() call for Directory in BackblazeB2 adapter");
+                return;
+            }
+
             throw new NotImplementedException();
         }
 

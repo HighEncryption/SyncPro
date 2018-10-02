@@ -49,6 +49,7 @@
     <Reference Include="System.Net.Http" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Constants.cs" />
     <Compile Include="DataModel\DeletedFacet.cs" />
     <Compile Include="DataModel\Drive.cs" />
     <Compile Include="DataModel\FileFacet.cs" />

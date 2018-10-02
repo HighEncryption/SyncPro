@@ -81,7 +81,7 @@
         }
     }
 
-    public struct CounterValueSet
+    public class CounterValueSet
     {
         public long Sum { get; set; }
 

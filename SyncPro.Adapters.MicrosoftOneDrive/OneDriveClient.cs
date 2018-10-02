@@ -14,6 +14,7 @@
     using Newtonsoft.Json.Linq;
 
     using SyncPro.Adapters.MicrosoftOneDrive.DataModel;
+    using SyncPro.Counters;
     using SyncPro.OAuth;
     using SyncPro.Tracing;
 
@@ -208,6 +209,13 @@
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, requestUri);
             request.Content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
+            CounterManager.LogSyncJobCounter(
+                Constants.CounterNames.ApiCall,
+                1,
+                new CounterDimension(
+                    Constants.DimensionNames.OperationName,
+                    "CreateFolder"));
+
             HttpResponseMessage response = await this.SendOneDriveRequest(request).ConfigureAwait(false);
 
             return await response.Content.ReadAsJsonAsync<Item>().ConfigureAwait(false);
@@ -227,6 +235,13 @@
 
         private async Task<OneDriveResponse<T>> GetOneDriveItem<T>(string requestUri)
         {
+            CounterManager.LogSyncJobCounter(
+                Constants.CounterNames.ApiCall,
+                1,
+                new CounterDimension(
+                    Constants.DimensionNames.OperationName,
+                    "GetItem"));
+
             // Send the request to OneDrive and get the response.
             var response = await this.SendOneDriveRequest(new HttpRequestMessage(HttpMethod.Get, requestUri)).ConfigureAwait(false);
 
@@ -239,6 +254,13 @@
 
         private async Task<OneDriveResponse<T>> GetOneDriveItemSet<T>(string requestUri)
         {
+            CounterManager.LogSyncJobCounter(
+                Constants.CounterNames.ApiCall,
+                1,
+                new CounterDimension(
+                    Constants.DimensionNames.OperationName,
+                    "GetItemSet"));
+
             // Send the request to OneDrive and get the response.
             var response = await this.SendOneDriveRequest(new HttpRequestMessage(HttpMethod.Get, requestUri)).ConfigureAwait(false);
 
@@ -584,6 +606,13 @@
                 return;
             }
 
+            CounterManager.LogSyncJobCounter(
+                Constants.CounterNames.ApiCall,
+                1,
+                new CounterDimension(
+                    Constants.DimensionNames.OperationName,
+                    "CancelUploadSession"));
+
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, session.UploadUrl);
             HttpResponseMessage response = await this.SendOneDriveRequest(request).ConfigureAwait(false);
 
@@ -653,6 +682,13 @@
                 Content = requestContent
             };
 
+            CounterManager.LogSyncJobCounter(
+                Constants.CounterNames.ApiCall,
+                1,
+                new CounterDimension(
+                    Constants.DimensionNames.OperationName,
+                    "CreateItem"));
+
             var response = await this.SendOneDriveRequest(request).ConfigureAwait(false);
 
             // Request was successful. Read the content returned.
@@ -688,6 +724,13 @@
             HttpRequestMessage request = new HttpRequestMessage(
                 HttpMethod.Post, 
                 string.Format("/v1.0/drive/items/{0}:/{1}:/upload.createSession", parentItemId, HttpUtility.UrlEncode(name)));
+
+            CounterManager.LogSyncJobCounter(
+                Constants.CounterNames.ApiCall,
+                1,
+                new CounterDimension(
+                    Constants.DimensionNames.OperationName,
+                    "CreateUploadSession"));
 
             HttpResponseMessage response = await this.SendOneDriveRequest(request).ConfigureAwait(false);
 
@@ -737,6 +780,13 @@
                 offset + fragmentBuffer.Length - 1,
                 uploadSession.Length);
 
+            CounterManager.LogSyncJobCounter(
+                Constants.CounterNames.ApiCall,
+                1,
+                new CounterDimension(
+                    Constants.DimensionNames.OperationName,
+                    "SendUploadFragment"));
+
             var response = await this.SendOneDriveRequest(request).ConfigureAwait(false);
 
             if (!response.IsSuccessStatusCode)
@@ -759,6 +809,13 @@
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, downloadUri);
             request.Headers.Range = new RangeHeaderValue(offset * length, ((offset + 1) * length) - 1);
 
+            CounterManager.LogSyncJobCounter(
+                Constants.CounterNames.ApiCall,
+                1,
+                new CounterDimension(
+                    Constants.DimensionNames.OperationName,
+                    "DownloadFileFragment"));
+
             var response = await this.oneDriveHttpClient.SendAsync(request).ConfigureAwait(false);
 
             if (!response.IsSuccessStatusCode)
@@ -772,6 +829,13 @@
         public async Task<Uri> GetDownloadUriForItem(string id)
         {
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, "/v1.0/drive/items/" + id + "/content");
+
+            CounterManager.LogSyncJobCounter(
+                Constants.CounterNames.ApiCall,
+                1,
+                new CounterDimension(
+                    Constants.DimensionNames.OperationName,
+                    "GetDownloadUriForItem"));
 
             var response = await this.SendOneDriveRequest(request, this.oneDriveHttpClientNoRedirect).ConfigureAwait(false);
 

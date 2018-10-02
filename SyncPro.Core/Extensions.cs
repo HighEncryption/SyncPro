@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.Contracts;
     using System.IO;
     using System.Linq;
     using System.Net.Http;
@@ -102,6 +103,23 @@
             }
 
             return set;
+        }
+    }
+
+    public static class StringArrayExtensions
+    {
+        [Pure]
+        public static int IndexOf(this string[] array, string s, bool ignoreCase)
+        {
+            for(int i = 0; i < array.Length; i++)
+            {
+                if (string.Equals(array[i], s, StringComparison.OrdinalIgnoreCase))
+                {
+                    return i;
+                }
+            }
+
+            return -1;
         }
     }
 
