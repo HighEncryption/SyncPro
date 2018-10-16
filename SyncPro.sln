@@ -43,6 +43,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "SyncPro.Setup", "SyncPro.Setup\SyncPro.Setup.wixproj", "{E4434DFB-16A4-4F18-872D-00F51AA4941C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SyncPro.Adapters.MicrosoftAzureStorage", "SyncPro.Adapters.MicrosoftAzureStorage\SyncPro.Adapters.MicrosoftAzureStorage.csproj", "{F7B58A03-BD60-4E2F-8876-4A34A56B0D5B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -169,6 +171,14 @@ Global
 		{E4434DFB-16A4-4F18-872D-00F51AA4941C}.Release|Any CPU.ActiveCfg = Release|x86
 		{E4434DFB-16A4-4F18-872D-00F51AA4941C}.Release|x86.ActiveCfg = Release|x86
 		{E4434DFB-16A4-4F18-872D-00F51AA4941C}.Release|x86.Build.0 = Release|x86
+		{F7B58A03-BD60-4E2F-8876-4A34A56B0D5B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F7B58A03-BD60-4E2F-8876-4A34A56B0D5B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F7B58A03-BD60-4E2F-8876-4A34A56B0D5B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{F7B58A03-BD60-4E2F-8876-4A34A56B0D5B}.Debug|x86.Build.0 = Debug|Any CPU
+		{F7B58A03-BD60-4E2F-8876-4A34A56B0D5B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F7B58A03-BD60-4E2F-8876-4A34A56B0D5B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F7B58A03-BD60-4E2F-8876-4A34A56B0D5B}.Release|x86.ActiveCfg = Release|Any CPU
+		{F7B58A03-BD60-4E2F-8876-4A34A56B0D5B}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

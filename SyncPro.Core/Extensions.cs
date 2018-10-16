@@ -9,6 +9,7 @@
     using System.Text;
     using System.Threading.Tasks;
     using System.Web;
+    using System.Xml.Serialization;
 
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
@@ -24,6 +25,15 @@
             }
 
             return default(TValue);
+        }
+
+        public static void AddIfValueNotNullOrWhitespace<TKey>(this Dictionary<TKey, string> dictionary, TKey key,
+            string value)
+        {
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                dictionary.Add(key, value);
+            }
         }
     }
 
@@ -42,6 +52,11 @@
                 .Split('&')
                 .Select(e => e.Split('='))
                 .ToDictionary(e => e[0], e => HttpUtility.UrlDecode(e[1]), StringComparer.OrdinalIgnoreCase);
+        }
+
+        public static string ToQueryParameters(this Dictionary<string, string> dictionary)
+        {
+            return string.Join("&", dictionary.Select(p => string.Format("{0}={1}", p.Key, p.Value)));
         }
 
         public static Uri ReplaceQueryParameterIfExists(this Uri uri, string name, string value)
@@ -156,6 +171,17 @@
             using (var stream = await content.ReadAsStreamAsync().ConfigureAwait(false))
             {
                 return JObject.Load(new JsonTextReader(new StreamReader(stream)));
+            }
+        }
+
+        public static async Task<T> ReadAsXmlObjectsync<T>(this HttpContent content)
+        {
+            using (var stream = await content.ReadAsStreamAsync().ConfigureAwait(false))
+            //using (XmlReader reader = XmlReader.Create(stream))
+            {
+                XmlSerializer serializer = new XmlSerializer(typeof(T));
+
+                return (T) serializer.Deserialize(stream);
             }
         }
     }

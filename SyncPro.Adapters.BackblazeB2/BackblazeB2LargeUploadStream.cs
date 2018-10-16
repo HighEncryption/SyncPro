@@ -21,7 +21,7 @@ namespace SyncPro.Adapters.BackblazeB2
             this.Session = session;
         }
 
-        protected override void UploadPart(byte[] partBuffer, long partOffset)
+        protected override void UploadPart(byte[] partBuffer, long partOffset, long partIndex)
         {
             // A sha1 hash needs to be sent for each part that is uploaded. Because the part size is small (less
             // than 100MB) and the entire payload is loaded into memory (in the partBuffer array), computing the

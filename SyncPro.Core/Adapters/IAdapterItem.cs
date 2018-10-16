@@ -53,6 +53,9 @@
         /// </remarks>
         string FullName { get; }
 
+        /// <summary>
+        /// The size of the file, in bytes.
+        /// </summary>
         long Size { get; }
 
         /// <summary>
@@ -65,8 +68,14 @@
         /// </summary>
         DateTime ModifiedTimeUtc { get; }
 
+        /// <summary>
+        /// The SHA1 hash of the file content.
+        /// </summary>
         byte[] Sha1Hash { get; }
 
+        /// <summary>
+        /// The MD5 hash of the file content.
+        /// </summary>
         byte[] Md5Hash { get; }
 
         /// <summary>

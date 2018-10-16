@@ -16,6 +16,7 @@
     using SyncPro.Adapters;
     using SyncPro.Adapters.BackblazeB2;
     using SyncPro.Adapters.GoogleDrive;
+    using SyncPro.Adapters.MicrosoftAzureStorage;
     using SyncPro.Adapters.MicrosoftOneDrive;
     using SyncPro.Adapters.WindowsFileSystem;
     using SyncPro.Counters;
@@ -111,6 +112,11 @@
                 WindowsFileSystemAdapter.TargetTypeId,
                 typeof(WindowsFileSystemAdapter),
                 typeof(WindowsFileSystemAdapterConfiguration));
+
+            AdapterRegistry.RegisterAdapter(
+                AzureStorageAdapter.TargetTypeId,
+                typeof(AzureStorageAdapter),
+                typeof(AzureStorageAdapterConfiguration));
 
             // Enable property validation logging if trying to debug validation problems
             // LoggerExtensions.LogPropertyValidation = true;

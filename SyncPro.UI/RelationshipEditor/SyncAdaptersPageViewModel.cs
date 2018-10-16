@@ -14,11 +14,11 @@
             : base(editorViewModel)
         {
             //this.SyncAdapters.Add(AmazonS3SyncTargetViewModel.CreateFromRelationship(this.EditorViewModel.SyncRelationship, isSourceAdapter));
-            //this.SyncAdapters.Add(AzureStorageSyncTargetViewModel.CreateFromRelationship(this.EditorViewModel.SyncRelationship, isSourceAdapter));
             this.SyncAdapters.Add(WindowsFileSystemAdapterViewModel.CreateFromRelationship(this.EditorViewModel.Relationship, isSourceAdapter));
             this.SyncAdapters.Add(OneDriveAdapterViewModel.CreateFromRelationship(this.EditorViewModel.Relationship, isSourceAdapter));
             this.SyncAdapters.Add(GoogleDriveAdapterViewModel.CreateFromRelationship(this.EditorViewModel.Relationship, isSourceAdapter));
             this.SyncAdapters.Add(BackblazeB2AdapterViewModel.CreateFromRelationship(this.EditorViewModel.Relationship, isSourceAdapter));
+            this.SyncAdapters.Add(MicrosoftAzureStorageAdapterViewModel.CreateFromRelationship(this.EditorViewModel.Relationship, isSourceAdapter));
         }
 
         private ObservableCollection<ISyncTargetViewModel> syncAdapters;

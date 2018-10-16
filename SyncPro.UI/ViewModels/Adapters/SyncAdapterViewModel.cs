@@ -5,6 +5,7 @@
     using SyncPro.Adapters;
     using SyncPro.Adapters.BackblazeB2;
     using SyncPro.Adapters.GoogleDrive;
+    using SyncPro.Adapters.MicrosoftAzureStorage;
     using SyncPro.Adapters.MicrosoftOneDrive;
     using SyncPro.Adapters.WindowsFileSystem;
     using SyncPro.Runtime;
@@ -77,6 +78,12 @@
             {
                 return new BackblazeB2AdapterViewModel(
                     new BackblazeB2Adapter(relationship));
+            }
+
+            if (typeof(TAdapter) == typeof(MicrosoftAzureStorageAdapterViewModel))
+            {
+                return new MicrosoftAzureStorageAdapterViewModel(
+                    new AzureStorageAdapter(relationship));
             }
 
             throw new NotImplementedException();

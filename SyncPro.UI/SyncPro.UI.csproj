@@ -272,6 +272,7 @@
     <Compile Include="Utility\FileInfoCache.cs" />
     <Compile Include="ViewModels\Adapters\BackblazeB2AdapterViewModel.cs" />
     <Compile Include="ViewModels\Adapters\GoogleDriveAdapterViewModel.cs" />
+    <Compile Include="ViewModels\Adapters\MicrosoftAzureStorageAdapterViewModel.cs" />
     <Compile Include="ViewModels\Adapters\OneDriveAdapterViewModel.cs" />
     <Compile Include="ViewModels\Adapters\PlaceholderAdapterViewModel.cs" />
     <Compile Include="ViewModels\AnalyzeJobViewModel.cs" />
@@ -537,6 +538,10 @@
     <ProjectReference Include="..\SyncPro.Adapters.GoogleDrive\SyncPro.Adapters.GoogleDrive.csproj">
       <Project>{cb8d31b8-f673-446f-b2b1-2050d89e4b74}</Project>
       <Name>SyncPro.Adapters.GoogleDrive</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SyncPro.Adapters.MicrosoftAzureStorage\SyncPro.Adapters.MicrosoftAzureStorage.csproj">
+      <Project>{f7b58a03-bd60-4e2f-8876-4a34a56b0d5b}</Project>
+      <Name>SyncPro.Adapters.MicrosoftAzureStorage</Name>
     </ProjectReference>
     <ProjectReference Include="..\SyncPro.Adapters.MicrosoftOneDrive\SyncPro.Adapters.MicrosoftOneDrive.csproj">
       <Project>{dd9793a5-ea69-4a43-9907-48f6b58cb151}</Project>

@@ -74,6 +74,7 @@
   </Choose>
   <ItemGroup>
     <Compile Include="AdapterTestsBase.cs" />
+    <Compile Include="AzureStorageTests.cs" />
     <Compile Include="BackblazeB2AccountInfo.cs" />
     <Compile Include="BackblazeB2SyncTests.cs" />
     <Compile Include="ComponentTests.cs" />
@@ -104,6 +105,10 @@
     <ProjectReference Include="..\SyncPro.Adapters.GoogleDrive\SyncPro.Adapters.GoogleDrive.csproj">
       <Project>{cb8d31b8-f673-446f-b2b1-2050d89e4b74}</Project>
       <Name>SyncPro.Adapters.GoogleDrive</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SyncPro.Adapters.MicrosoftAzureStorage\SyncPro.Adapters.MicrosoftAzureStorage.csproj">
+      <Project>{F7B58A03-BD60-4E2F-8876-4A34A56B0D5B}</Project>
+      <Name>SyncPro.Adapters.MicrosoftAzureStorage</Name>
     </ProjectReference>
     <ProjectReference Include="..\SyncPro.Adapters.MicrosoftOneDrive\SyncPro.Adapters.MicrosoftOneDrive.csproj">
       <Project>{dd9793a5-ea69-4a43-9907-48f6b58cb151}</Project>

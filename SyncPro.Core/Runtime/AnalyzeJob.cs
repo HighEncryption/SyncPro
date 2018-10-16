@@ -61,7 +61,7 @@ namespace SyncPro.Runtime
                     this.AnalyzeResult.IsComplete = true;
                 }
 
-                this.ProgressChanged(
+                this.ProgressChanged?.Invoke(
                     this, 
                     new AnalyzeJobProgressInfo(
                         "Analysis Complete",

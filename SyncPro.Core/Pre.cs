@@ -8,6 +8,8 @@
     public static class Pre
     {
         [DebuggerStepThrough]
+        [ContractAnnotation("arg:null=>halt")]
+
         public static void ThrowIfArgumentNull(object arg, string name)
         {
             if (arg == null)

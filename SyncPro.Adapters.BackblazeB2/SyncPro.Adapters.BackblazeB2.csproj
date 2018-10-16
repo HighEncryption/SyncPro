@@ -59,7 +59,6 @@
     <Compile Include="BackblazeB2UploadStream.cs" />
     <Compile Include="BackblazeConnectionInfo.cs" />
     <Compile Include="BackblazeErrorResponse.cs" />
-    <Compile Include="BufferedUploadStream.cs" />
     <Compile Include="DataModel\B2ActionToFileTypeConverter.cs" />
     <Compile Include="DataModel\CancelLargeFileResponse.cs" />
     <Compile Include="Constants.cs" />

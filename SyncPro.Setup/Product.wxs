@@ -49,6 +49,8 @@
       <ComponentRef Id="SyncPro_Adapters_GoogleDrive_pdb_component" />
       <ComponentRef Id="SyncPro_Adapters_MicrosoftOneDrive_dll_component" />
       <ComponentRef Id="SyncPro_Adapters_MicrosoftOneDrive_pdb_component" />
+      <ComponentRef Id="SyncPro_Adapters_MicrosoftAzureStorage_dll_component" />
+      <ComponentRef Id="SyncPro_Adapters_MicrosoftAzureStorage_pdb_component" />
       <ComponentRef Id="SyncPro_Adapters_WindowsFileSystem_dll_component" />
       <ComponentRef Id="SyncPro_Adapters_WindowsFileSystem_pdb_component" />
       <ComponentRef Id="SyncPro_Certificates_dll_component" />
@@ -188,6 +190,18 @@
                      Guid="d732dd35-6380-4b19-90f0-45f8db3904e3">
             <File Id="SyncPro_Adapters_MicrosoftOneDrive_pdb"
                   Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Adapters.MicrosoftOneDrive.pdb"
+                  KeyPath="yes" />
+          </Component>
+          <Component Id="SyncPro_Adapters_MicrosoftAzureStorage_dll_component"
+                     Guid="561e4e04-2873-4ae5-a465-f563397b858a">
+            <File Id="SyncPro_Adapters_MicrosoftAzureStorage_dll"
+                  Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Adapters.MicrosoftAzureStorage.dll"
+                  KeyPath="yes" />
+          </Component>
+          <Component Id="SyncPro_Adapters_MicrosoftAzureStorage_pdb_component"
+                     Guid="95419411-071a-4c64-8ea1-c859b853842d">
+            <File Id="SyncPro_Adapters_MicrosoftAzureStorage_pdb"
+                  Source="$(var.ProjectDir)..\SyncPro.UI\bin\$(var.Configuration)\SyncPro.Adapters.MicrosoftAzureStorage.pdb"
                   KeyPath="yes" />
           </Component>
           <Component Id="SyncPro_Adapters_WindowsFileSystem_dll_component"

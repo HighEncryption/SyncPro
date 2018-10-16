@@ -1,4 +1,4 @@
-namespace SyncPro.Adapters.BackblazeB2
+namespace SyncPro.Adapters
 {
     using System;
     using System.Collections.Generic;
@@ -27,8 +27,11 @@ namespace SyncPro.Adapters.BackblazeB2
         // The number of bytes remaining to be sent
         private long bytesRemaining;
 
-        // The upload part offset. Each part uploaded will increment this value by 1.
+        // The upload part offset. Each part uploaded will increment this value by the size of the part.
         private long partOffset;
+
+        // The index of the part. Each part upload will increment this value by 1.
+        private long partIndex;
 
         // The size of the part to upload. Must be a multiple of 320KiB per the OneDrive documentation.
         private readonly long partSize;
@@ -69,14 +72,30 @@ namespace SyncPro.Adapters.BackblazeB2
                 byte[] partBuffer = this.AccumulateBuffers();
 
                 // Call the specific method for uploading the part
-                this.UploadPart(partBuffer, this.partOffset);
+                this.UploadPart(partBuffer, this.partOffset, this.partIndex);
 
+                this.partIndex++;
                 this.partOffset += this.partSize;
                 this.bytesRemaining -= partBuffer.Length;
             }
         }
 
-        protected abstract void UploadPart(byte[] partBuffer, long partOffset);
+        protected abstract void UploadPart(byte[] partBuffer, long partOffset, long partIndex);
+
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            throw new NotSupportedException();
+        }
+
+        public override long Seek(long offset, SeekOrigin origin)
+        {
+            throw new NotSupportedException();
+        }
+
+        public override void SetLength(long value)
+        {
+            throw new NotSupportedException();
+        }
 
         protected bool ArePartsAvailable()
         {

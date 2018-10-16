@@ -65,18 +65,21 @@ namespace SyncPro.Adapters.MicrosoftOneDrive
                         this.currentFragmentOffset, 
                         fragmentLength).Result;
 
-                    this.currentBuffer = response.Content.ReadAsByteArrayAsync().Result;
-
-                    this.currentFragmentOffset++;
-                    this.currentBufferOffset = 0;
-
-                    var rangeHeader = response.Content.Headers.ContentRange;
-                    Pre.Assert(rangeHeader.To != null, "rangeHeader.To != null");
-                    Pre.Assert(rangeHeader.Length != null, "rangeHeader.Length != null");
-
-                    if (rangeHeader.To.Value == rangeHeader.Length - 1)
+                    using (response)
                     {
-                        this.isFinalBuffer = true;
+                        this.currentBuffer = response.Content.ReadAsByteArrayAsync().Result;
+
+                        this.currentFragmentOffset++;
+                        this.currentBufferOffset = 0;
+
+                        var rangeHeader = response.Content.Headers.ContentRange;
+                        Pre.Assert(rangeHeader.To != null, "rangeHeader.To != null");
+                        Pre.Assert(rangeHeader.Length != null, "rangeHeader.Length != null");
+
+                        if (rangeHeader.To.Value == rangeHeader.Length - 1)
+                        {
+                            this.isFinalBuffer = true;
+                        }
                     }
                 }
 

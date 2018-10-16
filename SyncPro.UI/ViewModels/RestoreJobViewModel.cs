@@ -39,14 +39,14 @@ namespace SyncPro.UI.ViewModels
             set { this.SetProperty(ref this.timeRemaining, value); }
         }
 
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private double progressValue;
+        //[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        //private double progressValue;
 
-        public double ProgressValue
-        {
-            get { return this.progressValue; }
-            set { this.SetProperty(ref this.progressValue, value); }
-        }
+        //public double ProgressValue
+        //{
+        //    get { return this.progressValue; }
+        //    set { this.SetProperty(ref this.progressValue, value); }
+        //}
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private int filesCompleted;

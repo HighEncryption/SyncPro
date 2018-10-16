@@ -77,6 +77,7 @@
     <Compile Include="Adapters\AdapterItem.cs" />
     <Compile Include="Adapters\AdapterRegistration.cs" />
     <Compile Include="Adapters\AdapterRegistry.cs" />
+    <Compile Include="Adapters\BufferedUploadStream.cs" />
     <Compile Include="Configuration\ApplicationConfiguration.cs" />
     <Compile Include="Counters\CounterInstance.cs" />
     <Compile Include="Counters\CounterManager.cs" />
@@ -85,6 +86,7 @@
     <Compile Include="Data\CounterDimensionData.cs" />
     <Compile Include="Data\CounterInstanceData.cs" />
     <Compile Include="Data\CounterValueData.cs" />
+    <Compile Include="Data\SyncEntryAdapterData.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="Runtime\AnalyzeJobProgressInfo.cs" />
     <Compile Include="Runtime\AnalyzeJobWorker.cs" />
