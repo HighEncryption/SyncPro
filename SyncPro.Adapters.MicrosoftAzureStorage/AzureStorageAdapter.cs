@@ -153,40 +153,76 @@
 
         public override IEnumerable<IAdapterItem> GetAdapterItems(IAdapterItem folder)
         {
-            string prefix = null; // = folder.FullName;
+            // When querying items in the root of the container, folder will have a name of '{containerName}', and when
+            // querying items in a folder other than the root, folder will have a have a name of
+            // '{containerName}/{folder}'. We will need to reformat this in order to property query storage.
+            string prefix = null; 
 
+            // Start by triming off the container name from the front of the folder name
             string relName = folder.FullName.Substring(this.TypedConfiguration.ContainerName.Length);
+
+            // If the folder name is empty, then we are querying the container, so leave the prefix empty.
             if (!string.IsNullOrWhiteSpace(relName))
             {
                 prefix = relName;
 
+                // Add a '/' character to the end of the folder name if needed
                 if (!prefix.EndsWith(this.PathSeparator))
                 {
                     prefix += this.PathSeparator;
                 }
+
+                // Ensure that the folder name does NOT start with a '/'.
+                prefix = prefix.TrimStart('/');
             }
 
-            ConfiguredTaskAwaitable<IList<Blob>> listBlobsTask = this.storageClient.ListBlobsAsync(
+            ConfiguredTaskAwaitable<IList<ContainerItem>> listBlobsTask = this.storageClient.ListBlobsAsync(
                     this.TypedConfiguration.ContainerName,
                     this.PathSeparator,
                     prefix)
                 .ConfigureAwait(false);
 
-            IList<Blob> result = listBlobsTask.GetAwaiter().GetResult();
+            IList<ContainerItem> result = listBlobsTask.GetAwaiter().GetResult();
 
-            foreach (Blob blob in result)
+            foreach (ContainerItem item in result)
             {
-                string fullPath = string.Format("{0}/{1}", folder.FullName, blob.Name);
+                // The item name returned by storage has the prefix at the beginning of the name, which
+                // we will need to trim off
+                string itemName = prefix != null ? item.Name.Substring(prefix.Length) : item.Name;
+
+                string fullPath = string.Format("{0}/{1}", folder.FullName, itemName);
 
                 string computedId;
                 using (var sha256 = new SHA256CryptoServiceProvider())
                 {
                     var hashBytes = sha256.ComputeHash(Encoding.Unicode.GetBytes(fullPath));
-                    computedId = BitConverter.ToString(hashBytes).Replace("-", "");
+                    //computedId = BitConverter.ToString(hashBytes).Replace("-", "");
+                    computedId = Convert.ToBase64String(hashBytes);
                 }
 
+                BlobPrefix blobPrefix = item as BlobPrefix;
+                if (blobPrefix != null)
+                {
+                    // Azure returns the blob prefix with a '/' character on the end. We need to trim this off
+                    // prior to returning it to the caller.
+                    yield return new AzureStorageAdapterItem(
+                        itemName.TrimEnd('/'),
+                        folder,
+                        this,
+                        SyncAdapterItemType.Directory,
+                        computedId,
+                        0,
+                        DateTime.Now, 
+                        DateTime.Now);
+
+                    continue;
+                }
+
+                Blob blob = item as Blob;
+                Pre.Assert(blob != null, "blob != null");
+
                 yield return new AzureStorageAdapterItem(
-                    blob.Name,
+                    itemName,
                     folder,
                     this,
                     SyncAdapterItemType.File,
@@ -208,17 +244,11 @@
 
             SyncEntry entry = new SyncEntry
             {
-                //CreationDateTimeUtc = item.CreatedDateTime.ToUniversalTime(),
                 Name = item.Name,
                 AdapterEntries = new List<SyncEntryAdapterData>(),
                 CreationDateTimeUtc = adapterItem.CreationTimeUtc,
                 ModifiedDateTimeUtc = adapterItem.ModifiedTimeUtc
             };
-
-            //if (item.ModifiedTimeUtc.HasValue)
-            //{
-            //    entry.ModifiedDateTimeUtc = item.LastModifiedDateTime.Value;
-            //}
 
             if (parentEntry != null)
             {

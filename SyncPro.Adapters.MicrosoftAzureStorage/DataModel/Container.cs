@@ -46,10 +46,24 @@
         }
     }
 
-    public class Blob
+    public abstract class ContainerItem
     {
         public string Name { get; set; }
+    }
 
+    public class BlobPrefix : ContainerItem
+    {
+        internal static BlobPrefix FromInternalResult(Internal.BlobPrefix b)
+        {
+            return new BlobPrefix
+            {
+                Name = b.Name,
+            };
+        }
+    }
+
+    public class Blob : ContainerItem
+    {
         public DateTime Created { get; set; }
 
         public DateTime LastModified { get; set; }

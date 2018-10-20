@@ -93,13 +93,20 @@ namespace SyncPro.UnitTests
 
             Assert.IsTrue(syncJob.HasFinished);
 
+            int expectedFileCount = syncFileList.Count;
+
+            if (sourceAdapter.Configuration.DirectoriesAreUniqueEntities == false)
+            {
+                expectedFileCount--;
+            }
+
             // Ensure that the right number of entries are present in the result
-            Assert.AreEqual(syncFileList.Count, syncJob.AnalyzeResult.AdapterResults.SelectMany(r => r.Value.EntryResults).Count());
+            Assert.AreEqual(expectedFileCount, syncJob.AnalyzeResult.AdapterResults.SelectMany(r => r.Value.EntryResults).Count());
 
             string[] localFiles = Directory.GetFileSystemEntries(syncDestinationPath, "*", SearchOption.AllDirectories);
 
             // Ensure that the number of files downloaded is the same as the number expected
-            Assert.AreEqual(syncFileList.Count, localFiles.Length);
+            Assert.AreEqual(expectedFileCount, localFiles.Length);
 
             foreach (string fileSystemEntry in localFiles)
             {

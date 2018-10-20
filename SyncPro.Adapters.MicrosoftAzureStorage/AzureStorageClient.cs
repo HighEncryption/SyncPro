@@ -19,7 +19,9 @@
     using SyncPro.Utility;
 
     using Container = SyncPro.Adapters.MicrosoftAzureStorage.DataModel.Container;
+    using ContainerItem = SyncPro.Adapters.MicrosoftAzureStorage.DataModel.ContainerItem;
     using Blob = SyncPro.Adapters.MicrosoftAzureStorage.DataModel.Blob;
+    using BlobPrefix = SyncPro.Adapters.MicrosoftAzureStorage.DataModel.BlobPrefix;
 
     public class AzureStorageClient : IDisposable
     {
@@ -102,9 +104,9 @@
             }
         }
 
-        public async Task<IList<Blob>> ListBlobsAsync(string containerName, string delimiter, string prefix)
+        public async Task<IList<ContainerItem>> ListBlobsAsync(string containerName, string delimiter, string prefix)
         {
-            List<Blob> blobs = new List<Blob>();
+            List<ContainerItem> containerItems = new List<ContainerItem>();
             string nextMarker = null;
 
             while (true)
@@ -137,11 +139,15 @@
                                 .ConfigureAwait(false);
 
                         // Aggregate the blobs returned in the response
-                        blobs.AddRange(results.Blobs.OfType<DataModel.Internal.Blob>().Select(Blob.FromInternalResult));
+                        // Convert Internal.BlobPrefix to BlobPrefix and add to result
+                        containerItems.AddRange(results.Blobs.OfType<DataModel.Internal.BlobPrefix>().Select(BlobPrefix.FromInternalResult));
+
+                        // Convert Internal.Blob to Blob and add to result
+                        containerItems.AddRange(results.Blobs.OfType<DataModel.Internal.Blob>().Select(Blob.FromInternalResult));
 
                         if (string.IsNullOrWhiteSpace(results.NextMarker))
                         {
-                            return blobs;
+                            return containerItems;
                         }
 
                         nextMarker = results.NextMarker;
