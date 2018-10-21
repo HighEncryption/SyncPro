@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Data.SqlTypes;
+    using System.Diagnostics.Contracts;
     using System.IO;
     using System.Linq;
     using System.Net.Http;
@@ -15,6 +16,8 @@
     using SyncPro.Configuration;
     using SyncPro.Data;
     using SyncPro.Runtime;
+
+    using TaskExtensions = SyncPro.TaskExtensions;
 
     public class AzureStorageAdapter : AdapterBase
     {
@@ -83,7 +86,7 @@
 
         public override Task CreateItemAsync(SyncEntry entry)
         {
-            throw new NotImplementedException();
+            return TaskExtensions.CompletedTask;
         }
 
         public override Stream GetReadStreamForEntry(SyncEntry entry)
@@ -120,25 +123,41 @@
 
             Pre.ThrowIfArgumentNull(uploadStream, "uploadStream");
 
-            if (!uploadStream.BlockList.Any())
+            // If there are any block IDs in the block list, then the file was uploaded using blocks (as opposed to
+            // uploading the file as a single blob). For this, we need to call PutBlockList to finalize the creation
+            // of the blob in storage.
+            if (uploadStream.BlockList.Any())
             {
-                // There are not block IDs created, which means that the file was uploaded
-                // in a single request.
-                return;
-            }
+                HttpResponseMessage response = this.storageClient.PutBlockListAsync(
+                    this.TypedConfiguration.ContainerName,
+                    uploadStream.FileName,
+                    uploadStream.BlockList).Result;
 
-            HttpResponseMessage response = this.storageClient.PutBlockListAsync(
-                this.TypedConfiguration.ContainerName,
-                uploadStream.FileName,
-                uploadStream.BlockList).Result;
-
-            using (response)
-            {
-                if (!response.IsSuccessStatusCode)
+                using (response)
                 {
-                    throw new AzureStorageHttpException();
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        throw new AzureStorageHttpException();
+                    }
                 }
             }
+
+            SyncEntryAdapterData adapterData =
+                updateInfo.Entry.AdapterEntries.FirstOrDefault(a => a.AdapterId == this.Configuration.Id);
+
+
+            if (adapterData == null)
+            {
+                adapterData = new SyncEntryAdapterData
+                {
+                    SyncEntry = updateInfo.Entry,
+                    AdapterId = this.Configuration.Id
+                };
+
+                updateInfo.Entry.AdapterEntries.Add(adapterData);
+            }
+
+            adapterData.AdapterEntryId = GetUniqueIdForFile(updateInfo.RelativePath);
         }
 
         public override void UpdateItem(EntryUpdateInfo updateInfo, SyncEntryChangedFlags changeFlags)
@@ -192,13 +211,7 @@
 
                 string fullPath = string.Format("{0}/{1}", folder.FullName, itemName);
 
-                string computedId;
-                using (var sha256 = new SHA256CryptoServiceProvider())
-                {
-                    var hashBytes = sha256.ComputeHash(Encoding.Unicode.GetBytes(fullPath));
-                    //computedId = BitConverter.ToString(hashBytes).Replace("-", "");
-                    computedId = Convert.ToBase64String(hashBytes);
-                }
+                string computedId = GetUniqueIdForFile(fullPath);
 
                 BlobPrefix blobPrefix = item as BlobPrefix;
                 if (blobPrefix != null)
@@ -313,6 +326,16 @@
                 this.TypedConfiguration.AccountKey);
 
             this.IsInitialized = true;
+        }
+
+        [Pure]
+        private string GetUniqueIdForFile(string path)
+        {
+            using (var sha256 = new SHA256CryptoServiceProvider())
+            {
+                byte[] hashBytes = sha256.ComputeHash(Encoding.Unicode.GetBytes(path));
+                return Convert.ToBase64String(hashBytes);
+            }
         }
     }
 }

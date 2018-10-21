@@ -77,9 +77,9 @@
             };
         }
 
-        public override async Task CreateItemAsync(SyncEntry entry)
+        public override Task CreateItemAsync(SyncEntry entry)
         {
-            await Task.Delay(0);
+            return SyncPro.TaskExtensions.CompletedTask;
         }
 
         public override Stream GetReadStreamForEntry(SyncEntry entry)

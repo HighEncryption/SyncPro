@@ -170,15 +170,19 @@
             //}
         }
 
-        protected override GoogleDriveAdapter CreateSourceAdapter_BasicSyncDownloadOnly(SyncRelationship newRelationship)
+        protected override GoogleDriveAdapter CreateSourceAdapter(SyncRelationship newRelationship, string testMethodName)
         {
             TokenResponse currentToken = this.GetCurrentToken();
 
             GoogleDriveAdapter sourceAdapter = new GoogleDriveAdapter(newRelationship)
             {
-                TargetItemId = "0B781VIRHEt3xeGpJN1FxNGVpb28",
                 CurrentToken = currentToken,
             };
+
+            if (testMethodName == "BasicSyncDownloadOnly")
+            {
+                sourceAdapter.TargetItemId = "0B781VIRHEt3xeGpJN1FxNGVpb28";
+            }
 
             sourceAdapter.Configuration.IsOriginator = true;
 
@@ -187,19 +191,9 @@
             return sourceAdapter;
         }
 
-        protected override GoogleDriveAdapter CreateSourceAdapter_BasicAnalyzeOnly(SyncRelationship newRelationship)
+        protected override GoogleDriveAdapter CreateDestinationAdapter(SyncRelationship newRelationship, string testMethodName)
         {
-            TokenResponse currentToken = this.GetCurrentToken();
-
-            GoogleDriveAdapter sourceAdapter = new GoogleDriveAdapter(newRelationship)
-            {
-                CurrentToken = currentToken
-            };
-
-            sourceAdapter.Configuration.IsOriginator = true;
-            sourceAdapter.InitializeClient().Wait();
-
-            return sourceAdapter;
+            throw new NotImplementedException();
         }
 
         private TokenResponse GetCurrentToken()

@@ -53,7 +53,6 @@ namespace SyncPro.UnitTests
 
             string tokenContent = File.ReadAllText(tokenFilePath);
 
-            //var token = JsonConvert.DeserializeObject<TokenResponseEx>(tokenContent);
             var token = JsonConvert.DeserializeObject<TokenResponse>(tokenContent);
 
             if (!token.IsEncrypted)
@@ -72,12 +71,6 @@ namespace SyncPro.UnitTests
             {
                 client.TokenRefreshed += (sender, args) =>
                 {
-                    //token = new TokenResponseEx(args.NewToken);
-                    //token.Protect();
-                    //tokenContent = JsonConvert.SerializeObject(token, Formatting.Indented);
-                    //File.WriteAllText(tokenFilePath, tokenContent);
-                    //token.Unprotect();
-
                     // The token was refreshed, so save a protected copy of the token to the token file.
                     token = args.NewToken;
                     token.SaveProtectedToken(tokenFilePath);
@@ -86,13 +79,12 @@ namespace SyncPro.UnitTests
                 client.GetUserProfileAsync().Wait();
             }
 
-            //testContext.Properties["CurrentToken"] = token;
             classCurrentToken = token;
         }
 
-        protected override OneDriveAdapter CreateSourceAdapter_BasicSyncDownloadOnly(SyncRelationship newRelationship)
+        protected override OneDriveAdapter CreateSourceAdapter(SyncRelationship newRelationship, string testMethodName)
         {
-            TokenResponse currentToken = this.GetCurrentToken();
+            TokenResponse currentToken = GetCurrentToken();
 
             OneDriveAdapter sourceAdapter = new OneDriveAdapter(newRelationship)
             {
@@ -107,22 +99,10 @@ namespace SyncPro.UnitTests
             return sourceAdapter;
         }
 
-        protected override OneDriveAdapter CreateSourceAdapter_BasicAnalyzeOnly(SyncRelationship newRelationship)
+        protected override OneDriveAdapter CreateDestinationAdapter(SyncRelationship newRelationship, string testMethodName)
         {
-            TokenResponse currentToken = this.GetCurrentToken();
-
-            OneDriveAdapter sourceAdapter = new OneDriveAdapter(newRelationship)
-            {
-                CurrentToken = currentToken,
-            };
-
-            sourceAdapter.Configuration.IsOriginator = true;
-            sourceAdapter.Config.TargetPath = "OneDrive/SyncTest";
-            sourceAdapter.InitializeClient().Wait();
-
-            return sourceAdapter;
+            throw new NotImplementedException();
         }
-
 
         [TestMethod]
         public void BasicSyncLocalToOneDrive()
@@ -151,12 +131,12 @@ namespace SyncPro.UnitTests
                                                 TestHelper.CreateFile(syncSourcePath, "dir2\\file3.txt")
                                             };
 
-            TokenResponse currentToken = this.GetCurrentToken();
+            TokenResponse currentToken = GetCurrentToken();
 
             Guid remoteTestFolderName = Guid.NewGuid();
             Item remoteTestFolder = CreateOneDriveTestDirectory(currentToken, remoteTestFolderName.ToString("D")).Result;
 
-            SyncRelationship newRelationship = this.SetupRelationship(testRootPath, syncSourcePath, remoteTestFolder);
+            SyncRelationship newRelationship = SetupRelationship(testRootPath, syncSourcePath, remoteTestFolder);
 
             AnalyzeJob analyzeJob = new AnalyzeJob(newRelationship);
 
@@ -175,7 +155,7 @@ namespace SyncPro.UnitTests
             OneDriveAdapter oneDriveAdapter =
                 newRelationship.Adapters.First(a => !a.Configuration.IsOriginator) as OneDriveAdapter;
 
-            OneDriveClient client = new OneDriveClient(this.GetCurrentToken());
+            OneDriveClient client = new OneDriveClient(GetCurrentToken());
             foreach (string syncFile in syncFileList.Where(f => f.EndsWith(".txt")))
             {
                 string localPath = Path.Combine(syncSourcePath, syncFile);
@@ -230,7 +210,7 @@ namespace SyncPro.UnitTests
             int fragmentSize = 327680; // 320k
             int payloadSize = 819200; // 2.5 fragments
 
-            TokenResponse currentToken = this.GetCurrentToken();
+            TokenResponse currentToken = GetCurrentToken();
 
             Guid remoteTestFolderName = Guid.NewGuid();
             Item remoteTestFolder = CreateOneDriveTestDirectory(currentToken, remoteTestFolderName.ToString("D")).Result;
@@ -265,7 +245,7 @@ namespace SyncPro.UnitTests
             int fragmentSize = OneDriveFileUploadStream.DefaultFragmentSize; // 10M
             int payloadSize = 524288; // < 1 fragments
 
-            TokenResponse currentToken = this.GetCurrentToken();
+            TokenResponse currentToken = GetCurrentToken();
 
             Guid remoteTestFolderName = Guid.NewGuid();
             Item remoteTestFolder = CreateOneDriveTestDirectory(currentToken, remoteTestFolderName.ToString("D")).Result;
@@ -300,7 +280,7 @@ namespace SyncPro.UnitTests
             int fragmentSize = 327680; // 320k
             int payloadSize = 819200; // 2.5 fragments
 
-            TokenResponse currentToken = this.GetCurrentToken();
+            TokenResponse currentToken = GetCurrentToken();
 
             Guid remoteTestFolderName = Guid.NewGuid();
             Item remoteTestFolder = CreateOneDriveTestDirectory(currentToken, remoteTestFolderName.ToString("D")).Result;
@@ -338,7 +318,7 @@ namespace SyncPro.UnitTests
 
             int payloadSize = 262144; // 256k
 
-            TokenResponse currentToken = this.GetCurrentToken();
+            TokenResponse currentToken = GetCurrentToken();
 
             Guid remoteTestFolderName = Guid.NewGuid();
             Item remoteTestFolder = CreateOneDriveTestDirectory(currentToken, remoteTestFolderName.ToString("D")).Result;
@@ -373,7 +353,7 @@ namespace SyncPro.UnitTests
 
             int payloadSize = 262144; // 256k
 
-            TokenResponse currentToken = this.GetCurrentToken();
+            TokenResponse currentToken = GetCurrentToken();
 
             Guid remoteTestFolderName = Guid.NewGuid();
             Item remoteTestFolder = CreateOneDriveTestDirectory(currentToken, remoteTestFolderName.ToString("D")).Result;
@@ -408,7 +388,7 @@ namespace SyncPro.UnitTests
                 Assert.Inconclusive(GlobalTestSettings.NetworkTestsDisabledMessage);
             }
 
-            TokenResponse currentToken = this.GetCurrentToken();
+            TokenResponse currentToken = GetCurrentToken();
 
             using (OneDriveClient client = new OneDriveClient(currentToken))
             {
@@ -436,7 +416,7 @@ namespace SyncPro.UnitTests
             int fragmentSize = 327680; // 320k
             int payloadSize = 1;
 
-            TokenResponse currentToken = this.GetCurrentToken();
+            TokenResponse currentToken = GetCurrentToken();
 
             Guid remoteTestFolderName = Guid.NewGuid();
             Item remoteTestFolder = CreateOneDriveTestDirectory(currentToken, remoteTestFolderName.ToString("D")).Result;
@@ -464,7 +444,7 @@ namespace SyncPro.UnitTests
                 Assert.Inconclusive(GlobalTestSettings.NetworkTestsDisabledMessage);
             }
 
-            TokenResponse currentToken = this.GetCurrentToken();
+            TokenResponse currentToken = GetCurrentToken();
 
             using (OneDriveClient client = new OneDriveClient(currentToken))
             {
@@ -682,7 +662,7 @@ namespace SyncPro.UnitTests
             string syncDestinationPath = Path.Combine(testRootPath, "Destination");
             Directory.CreateDirectory(syncDestinationPath);
 
-            TokenResponse currentToken = this.GetCurrentToken();
+            TokenResponse currentToken = GetCurrentToken();
 
             Global.Initialize(testRootPath);
             SyncRelationship newRelationship = SyncRelationship.Create();
@@ -767,7 +747,7 @@ namespace SyncPro.UnitTests
 
             OneDriveAdapter destAdapter = new OneDriveAdapter(newRelationship)
             {
-                CurrentToken = this.GetCurrentToken(),
+                CurrentToken = GetCurrentToken(),
             };
 
             destAdapter.Config.TargetPath = "OneDrive/Testing/" + syncDestinationPath.Name;

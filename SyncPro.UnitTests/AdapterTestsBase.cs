@@ -2,8 +2,10 @@ namespace SyncPro.UnitTests
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.IO;
     using System.Linq;
+    using System.Runtime.CompilerServices;
     using System.Threading;
 
     using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -18,7 +20,9 @@ namespace SyncPro.UnitTests
     {
         public TestContext TestContext { get; set; }
 
-        protected abstract TAdapter CreateSourceAdapter_BasicSyncDownloadOnly(SyncRelationship newRelationship);
+        protected abstract TAdapter CreateSourceAdapter(SyncRelationship newRelationship, string testMethodName);
+
+        protected abstract TAdapter CreateDestinationAdapter(SyncRelationship newRelationship, string testMethodName);
 
         [TestMethod]
         public void BasicSyncDownloadOnly()
@@ -34,15 +38,10 @@ namespace SyncPro.UnitTests
             string syncDestinationPath = Path.Combine(testRootPath, "Destination");
             Directory.CreateDirectory(syncDestinationPath);
 
-            Global.Initialize(testRootPath);
+            Global.Initialize(testRootPath, true);
             SyncRelationship newRelationship = SyncRelationship.Create();
 
-
-            TAdapter sourceAdapter = this.CreateSourceAdapter_BasicSyncDownloadOnly(newRelationship);
-
-            //sourceAdapter.Configuration.IsOriginator = true;
-
-            //sourceAdapter.InitializeClient().Wait();
+            TAdapter sourceAdapter = CreateSourceAdapter(newRelationship, GetCurrentMethod());
 
             WindowsFileSystemAdapter destAdapter = new WindowsFileSystemAdapter(newRelationship);
 
@@ -133,9 +132,6 @@ namespace SyncPro.UnitTests
                 }
             }
         }
-        
-        protected abstract TAdapter CreateSourceAdapter_BasicAnalyzeOnly(SyncRelationship newRelationship);
-
 
         [TestMethod]
         public void BasicAnalyzeOnly()
@@ -154,21 +150,7 @@ namespace SyncPro.UnitTests
             Global.Initialize(testRootPath);
             SyncRelationship newRelationship = SyncRelationship.Create();
 
-            TAdapter sourceAdapter = CreateSourceAdapter_BasicAnalyzeOnly(newRelationship);
-
-            //TokenResponse currentToken = this.GetCurrentToken();
-
-            //Global.Initialize(testRootPath);
-            //SyncRelationship newRelationship = SyncRelationship.Create();
-
-            //OneDriveAdapter sourceAdapter = new OneDriveAdapter(newRelationship)
-            //{
-            //    CurrentToken = currentToken,
-            //};
-
-            //sourceAdapter.Configuration.IsOriginator = true;
-            //sourceAdapter.Config.TargetPath = "OneDrive/SyncTest";
-            //sourceAdapter.InitializeClient().Wait();
+            TAdapter sourceAdapter = CreateSourceAdapter(newRelationship, GetCurrentMethod());
 
             WindowsFileSystemAdapter destAdapter = new WindowsFileSystemAdapter(newRelationship);
             destAdapter.Config.RootDirectory = syncDestinationPath;
@@ -198,6 +180,79 @@ namespace SyncPro.UnitTests
             }
 
             Assert.IsTrue(run1.HasFinished);
+        }
+
+        [TestMethod]
+        public void BasicSyncUpload()
+        {
+            if (!GlobalTestSettings.RunNetworkTests)
+            {
+                Assert.Inconclusive(GlobalTestSettings.NetworkTestsDisabledMessage);
+            }
+
+            string testRootPath = Path.Combine(this.TestContext.TestLogsDir, this.TestContext.TestName);
+            Directory.CreateDirectory(testRootPath);
+
+            string syncSourcePath = Path.Combine(testRootPath, "Source");
+            Directory.CreateDirectory(syncSourcePath);
+
+            // Create temp files/folders
+            List<string> syncFileList = new List<string>
+                                            {
+                                                TestHelper.CreateDirectory(syncSourcePath, "dir1"),
+                                                TestHelper.CreateFile(syncSourcePath, "dir1\\file1.txt"),
+                                                TestHelper.CreateFile(syncSourcePath, "dir1\\file2.txt"),
+                                                TestHelper.CreateFile(syncSourcePath, "dir1\\file3.txt"),
+                                                TestHelper.CreateDirectory(syncSourcePath, "dir2"),
+                                                TestHelper.CreateFile(syncSourcePath, "dir2\\file1.txt"),
+                                                TestHelper.CreateFile(syncSourcePath, "dir2\\file2.txt"),
+                                                TestHelper.CreateFile(syncSourcePath, "dir2\\file3.txt")
+                                            };
+
+            Global.Initialize(testRootPath);
+            SyncRelationship newRelationship = SyncRelationship.Create();
+
+            WindowsFileSystemAdapter sourceAdapter = new WindowsFileSystemAdapter(newRelationship);
+            sourceAdapter.Config.RootDirectory = syncSourcePath;
+
+            TAdapter destAdapter = CreateDestinationAdapter(newRelationship, GetCurrentMethod());
+
+            newRelationship.Adapters.Add(sourceAdapter);
+            newRelationship.Adapters.Add(destAdapter);
+
+            newRelationship.SourceAdapter = sourceAdapter;
+            newRelationship.DestinationAdapter = destAdapter;
+
+            newRelationship.Name = "Test Relationship #1";
+            newRelationship.Description = "Test Relationship Description #1";
+
+            newRelationship.SaveAsync().Wait();
+
+            AnalyzeJob analyzeJob = new AnalyzeJob(newRelationship);
+
+            analyzeJob.ContinuationJob = new SyncJob(newRelationship, analyzeJob.AnalyzeResult)
+            {
+                TriggerType = SyncTriggerType.Manual
+            };
+
+            analyzeJob.Start();
+
+            SyncJob syncJob = (SyncJob)analyzeJob.WaitForCompletion();
+
+            Assert.IsTrue(syncJob.HasFinished);
+
+            Assert.AreEqual(
+                syncFileList.Count, 
+                syncJob.AnalyzeResult.AdapterResults.SelectMany(r => r.Value.EntryResults).Count());
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private string GetCurrentMethod()
+        {
+            var st = new StackTrace();
+            var sf = st.GetFrame(1);
+
+            return sf.GetMethod().Name;
         }
     }
 }

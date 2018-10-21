@@ -248,6 +248,8 @@
 
     public static class TaskExtensions
     {
+        public static readonly Task CompletedTask = Task.FromResult(false);
+
         public static Task ThrowIfFaulted(this Task task)
         {
             return task.ContinueWith(t =>

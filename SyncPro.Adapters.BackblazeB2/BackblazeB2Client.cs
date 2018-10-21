@@ -44,9 +44,11 @@
             this.applicationKey = applicationKey;
             this.connectionInfo = connectionInfo;
 
+            Assembly assembly = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
+
             this.userAgentString = string.Format(
                 "SyncPro/{0}",
-                Assembly.GetEntryAssembly().GetName().Version);
+                assembly.GetName().Version);
         }
 
         public void Dispose()

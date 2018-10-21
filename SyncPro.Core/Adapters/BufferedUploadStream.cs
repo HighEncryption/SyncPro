@@ -36,14 +36,13 @@ namespace SyncPro.Adapters
         // The size of the part to upload. Must be a multiple of 320KiB per the OneDrive documentation.
         private readonly long partSize;
 
-        protected BufferedUploadStream(long partSize, long totalSize)
+        protected BufferedUploadStream(long partSize, long fileLength)
         {
             Pre.Assert(partSize > 0, "partSize > 0");
-            Pre.Assert(totalSize > 0, "totalSize > 0");
-            Pre.Assert(totalSize >= partSize, "totalSize >= partSize");
+            Pre.Assert(fileLength > 0, "fileLength > 0");
 
             this.partSize = partSize;
-            this.totalSize = totalSize;
+            this.bytesRemaining = fileLength;
         }
 
         public override void Write(byte[] buffer, int offset, int count)
@@ -58,21 +57,21 @@ namespace SyncPro.Adapters
             this.totalSize += count;
 
             // If the total size of the buffers is at least the part size, flush the data (sending it via UploadPart).
-            if (this.ArePartsAvailable())
+            if (ArePartsAvailable())
             {
-                this.Flush();
+                Flush();
             }
         }
 
         public sealed override void Flush()
         {
-            while (this.ArePartsAvailable())
+            while (ArePartsAvailable())
             {
                 // Coalase the buffers until we have a single buffer of the right size
-                byte[] partBuffer = this.AccumulateBuffers();
+                byte[] partBuffer = AccumulateBuffers();
 
                 // Call the specific method for uploading the part
-                this.UploadPart(partBuffer, this.partOffset, this.partIndex);
+                UploadPart(partBuffer, this.partOffset, this.partIndex);
 
                 this.partIndex++;
                 this.partOffset += this.partSize;

@@ -44,7 +44,7 @@
 
         public void Dispose()
         {
-            this.Dispose(true);
+            Dispose(true);
             GC.SuppressFinalize(this);
         }
 
@@ -74,7 +74,7 @@
 
                 queryParams.AddIfValueNotNullOrWhitespace("marker", nextMarker);
 
-                HttpRequestMessage request = this.BuildRequest(
+                HttpRequestMessage request = BuildRequest(
                     null,
                     queryParams.ToQueryParameters(),
                     HttpMethod.Get);
@@ -82,7 +82,7 @@
                 using (request)
                 {
                     HttpResponseMessage responseMessage =
-                        await this.SendRequestAsync(request).ConfigureAwait(false);
+                        await SendRequestAsync(request).ConfigureAwait(false);
 
                     using (responseMessage)
                     {
@@ -122,7 +122,7 @@
                 queryParams.AddIfValueNotNullOrWhitespace("prefix", prefix);
                 queryParams.AddIfValueNotNullOrWhitespace("marker", nextMarker);
 
-                HttpRequestMessage request = this.BuildRequest(
+                HttpRequestMessage request = BuildRequest(
                     containerName,
                     queryParams.ToQueryParameters(),
                     HttpMethod.Get);
@@ -130,7 +130,7 @@
                 using (request)
                 {
                     HttpResponseMessage responseMessage =
-                        await this.SendRequestAsync(request).ConfigureAwait(false);
+                        await SendRequestAsync(request).ConfigureAwait(false);
 
                     using (responseMessage)
                     {
@@ -162,7 +162,7 @@
             long startByte, 
             long endByte)
         {
-            HttpRequestMessage request = this.BuildRequest(
+            HttpRequestMessage request = BuildRequest(
                 containerName,
                 null,
                 HttpMethod.Get);
@@ -173,7 +173,7 @@
 
             using (request)
             {
-                return await this.SendRequestAsync(request).ConfigureAwait(false);
+                return await SendRequestAsync(request).ConfigureAwait(false);
             }
         }
 
@@ -181,14 +181,14 @@
             string containerName, 
             string blobName)
         {
-            HttpRequestMessage request = this.BuildRequest(
+            HttpRequestMessage request = BuildRequest(
                 containerName + "/" + blobName,
                 null,
                 HttpMethod.Get);
 
             using (request)
             {
-                return await this.SendRequestAsync(request, "GetBlob").ConfigureAwait(false);
+                return await SendRequestAsync(request, "GetBlob").ConfigureAwait(false);
             }
         }
 
@@ -198,19 +198,20 @@
             byte[] data,
             byte[] md5)
         {
-            HttpRequestMessage request = this.BuildRequest(
+            HttpRequestMessage request = BuildRequest(
                 containerName + "/" + blobName,
                 null,
                 HttpMethod.Put);
 
             request.Headers.TryAddWithoutValidation(
-                "Content-MD5",
-                Convert.ToBase64String(md5));
+                "x-ms-blob-type",
+                "BlockBlob");
 
             using (request)
             {
                 request.Content = new ByteArrayContent(data);
-                return await this.SendRequestAsync(request).ConfigureAwait(false);
+                request.Content.Headers.ContentMD5 = md5;
+                return await SendRequestAsync(request, "PutBlob").ConfigureAwait(false);
             }
         }
 
@@ -228,7 +229,7 @@
                     {"blockid", blockId}
                 };
 
-            HttpRequestMessage request = this.BuildRequest(
+            HttpRequestMessage request = BuildRequest(
                 containerName + "/" + blobName,
                 queryParams.ToQueryParameters(),
                 HttpMethod.Put);
@@ -240,7 +241,7 @@
             using (request)
             {
                 request.Content = new ByteArrayContent(data);
-                return await this.SendRequestAsync(request).ConfigureAwait(false);
+                return await SendRequestAsync(request).ConfigureAwait(false);
             }
         }
 
@@ -255,11 +256,7 @@
                     {"comp", "blocklist"},
                 };
 
-            HttpRequestMessage request = this.BuildRequest(
-                containerName + "/" + blobName,
-                queryParams.ToQueryParameters(),
-                HttpMethod.Put);
-
+            // Build the XML content that we will send as the body of the request
             XmlDocument xmlDoc = new XmlDocument();
             XmlElement blockListElement = (XmlElement) xmlDoc.AppendChild(
                 xmlDoc.CreateElement("BlockList"));
@@ -278,15 +275,41 @@
                 xmlDoc.Save(sw);
             }
 
+            HttpRequestMessage request = BuildRequest(
+                containerName + "/" + blobName,
+                queryParams.ToQueryParameters(),
+                HttpMethod.Put);
+
             using (request)
             {
                 request.Content = new StringContent(stringBuilder.ToString());
-                return await this.SendRequestAsync(request).ConfigureAwait(false);
+                return await SendRequestAsync(request).ConfigureAwait(false);
             }
         }
 
-        private async Task<HttpResponseMessage> SendRequestAsync(HttpRequestMessage request, string counterOpName = null)
+        private async Task<HttpResponseMessage> SendRequestAsync(
+            HttpRequestMessage request,
+            string counterOpName = null,
+            bool addAuthenticationHeader = true)
         {
+            if (addAuthenticationHeader)
+            {
+                string md5 = null;
+                if (request.Content?.Headers.ContentMD5 != null)
+                {
+                    md5 = Convert.ToBase64String(request.Content.Headers.ContentMD5);
+                }
+
+                string sharedKey = GetAuthorizationSharedKey(
+                    this.accountName,
+                    this.accountKey,
+                    DateTime.UtcNow, 
+                    request,
+                    md5:md5);
+
+                request.Headers.Authorization = new AuthenticationHeaderValue("SharedKey", sharedKey);
+            }
+
             LogRequest(request, this.httpClient.BaseAddress);
 
             LogApiCallCounter(request, counterOpName);
@@ -318,7 +341,10 @@
             throw new AzureStorageHttpException(errorResponse);
         }
 
-        private HttpRequestMessage BuildRequest(string path, string query, HttpMethod method)
+        private HttpRequestMessage BuildRequest(
+            string path, 
+            string query, 
+            HttpMethod method)
         {
             DateTime timestamp = DateTime.UtcNow;
 
@@ -344,14 +370,6 @@
             // Add the required header to the call
             requestMessage.Headers.TryAddWithoutValidation("x-ms-version", ApiVersion);
             requestMessage.Headers.TryAddWithoutValidation("x-ms-date", timestamp.ToString("R"));
-
-            string sharedKey = GetAuthorizationSharedKey(
-                this.accountName,
-                this.accountKey,
-                timestamp,
-                requestMessage);
-
-            requestMessage.Headers.Authorization = new AuthenticationHeaderValue("SharedKey", sharedKey);
 
             return requestMessage;
         }
@@ -423,7 +441,7 @@
             // This is the raw representation of the message signature.
             string messageSignature = string.Format("{0}\n\n\n{1}\n{5}\n\n\n\n{2}\n\n\n\n{3}{4}",
                 httpRequestMessage.Method,
-                (httpRequestMessage.Method == HttpMethod.Get || httpRequestMessage.Method == HttpMethod.Head)
+                httpRequestMessage.Method == HttpMethod.Get || httpRequestMessage.Method == HttpMethod.Head
                     ? string.Empty
                     : httpRequestMessage.Content.Headers.ContentLength.ToString(),
                 ifMatch,

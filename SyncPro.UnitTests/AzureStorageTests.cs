@@ -29,6 +29,7 @@ namespace SyncPro.UnitTests
     public class AzureStorageTests : AdapterTestsBase<AzureStorageAdapter>
     {
         public const string DefaultContainerName = "syncpro-unit-tests";
+        public const string TestingContainerName = "syncpro-temp-tests";
 
         private static AzureStorageAdapterConfiguration accountInfo;
 
@@ -87,12 +88,12 @@ namespace SyncPro.UnitTests
             File.WriteAllText(accountInfoFilePath, serializedInfo);
         }
 
-        protected override AzureStorageAdapter CreateSourceAdapter_BasicSyncDownloadOnly(
-            SyncRelationship newRelationship)
+        protected override AzureStorageAdapter CreateSourceAdapter(
+            SyncRelationship newRelationship,
+            string testMethodName)
         {
             AzureStorageAdapter sourceAdapter = new AzureStorageAdapter(newRelationship, accountInfo);
 
-            //sourceAdapter.TypedConfiguration.TargetPath = "OneDrive/SyncTest";
             sourceAdapter.TypedConfiguration.IsOriginator = true;
 
             sourceAdapter.InitializeClient();
@@ -100,18 +101,24 @@ namespace SyncPro.UnitTests
             return sourceAdapter;
         }
 
-        protected override AzureStorageAdapter CreateSourceAdapter_BasicAnalyzeOnly(SyncRelationship newRelationship)
+        protected override AzureStorageAdapter CreateDestinationAdapter(
+            SyncRelationship newRelationship, 
+            string testMethodName)
         {
-            AzureStorageAdapter sourceAdapter = new AzureStorageAdapter(newRelationship, accountInfo);
+            var testAccountInfo = new AzureStorageAdapterConfiguration
+            {
+                AccountName = accountInfo.AccountName,
+                AccountKey = accountInfo.AccountKey,
+                ContainerName = TestingContainerName
+            };
 
-            //sourceAdapter.TypedConfiguration. = "SyncTest";
-            sourceAdapter.TypedConfiguration.IsOriginator = true;
+            AzureStorageAdapter destAdapter = new AzureStorageAdapter(newRelationship, testAccountInfo);
 
-            sourceAdapter.InitializeClient();
+            destAdapter.TypedConfiguration.IsOriginator = false;
 
-            var root = sourceAdapter.GetRootFolder().Result;
+            destAdapter.InitializeClient();
 
-            return sourceAdapter;
+            return destAdapter;
         }
     }
 }
