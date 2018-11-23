@@ -11,6 +11,7 @@
     using System.Security.Cryptography;
     using System.Text;
     using System.Threading.Tasks;
+    using System.Web;
     using System.Xml;
 
     using SyncPro.Adapters.MicrosoftAzureStorage.DataModel.Internal;
@@ -25,7 +26,7 @@
 
     public class AzureStorageClient : IDisposable
     {
-        private const string ApiVersion = "2017-11-09"; // "2016-05-31";
+        private const string ApiVersion = "2017-11-09";
 
         private readonly string accountName;
         private readonly SecureString accountKey;
@@ -225,7 +226,7 @@
                 new Dictionary<string, string>
                 {
                     {"comp", "block"},
-                    {"blockid", blockId}
+                    {"blockid", HttpUtility.UrlEncode(Convert.ToBase64String(Encoding.ASCII.GetBytes(blockId))) }
                 };
 
             HttpRequestMessage request = BuildRequest(
@@ -233,14 +234,11 @@
                 queryParams.ToQueryParameters(),
                 HttpMethod.Put);
 
-            request.Headers.TryAddWithoutValidation(
-                "Content-MD5",
-                Convert.ToBase64String(md5));
-
             using (request)
             {
                 request.Content = new ByteArrayContent(data);
-                return await SendRequestAsync(request).ConfigureAwait(false);
+                request.Content.Headers.ContentMD5 = md5;
+                return await SendRequestAsync(request, "PutBlock").ConfigureAwait(false);
             }
         }
 
@@ -265,13 +263,18 @@
                 XmlElement blockIdElement = (XmlElement) blockListElement.AppendChild(
                     xmlDoc.CreateElement("Latest"));
 
-                blockIdElement.InnerText = blockID;
+                blockIdElement.InnerText = Convert.ToBase64String(Encoding.ASCII.GetBytes(blockID));
             }
 
-            StringBuilder stringBuilder = new StringBuilder();
-            using (StringWriter sw = new StringWriter(stringBuilder))
+            string content;
+            using (MemoryStream ms = new MemoryStream())
             {
-                xmlDoc.Save(sw);
+                using (StreamWriter sw1 = new StreamWriter(ms, Encoding.UTF8))
+                {
+                    xmlDoc.Save(sw1);
+                }
+
+                content = Encoding.UTF8.GetString(ms.ToArray());
             }
 
             HttpRequestMessage request = BuildRequest(
@@ -281,8 +284,8 @@
 
             using (request)
             {
-                request.Content = new StringContent(stringBuilder.ToString());
-                return await SendRequestAsync(request).ConfigureAwait(false);
+                request.Content = new StringContent(content);
+                return await SendRequestAsync(request, "PutBlockList").ConfigureAwait(false);
             }
         }
 
@@ -302,7 +305,6 @@
                 string sharedKey = GetAuthorizationSharedKey(
                     this.accountName,
                     this.accountKey,
-                    DateTime.UtcNow, 
                     request,
                     md5:md5);
 
@@ -418,7 +420,7 @@
             foreach (string elem in elems.Where(e => !string.IsNullOrWhiteSpace(e)))
             {
                 string[] parts = elem.Split('=');
-                dict.Add(parts[0], parts[1]);
+                dict.Add(parts[0], HttpUtility.UrlDecode(parts[1]));
             }
 
             foreach (var item in dict.Keys.OrderBy(k => k))
@@ -432,13 +434,20 @@
         internal static string GetAuthorizationSharedKey(
             string storageAccountName, 
             SecureString storageAccountKey, 
-            DateTime now,
             HttpRequestMessage httpRequestMessage, 
             string ifMatch = "", 
             string md5 = "")
         {
+            string contentType = string.Empty;
+
+            if (httpRequestMessage.Method != HttpMethod.Get && httpRequestMessage.Method != HttpMethod.Head
+                && httpRequestMessage.Content != null && httpRequestMessage.Content.Headers.ContentType != null)
+            {
+                contentType = httpRequestMessage.Content.Headers.ContentType.ToString();
+            }
+
             // This is the raw representation of the message signature.
-            string messageSignature = string.Format("{0}\n\n\n{1}\n{5}\n\n\n\n{2}\n\n\n\n{3}{4}",
+            string messageSignature = string.Format("{0}\n\n\n{1}\n{5}\n{6}\n\n\n{2}\n\n\n\n{3}{4}",
                 httpRequestMessage.Method,
                 httpRequestMessage.Method == HttpMethod.Get || httpRequestMessage.Method == HttpMethod.Head
                     ? string.Empty
@@ -446,7 +455,8 @@
                 ifMatch,
                 GetCanonicalizedHeaders(httpRequestMessage),
                 GetCanonicalizedResource(httpRequestMessage.RequestUri, storageAccountName),
-                md5);
+                md5,
+                contentType);
 
             // Now turn it into a byte array.
             byte[] signatureBytes = Encoding.UTF8.GetBytes(messageSignature);

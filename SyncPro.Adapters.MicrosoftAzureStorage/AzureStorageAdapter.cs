@@ -16,6 +16,7 @@
     using SyncPro.Configuration;
     using SyncPro.Data;
     using SyncPro.Runtime;
+    using SyncPro.Tracing;
 
     using TaskExtensions = SyncPro.TaskExtensions;
 
@@ -162,7 +163,30 @@
 
         public override void UpdateItem(EntryUpdateInfo updateInfo, SyncEntryChangedFlags changeFlags)
         {
-            throw new NotImplementedException();
+            if (updateInfo.Entry.Type == SyncEntryType.Directory)
+            {
+                Logger.Debug("Suppressing UpdateItem() call for Directory in BackblazeB2 adapter");
+                return;
+            }
+
+            // The changeFlags parameter is passed by value, so we will modify it as we go to unset
+            // the properties that we change. If we are left with a changeFlags that is non-zero, 
+            // then we missed a case.
+            if ((changeFlags & SyncEntryChangedFlags.ModifiedTimestamp) != 0)
+            {
+                Pre.Assert(updateInfo.ModifiedDateTimeUtcNew != null, "updateInfo.ModifiedDateTimeUtcNew != null");
+
+                // No action needed at the remote end. Updating the blob will update the Last-Modified
+                // property. However, we do need to update the Entry.
+                updateInfo.Entry.ModifiedDateTimeUtc = updateInfo.ModifiedDateTimeUtcNew.Value;
+
+                changeFlags &= ~SyncEntryChangedFlags.ModifiedTimestamp;
+            }
+
+            if (changeFlags != SyncEntryChangedFlags.None)
+            {
+                throw new NotImplementedException("changeFlags = " + changeFlags);
+            }
         }
 
         public override void DeleteItem(SyncEntry entry)
