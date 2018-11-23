@@ -21,16 +21,46 @@ namespace SyncPro.UnitTests
             return relativePath;
         }
 
-        public static string CreateFile(string rootPath, string relativePath)
+        public static string CreateFile(string rootPath, string relativePath, byte[] data = null)
         {
             string fullPath = Path.Combine(rootPath, relativePath);
 
             using (FileStream fs = File.Open(fullPath, FileMode.CreateNew))
             {
-                using (StreamWriter sw = new StreamWriter(fs))
+                if (data != null)
                 {
-                    sw.Write("The file name is: " + fullPath);
-                    sw.Write("Current time is: " + DateTime.Now.ToString("O"));
+                    fs.Write(data, 0, data.Length);
+                }
+                else
+                {
+                    using (StreamWriter sw = new StreamWriter(fs))
+                    {
+                        sw.Write("The file name is: " + fullPath);
+                        sw.Write("Current time is: " + DateTime.Now.ToString("O"));
+                    }
+                }
+            }
+
+            return relativePath;
+        }
+
+        public static string UpdateFile(string rootPath, string relativePath, byte[] data = null)
+        {
+            string fullPath = Path.Combine(rootPath, relativePath);
+
+            using (FileStream fs = File.Open(fullPath, FileMode.Truncate))
+            {
+                if (data != null)
+                {
+                    fs.Write(data, 0, data.Length);
+                }
+                else
+                {
+                    using (StreamWriter sw = new StreamWriter(fs))
+                    {
+                        sw.Write("The file name is: " + fullPath);
+                        sw.Write("Current time is: " + DateTime.Now.ToString("O"));
+                    }
                 }
             }
 
