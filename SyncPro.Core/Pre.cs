@@ -70,7 +70,7 @@
         [ContractAnnotation("condition:false=>halt")]
         public static void Assert(bool condition)
         {
-            Pre.Assert(condition, null);
+            Assert(condition, null);
         }
 
         [ContractAnnotation("condition:false=>halt")]

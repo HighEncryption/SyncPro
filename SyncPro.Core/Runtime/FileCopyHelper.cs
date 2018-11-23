@@ -29,7 +29,7 @@ namespace SyncPro.Runtime
         /// <summary>
         /// The buffer size used for copying data between adapters (currently 64k).
         /// </summary>
-        private const int transferBufferSize = 0x10000;
+        private const int TransferBufferSize = 0x10000;
 
         public EncryptionMode EncryptionMode { get; set; }
 
@@ -106,7 +106,7 @@ namespace SyncPro.Runtime
                         readStreamLength);
                 }
 
-                TransferResult result = await this.TransferDataWithTransformsAsync(fromStream, toStream)
+                TransferResult result = await TransferDataWithTransformsAsync(fromStream, toStream)
                     .ConfigureAwait(false);
 
                 if (this.EncryptionMode == EncryptionMode.Encrypt)
@@ -213,7 +213,7 @@ namespace SyncPro.Runtime
 
                 // Allocate the buffer that will be used to transfer the data. The source stream will be read one
                 // suffer-size as a time, then written to the destination.
-                byte[] buffer = new byte[transferBufferSize];
+                byte[] buffer = new byte[TransferBufferSize];
                 long readTotal = 0;
                 long writtenTotal = 0;
 
@@ -229,8 +229,8 @@ namespace SyncPro.Runtime
                             // Get the number of tokens needed. We will require tokens equaling the number of
                             // bytes to be transferred. This is a non-blocking calling and will return between
                             // 0 and the number of requested tokens.
-                            tokens += this.throttlingManager.GetTokens(transferBufferSize - tokens);
-                            if (tokens >= transferBufferSize)
+                            tokens += this.throttlingManager.GetTokens(TransferBufferSize - tokens);
+                            if (tokens >= TransferBufferSize)
                             {
                                 // We have enough tokens to transfer the buffer
                                 break;
@@ -357,6 +357,7 @@ namespace SyncPro.Runtime
                 md5?.Dispose();
             }
         }
+
         private class TransferResult
         {
             public long BytesRead { get; set; }

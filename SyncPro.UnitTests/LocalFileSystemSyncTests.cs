@@ -9,7 +9,6 @@
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     using SyncPro.Adapters;
-    using SyncPro.Adapters.WindowsFileSystem;
     using SyncPro.Runtime;
 
     [TestClass]
@@ -166,9 +165,12 @@
                 throw new Exception("Failed to create file security");
             }
 
+            SecurityIdentifier currentUser = WindowsIdentity.GetCurrent().User;
+            Pre.Assert(currentUser != null, "currentUser != null");
+
             // Create a new rule denying ready access to the current user
             FileSystemAccessRule newRule = new FileSystemAccessRule(
-                WindowsIdentity.GetCurrent().User,
+                currentUser,
                 FileSystemRights.Read,
                 AccessControlType.Deny);
 

@@ -175,16 +175,14 @@
             return resultList;
         }
 
-        //private string relativePath;
-
         public string GetRelativePath(SyncDatabase database, string pathSeparator)
         {
-            return PathUtility.Join(pathSeparator, this.GetRelativePathStack(database));
+            return PathUtility.Join(pathSeparator, GetRelativePathStack(database));
         }
 
         public IList<string> GetRelativePathStack(SyncDatabase database)
         {
-            return this.relativePathStack ?? (this.relativePathStack = this.GetRelativePathStackInternal(database));
+            return this.relativePathStack ?? (this.relativePathStack = GetRelativePathStackInternal(database));
         }
 
         public long GetSize(SyncRelationship relationship, SyncEntryPropertyLocation location)

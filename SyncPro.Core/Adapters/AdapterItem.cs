@@ -74,7 +74,7 @@
         /// <summary>
         /// The full path of the item.
         /// </summary>
-        public string FullName => this.fullName ?? (this.fullName = this.GetPath());
+        public string FullName => this.fullName ?? (this.fullName = GetPath());
 
         protected virtual string GetPath()
         {

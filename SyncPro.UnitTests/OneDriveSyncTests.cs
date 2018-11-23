@@ -41,6 +41,7 @@ namespace SyncPro.UnitTests
             {
                 string tokenHelperPath = "OneDriveTokenHelper.exe";
                 Process p = Process.Start(tokenHelperPath, "/getToken /path \"" + tokenFilePath + "\"");
+                Pre.Assert(p != null, "p != null");
                 p.WaitForExit();
 
                 if (p.ExitCode != 1)

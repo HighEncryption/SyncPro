@@ -57,7 +57,7 @@
 
         public bool TestMode
         {
-            get { return this.testMode; }
+            get => this.testMode;
             set
             {
                 this.testMode = value;
@@ -71,11 +71,11 @@
 
         public App()
         {
-            this.InitializeComponent();
+            InitializeComponent();
             this.ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
-            this.ShowConfigureWindowCommand = new DelegatedCommand(o => this.ShowMainWindow());
-            this.ShutdownApplicationCommand = new DelegatedCommand(o => this.Shutdown());
+            this.ShowConfigureWindowCommand = new DelegatedCommand(o => ShowMainWindow());
+            this.ShutdownApplicationCommand = new DelegatedCommand(o => Shutdown());
         }
 
         internal static void Start(Dictionary<string, string> args)
@@ -249,10 +249,10 @@
             // If there are no sync relationships, show the main window
             if (!this.mainWindowViewModel.SyncRelationships.Any() || !(bool)runInBackground)
             {
-                this.localDispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(this.ShowMainWindow));
+                this.localDispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(ShowMainWindow));
             }
 
-            this.localDispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(this.ShowFirstRunDialog));
+            this.localDispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(ShowFirstRunDialog));
         }
 
         private void ShowMainWindow()

@@ -53,7 +53,7 @@
 
         public void Dispose()
         {
-            this.Dispose(true);
+            Dispose(true);
             GC.SuppressFinalize(this);
         }
 
@@ -75,13 +75,13 @@
 
             if (this.connectionInfo == null)
             {
-                await this.AuthorizeAccount().ConfigureAwait(false);
+                await AuthorizeAccount().ConfigureAwait(false);
             }
         }
 
         public async Task<IList<Bucket>> ListBucketsAsync()
         {
-            HttpRequestMessage request = this.BuildJsonRequest(
+            HttpRequestMessage request = BuildJsonRequest(
                 Constants.ApiListBucketsUrl,
                 HttpMethod.Post, 
                 new JsonBuilder()
@@ -93,7 +93,7 @@
             using (request)
             {
                 HttpResponseMessage responseMessage =
-                    await this.SendRequestAsync(request).ConfigureAwait(false);
+                    await SendRequestAsync(request).ConfigureAwait(false);
 
                 using (responseMessage)
                 {
@@ -109,7 +109,7 @@
 
         public async Task<Bucket> CreateBucket(string bucketName, string bucketType)
         {
-            HttpRequestMessage request = this.BuildJsonRequest(
+            HttpRequestMessage request = BuildJsonRequest(
                 Constants.ApiCreateBucketUrl,
                 HttpMethod.Post,
                 new JsonBuilder()
@@ -123,7 +123,7 @@
             using (request)
             {
                 HttpResponseMessage responseMessage =
-                    await this.SendRequestAsync(request).ConfigureAwait(false);
+                    await SendRequestAsync(request).ConfigureAwait(false);
 
                 using (responseMessage)
                 {
@@ -138,7 +138,7 @@
         {
             GetUploadUrlResponse response;
 
-            HttpRequestMessage request = this.BuildJsonRequest(
+            HttpRequestMessage request = BuildJsonRequest(
                 Constants.ApiGetUploadUrl,
                 HttpMethod.Post,
                 new JsonBuilder()
@@ -148,7 +148,7 @@
             using (request)
             {
                 HttpResponseMessage responseMessage =
-                    await this.SendRequestAsync(request).ConfigureAwait(false);
+                    await SendRequestAsync(request).ConfigureAwait(false);
 
                 using (responseMessage)
                 {
@@ -165,7 +165,7 @@
             string prefix, 
             string delimiter)
         {
-            ListFileNamesResponse response = await this.InternalListFileNamesAsync(
+            ListFileNamesResponse response = await InternalListFileNamesAsync(
                     bucketId,
                     prefix,
                     delimiter,
@@ -176,7 +176,7 @@
 
             while (!string.IsNullOrWhiteSpace(response.NextFileName))
             {
-                response = await this.InternalListFileNamesAsync(
+                response = await InternalListFileNamesAsync(
                         bucketId,
                         prefix,
                         delimiter,
@@ -195,7 +195,7 @@
             string delimiter,
             string startFileName)
         {
-            HttpRequestMessage request = this.BuildJsonRequest(
+            HttpRequestMessage request = BuildJsonRequest(
                 Constants.ApiListFileNamesUrl,
                 HttpMethod.Post, 
                 new JsonBuilder()
@@ -209,7 +209,7 @@
             using (request)
             {
                 HttpResponseMessage responseMessage =
-                    await this.SendRequestAsync(request).ConfigureAwait(false);
+                    await SendRequestAsync(request).ConfigureAwait(false);
 
                 using (responseMessage)
                 {
@@ -241,11 +241,11 @@
             Stream stream)
         {
             // Get the upload information (destination URL and temporary auth token)
-            GetUploadUrlResponse uploadUrlResponse = await this.GetUploadUrl(bucketId);
+            GetUploadUrlResponse uploadUrlResponse = await GetUploadUrl(bucketId);
 
             BackblazeB2FileUploadResponse uploadResponse;
 
-            HttpRequestMessage request = this.CreateRequestMessage(
+            HttpRequestMessage request = CreateRequestMessage(
                 HttpMethod.Post,
                 uploadUrlResponse.UploadUrl);
 
@@ -266,7 +266,7 @@
                 request.Content.Headers.ContentType = new MediaTypeHeaderValue("b2/x-auto");
 
                 HttpResponseMessage responseMessage =
-                    await this.SendRequestAsync(request).ConfigureAwait(false);
+                    await SendRequestAsync(request).ConfigureAwait(false);
 
                 using (responseMessage)
                 {
@@ -287,7 +287,7 @@
 
             try
             {
-                startLargeFileRequest = this.BuildJsonRequest(
+                startLargeFileRequest = BuildJsonRequest(
                     Constants.ApiStartLargeFileUrl,
                     HttpMethod.Post,
                     new JsonBuilder()
@@ -297,7 +297,7 @@
                         .ToString());
 
                 startLargeFileResponse =
-                    await this.SendRequestAsync(startLargeFileRequest).ConfigureAwait(false);
+                    await SendRequestAsync(startLargeFileRequest).ConfigureAwait(false);
 
                 response = await startLargeFileResponse.Content
                         .TryReadAsJsonAsync<StartLargeFileResponse>()
@@ -321,7 +321,7 @@
 
             try
             {
-                finishLargeFileRequest = this.BuildJsonRequest(
+                finishLargeFileRequest = BuildJsonRequest(
                     Constants.ApiFinishLargeFileUrl,
                     HttpMethod.Post,
                     new JsonBuilder()
@@ -330,7 +330,7 @@
                         .ToString());
 
                 finishLargeFileResponse =
-                    await this.SendRequestAsync(finishLargeFileRequest).ConfigureAwait(false);
+                    await SendRequestAsync(finishLargeFileRequest).ConfigureAwait(false);
 
                 response = await finishLargeFileResponse.Content
                     .TryReadAsJsonAsync<FinishLargeFileResponse>()
@@ -354,7 +354,7 @@
 
             try
             {
-                listUnfinishedLargeFilesRequest = this.BuildJsonRequest(
+                listUnfinishedLargeFilesRequest = BuildJsonRequest(
                     Constants.ApiListLargeUnfinishedFilesUrl,
                     HttpMethod.Post,
                     new JsonBuilder()
@@ -362,7 +362,7 @@
                         .ToString());
 
                 listUnfinishedLargeFilesResponse =
-                    await this.SendRequestAsync(listUnfinishedLargeFilesRequest).ConfigureAwait(false);
+                    await SendRequestAsync(listUnfinishedLargeFilesRequest).ConfigureAwait(false);
 
                 response = await listUnfinishedLargeFilesResponse.Content
                     .TryReadAsJsonAsync<ListLargeUnfinishedFilesResponse>()
@@ -386,7 +386,7 @@
 
             try
             {
-                cancelLargeFileRequest = this.BuildJsonRequest(
+                cancelLargeFileRequest = BuildJsonRequest(
                     Constants.ApiCancelLargeFileUrl,
                     HttpMethod.Post,
                     new JsonBuilder()
@@ -394,7 +394,7 @@
                         .ToString());
 
                 cancelLargeFileResponse =
-                    await this.SendRequestAsync(cancelLargeFileRequest).ConfigureAwait(false);
+                    await SendRequestAsync(cancelLargeFileRequest).ConfigureAwait(false);
 
                 response = await cancelLargeFileResponse.Content
                     .TryReadAsJsonAsync<CancelLargeFileResponse>()
@@ -418,7 +418,7 @@
 
             try
             {
-                getUploadPartUrlRequest = this.BuildJsonRequest(
+                getUploadPartUrlRequest = BuildJsonRequest(
                     Constants.ApiGetUploadPartUrl,
                     HttpMethod.Post,
                     new JsonBuilder()
@@ -426,7 +426,7 @@
                         .ToString());
 
                 getUploadPartUrlResponse =
-                    await this.SendRequestAsync(getUploadPartUrlRequest).ConfigureAwait(false);
+                    await SendRequestAsync(getUploadPartUrlRequest).ConfigureAwait(false);
 
                 response = await getUploadPartUrlResponse.Content
                         .TryReadAsJsonAsync<GetUploadPartUrlResponse>()
@@ -451,7 +451,7 @@
         {
             UploadPartResponse uploadResponse;
 
-            HttpRequestMessage request = this.CreateRequestMessage(
+            HttpRequestMessage request = CreateRequestMessage(
                 HttpMethod.Post,
                 uploadUrl);
 
@@ -469,7 +469,7 @@
                 request.Content = new DelayedDisposeStreamContent(stream);
 
                 HttpResponseMessage responseMessage =
-                    await this.SendRequestAsync(request).ConfigureAwait(false);
+                    await SendRequestAsync(request).ConfigureAwait(false);
 
                 using (responseMessage)
                 {
@@ -487,7 +487,7 @@
         {
             try
             {
-                return await this.SendRequestAsync(request, this.httpClient).ConfigureAwait(false);
+                return await SendRequestAsync(request, this.httpClient).ConfigureAwait(false);
             }
             finally
             {
@@ -518,7 +518,7 @@
                     errorResponse.Code == "unauthorized")
                 {
                     // Refresh the auth token
-                    await this.AuthorizeAccount();
+                    await AuthorizeAccount();
 
                     HttpRequestMessage newRequest = await request.Clone().ConfigureAwait(false);
 
@@ -561,7 +561,7 @@
 
         private async Task AuthorizeAccount()
         {
-            HttpRequestMessage request = this.CreateRequestMessage(
+            HttpRequestMessage request = CreateRequestMessage(
                 HttpMethod.Get,
                 Constants.DefaultApiUrl + Constants.ApiAuthorizeAccountUrl);
 
@@ -613,7 +613,7 @@
                 throw new Exception("The connection information has not been initialized.");
             }
 
-            HttpRequestMessage request = this.CreateRequestMessage(
+            HttpRequestMessage request = CreateRequestMessage(
                 method,
                 this.connectionInfo.ApiUrl + urlPart);
 
@@ -665,14 +665,10 @@
 
         private static string UrlEncode(string str)
         {
-            if (str == "/")
-            {
-                return str;
-            }
-
-            return Uri.EscapeDataString(str);
+            return str == "/" ? str : Uri.EscapeDataString(str);
         }
 
+        // ReSharper disable once UnusedMember.Local
         private static string UrlDecode(string str)
         {
             if (str == "+")

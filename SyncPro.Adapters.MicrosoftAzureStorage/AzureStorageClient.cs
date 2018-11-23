@@ -92,7 +92,6 @@
                         // Convert from the XML-based result object into our portable type
                         containers.AddRange(results.Containers.Select(Container.FromInternalResult));
 
-                        // TODO: Need to handle the case when there is a 
                         if (string.IsNullOrWhiteSpace(results.NextMarker))
                         {
                             return containers;
@@ -535,12 +534,7 @@
                 new CounterDimension(Constants.DimensionNames.ApiCallName, opName));
         }
 
-        private static void LogRequest(HttpRequestMessage request, Uri defaultBaseAddress)
-        {
-            LogRequest(request, defaultBaseAddress, false);
-        }
-
-        private static void LogRequest(HttpRequestMessage request, Uri defaultBaseAddress, bool includeDetail)
+        private static void LogRequest(HttpRequestMessage request, Uri defaultBaseAddress, bool includeDetail = false)
         {
             Uri uri = request.RequestUri;
 
@@ -585,12 +579,7 @@
             }
         }
 
-        private static void LogResponse(HttpResponseMessage response)
-        {
-            LogResponse(response, false);
-        }
-
-        private static void LogResponse(HttpResponseMessage response, bool includeDetail)
+        private static void LogResponse(HttpResponseMessage response, bool includeDetail = false)
         {
             Logger.Debug("HttpResponse: {0} ({1})", (int)response.StatusCode, response.ReasonPhrase);
 

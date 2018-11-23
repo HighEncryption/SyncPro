@@ -3,7 +3,6 @@ namespace SyncPro.UnitTests
     using System;
     using System.ComponentModel;
     using System.IO;
-    using System.Security;
 
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -12,18 +11,6 @@ namespace SyncPro.UnitTests
     using SyncPro.Adapters;
     using SyncPro.Adapters.MicrosoftAzureStorage;
     using SyncPro.Runtime;
-    using SyncPro.Utility;
-
-    //public class AzureStorageAccountInfo
-    //{
-    //    public string AccountName { get; set; }
-
-    //    [JsonConverter(typeof(SecureStringToProtectedDataConverter))]
-    //    public SecureString AccessKey { get; set; }
-
-    //    public string ContainerName { get; set; }
-
-    //}
 
     [TestClass]
     public class AzureStorageTests : AdapterTestsBase<AzureStorageAdapter>
