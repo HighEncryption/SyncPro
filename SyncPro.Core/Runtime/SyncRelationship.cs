@@ -599,7 +599,7 @@
             // Disable scheduler for continuous syncing
             foreach (AdapterBase adapterBase in this.Adapters.Where(a => a.Configuration.IsOriginator))
             {
-                if (adapterBase.SupportsChangeNotification())
+                if (adapterBase.Capabilities.HasFlag(AdapterCapabilities.ChangeNotification))
                 {
                     IChangeNotification changeNotificationAdapter = (IChangeNotification)adapterBase;
                     changeNotificationAdapter.EnableChangeNotification(false);
@@ -622,7 +622,7 @@
                 case SyncTriggerType.Continuous:
                     foreach (AdapterBase adapterBase in this.Adapters.Where(a => a.Configuration.IsOriginator))
                     {
-                        if (adapterBase.SupportsChangeNotification())
+                        if (adapterBase.Capabilities.HasFlag(AdapterCapabilities.ChangeNotification))
                         {
                             IChangeNotification changeNotificationAdapter = (IChangeNotification) adapterBase;
                             changeNotificationAdapter.ItemChanged += this.SyncSchedulerHandleAdapterItemChangeNotification;

@@ -630,7 +630,9 @@
                 DateTime nextSyncTime = this.BaseModel.GetNextScheduledTriggerTime();
                 this.NextSyncDisplayString = nextSyncTime.ToString("dddd, MMMM dd, HH:mm");
             }
-            else if (this.SyncSourceAdapter.AdapterBase.SupportsChangeNotification())
+            else if (
+                this.SyncSourceAdapter.AdapterBase.Capabilities.HasFlag(
+                    AdapterCapabilities.ChangeNotification))
             {
                 IChangeNotification changeNotification =
                     (IChangeNotification) this.SyncSourceAdapter.AdapterBase;
@@ -691,7 +693,13 @@
                 return null;
             }
 
-            return await adapter.GetItemThumbnail(adapterEntryId, relativePath).ConfigureAwait(false);
+            if (!adapter.Capabilities.HasFlag(AdapterCapabilities.Thumbnails))
+            {
+                return null;
+            }
+
+            IThumbnails thumbnails = adapter as IThumbnails;
+            return await thumbnails.GetItemThumbnail(adapterEntryId, relativePath).ConfigureAwait(false);
         }
     }
 }

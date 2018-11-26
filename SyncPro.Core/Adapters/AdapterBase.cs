@@ -71,7 +71,14 @@
         /// Gets the GUID that uniquely identifies this type of adapter.
         /// </summary>
         public abstract Guid GetTargetTypeId();
+        
+        public abstract AdapterCapabilities Capabilities { get; }
 
+        /// <summary>
+        /// Adapter locality is a coarse-grain identification of where the remote endpoint for the
+        /// adapter is located. This value is use to improve performance when deciding how to handle
+        /// file hashes.
+        /// </summary>
         public virtual AdapterLocality Locality => AdapterLocality.Internet;
 
         /// <summary>
@@ -206,27 +213,7 @@
             });
         }
 
-        /// <summary>
-        /// Indicates whether the <see cref="AdapterBase"/> supports change notification. See 
-        /// <see cref="IChangeNotification"/> for more information on change notifiation.
-        /// </summary>
-        public bool SupportsChangeNotification()
-        {
-            return this is IChangeNotification;
-        }
-
-        /// <summary>
-        /// Indicates whether the <see cref="AdapterBase"/> supports change tracking. See 
-        /// <see cref="IChangeTracking"/> for more information on change notifiation.
-        /// </summary>
-        public bool SupportChangeTracking()
-        {
-            return this is IChangeTracking;
-        }
-
         public abstract byte[] GetItemHash(HashType hashType, IAdapterItem adapterItem);
-
-        public abstract Task<byte[]> GetItemThumbnail(string itemId, string relativePath);
     }
 
     public class EntryUpdateResult
@@ -246,5 +233,14 @@
         }
 
         public EntryUpdateInfo UpdateInfo { get; set; }
+    }
+
+    [Flags]
+    public enum AdapterCapabilities
+    {
+        None = 0x00,
+        ChangeNotification = 0x01,
+        ChangeTracking = 0x02,
+        Thumbnails = 0x04,
     }
 }

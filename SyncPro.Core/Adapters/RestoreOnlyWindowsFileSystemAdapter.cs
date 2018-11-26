@@ -28,6 +28,8 @@ namespace SyncPro.Adapters
             return TargetTypeId;
         }
 
+        public override AdapterCapabilities Capabilities => AdapterCapabilities.None;
+
         public override Task<SyncEntry> CreateRootEntry()
         {
             throw new NotImplementedException();
@@ -113,11 +115,6 @@ namespace SyncPro.Adapters
         }
 
         public override byte[] GetItemHash(HashType hashType, IAdapterItem adapterItem)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override Task<byte[]> GetItemThumbnail(string itemId, string relativePath)
         {
             throw new NotImplementedException();
         }

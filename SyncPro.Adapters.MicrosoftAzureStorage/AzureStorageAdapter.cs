@@ -20,7 +20,8 @@
 
     using TaskExtensions = SyncPro.TaskExtensions;
 
-    public class AzureStorageAdapter : AdapterBase
+    public class AzureStorageAdapter : 
+        AdapterBase
     {
         public static readonly Guid TargetTypeId = Guid.Parse("3EF1B90E-C5EF-42EE-A441-78A220B7107F");
 
@@ -47,6 +48,8 @@
         {
             return TargetTypeId;
         }
+
+        public override AdapterCapabilities Capabilities => AdapterCapabilities.None;
 
         public override async Task<SyncEntry> CreateRootEntry()
         {
@@ -330,11 +333,6 @@
         }
 
         public override byte[] GetItemHash(HashType hashType, IAdapterItem adapterItem)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override Task<byte[]> GetItemThumbnail(string itemId, string relativePath)
         {
             throw new NotImplementedException();
         }

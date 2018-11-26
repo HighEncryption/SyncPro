@@ -15,7 +15,11 @@
     using SyncPro.Tracing;
     using SyncPro.Utility;
 
-    public class WindowsFileSystemAdapter : AdapterBase, IChangeNotification, IDisposable
+    public class WindowsFileSystemAdapter : 
+        AdapterBase, 
+        IChangeNotification, 
+        IThumbnails,
+        IDisposable
     {
         public static readonly Guid TargetTypeId = new Guid("b1755e86-381e-4e78-b47d-dbbfeee34585");
 
@@ -26,6 +30,10 @@
         {
             return TargetTypeId;
         }
+
+        public override AdapterCapabilities Capabilities =>
+            AdapterCapabilities.ChangeNotification |
+            AdapterCapabilities.Thumbnails;
 
         public override AdapterLocality Locality =>
             this.Config.RootDirectory.StartsWith(@"\\") ? AdapterLocality.LocalNetwork : AdapterLocality.LocalComputer;
@@ -381,7 +389,7 @@
             throw new NotImplementedException("Unknown hash type");
         }
 
-        public override Task<byte[]> GetItemThumbnail(string itemId, string relativePath)
+        public Task<byte[]> GetItemThumbnail(string itemId, string relativePath)
         {
             string ext = relativePath.Split('.').LastOrDefault();
 

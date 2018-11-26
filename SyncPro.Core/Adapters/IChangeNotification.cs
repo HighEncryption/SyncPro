@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     [Flags]
     public enum ItemChangeType
@@ -81,5 +82,10 @@
         /// </summary>
         /// <returns>The next notification time</returns>
         DateTime GetNextNotificationTime();
+    }
+
+    public interface IThumbnails
+    {
+        Task<byte[]> GetItemThumbnail(string itemId, string relativePath);
     }
 }

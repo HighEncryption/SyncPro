@@ -9,13 +9,16 @@
     using System.Threading.Tasks;
 
     using SyncPro.Adapters.MicrosoftOneDrive.DataModel;
-    using SyncPro.Configuration;
     using SyncPro.Data;
     using SyncPro.OAuth;
     using SyncPro.Runtime;
     using SyncPro.Tracing;
 
-    public class OneDriveAdapter : AdapterBase, IChangeTracking, IChangeNotification
+    public class OneDriveAdapter : 
+        AdapterBase, 
+        IChangeTracking, 
+        IChangeNotification,
+        IThumbnails
     {
         public static readonly Guid TargetTypeId = Guid.Parse("48db1119-1fff-4d97-99ba-2e715a53619a");
 
@@ -51,6 +54,11 @@
         {
             return TargetTypeId;
         }
+
+        public override AdapterCapabilities Capabilities =>
+            AdapterCapabilities.ChangeNotification |
+            AdapterCapabilities.ChangeTracking |
+            AdapterCapabilities.Thumbnails;
 
         /// <inheritdoc />
         public override async Task<SyncEntry> CreateRootEntry()
@@ -484,7 +492,7 @@
             return null;
         }
 
-        public override async Task<byte[]> GetItemThumbnail(string itemId, string relativePath)
+        public async Task<byte[]> GetItemThumbnail(string itemId, string relativePath)
         {
             ThumbnailSet thumbnailSet = await this.oneDriveClient.GetThumbnailsAsync(itemId).ConfigureAwait(false);
 

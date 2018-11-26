@@ -106,7 +106,7 @@ namespace SyncPro.Runtime
         {
             Logger.AnalyzeChangesStart(
                 this.analyzeRelationshipResult.Id,
-                sourceAdapter.Configuration.Id);
+                this.sourceAdapter.Configuration.Id);
 
             Logger.Info(
                 Logger.BuildEventMessageWithProperties(
@@ -114,8 +114,9 @@ namespace SyncPro.Runtime
                     new Dictionary<string, object>()
                     {
                         { "SyncAnalysisRunId", this.analyzeRelationshipResult.Id },
-                        { "AdapterId", sourceAdapter.Configuration.Id },
-                        { "SupportChangeTracking", sourceAdapter.SupportChangeTracking() }
+                        { "AdapterId", this.sourceAdapter.Configuration.Id },
+                        { "Capabilities", StringExtensions.GetSetFlagNames<AdapterCapabilities>(
+                            this.sourceAdapter.Capabilities) }
                     }));
 
             try
@@ -132,7 +133,7 @@ namespace SyncPro.Runtime
                 // originate from) supports change tracking, which would provide us with an easier-to-use set of changes
                 // that will need to be applied. Without change tracking, we will need to perform a manual walk of the
                 // file/directory tree and compare to what is in the database.
-                if (sourceAdapter.SupportChangeTracking())
+                if (sourceAdapter.Capabilities.HasFlag(AdapterCapabilities.ChangeTracking))
                 {
                     // Get a reference to the source adapter with change tracking
                     IChangeTracking changeTracking = (IChangeTracking) sourceAdapter;

@@ -47,6 +47,8 @@
             return TargetTypeId;
         }
 
+        public override AdapterCapabilities Capabilities => AdapterCapabilities.None;
+
         public override async Task<SyncEntry> CreateRootEntry()
         {
             Item rootItem = await this.googleDriveClient.GetItemById(this.TargetItemId).ConfigureAwait(false);
@@ -128,11 +130,6 @@
             }
 
             return null;
-        }
-
-        public override async Task<byte[]> GetItemThumbnail(string itemId, string relativePath)
-        {
-            return await Task.FromResult<byte[]>(null);
         }
 
         public override void FinalizeItemWrite(Stream stream, EntryUpdateInfo updateInfo)

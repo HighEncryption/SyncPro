@@ -32,13 +32,13 @@ namespace SyncPro.UI.Navigation.ViewModels
             this.MenuCommands.Add(new AnalyzeRelationshipMenuCommand(relationship));
             this.MenuCommands.Add(new BeginSyncMenuCommand(relationship));
 
-            if (this.Relationship.SyncSourceAdapter.AdapterBase is WindowsFileSystemAdapter)
+            if (this.Relationship.SyncSourceAdapter?.AdapterBase is WindowsFileSystemAdapter)
             {
                 this.MenuCommands.Add(
                     new OpenFolderMenuCommand(this.Relationship.SyncSourceAdapter));
             }
 
-            if (this.Relationship.SyncDestinationAdapter.AdapterBase is WindowsFileSystemAdapter)
+            if (this.Relationship.SyncDestinationAdapter?.AdapterBase is WindowsFileSystemAdapter)
             {
                 this.MenuCommands.Add(
                     new OpenFolderMenuCommand(this.Relationship.SyncDestinationAdapter));
