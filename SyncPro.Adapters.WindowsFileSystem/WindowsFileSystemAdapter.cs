@@ -175,7 +175,8 @@
                 else if (updateInfo.Entry.Type == SyncEntryType.Directory)
                 {
                     Pre.Assert(!string.IsNullOrEmpty(newFullPath), "newFullPath != null");
-                    Directory.Move(fullPath, newFullPath);
+                    if (fullPath != newFullPath)
+                        Directory.Move(fullPath, newFullPath);
                 }
                 else
                 {
