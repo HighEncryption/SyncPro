@@ -21,6 +21,9 @@ namespace SyncPro.Runtime
 
     public abstract class JobBase
     {
+        private bool resync;
+        private bool skipHashCheck;
+
         public SyncRelationship Relationship { get; }
 
         /// <summary>
@@ -47,6 +50,35 @@ namespace SyncPro.Runtime
         /// The result of the sync job
         /// </summary>
         public JobResult JobResult { get; protected set; }
+
+        public bool Resync
+        {
+            get => this.resync;
+            set
+            {
+                if (this.HasStarted)
+                {
+                    throw new Exception("Cannot get Resync property after the job has started");
+                }
+
+                this.resync = value;
+            }
+        }
+
+        public bool SkipHashCheck
+        {
+            get => this.skipHashCheck;
+            set
+            {
+                if (this.HasStarted)
+                {
+                    throw new Exception("Cannot get Resync property after the job has started");
+                }
+
+                this.skipHashCheck = value;
+            }
+        }
+
 
         /// <summary>
         /// Indicates whether the job has started

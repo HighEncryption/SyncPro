@@ -113,7 +113,7 @@ namespace SyncPro.UI.ViewModels
             this.ProgressValue = 1;
             this.IsProgressIndeterminate = false;
 
-            // Calculate unchanges files and folders
+            // Calculate unchanged files and folders
             this.ChangeMetricsList[0].Unchanged = this.AnalyzeJob.AnalyzeResult.UnchangedFileCount;
             this.ChangeMetricsList[1].Unchanged = this.AnalyzeJob.AnalyzeResult.UnchangedFolderCount;
             this.ChangeMetricsList[2].Unchanged = this.AnalyzeJob.AnalyzeResult.UnchangedFileBytes;
@@ -123,11 +123,14 @@ namespace SyncPro.UI.ViewModels
             {
                 if (adapterResult.Value.Exception != null)
                 {
-                    this.ErrorMessages.Add(
-                        new ErrorViewModel(
-                            false,
-                            adapterResult.Value.Exception.Message,
-                            adapterResult.Value.Exception.ToString()));
+                    App.DispatcherInvoke(() =>
+                    {
+                        this.ErrorMessages.Add(
+                            new ErrorViewModel(
+                                false,
+                                adapterResult.Value.Exception.Message,
+                                adapterResult.Value.Exception.ToString()));
+                    });
 
                     this.ProgressState = ProgressState.Error;
                 }
@@ -241,7 +244,14 @@ namespace SyncPro.UI.ViewModels
             {
                 if (info.HasSyncEntryFlag(SyncEntryChangedFlags.NewDirectory))
                 {
-                    this.ChangeMetricsList[1].Added++;
+                    if (info.HasSyncEntryFlag(SyncEntryChangedFlags.DestinationExists))
+                    {
+                        this.ChangeMetricsList[1].Existing++;
+                    }
+                    else
+                    {
+                        this.ChangeMetricsList[1].Added++;
+                    }
                 }
                 else if (info.HasSyncEntryFlag(SyncEntryChangedFlags.Deleted))
                 {
@@ -257,9 +267,17 @@ namespace SyncPro.UI.ViewModels
             {
                 if (info.HasSyncEntryFlag(SyncEntryChangedFlags.NewFile))
                 {
-                    this.ChangeMetricsList[0].Added++;
-                    this.ChangeMetricsList[2].Added += info.Entry.GetSize(this.SyncRelationship.GetSyncRelationship(), SyncEntryPropertyLocation.Source);
-                    this.BytesToCopy += info.Entry.GetSize(this.SyncRelationship.GetSyncRelationship(), SyncEntryPropertyLocation.Source);
+                    if (info.HasSyncEntryFlag(SyncEntryChangedFlags.DestinationExists))
+                    {
+                        this.ChangeMetricsList[0].Existing++;
+                        this.ChangeMetricsList[2].Existing += info.Entry.GetSize(this.SyncRelationship.GetSyncRelationship(), SyncEntryPropertyLocation.Source);
+                    }
+                    else
+                    {
+                        this.ChangeMetricsList[0].Added++;
+                        this.ChangeMetricsList[2].Added += info.Entry.GetSize(this.SyncRelationship.GetSyncRelationship(), SyncEntryPropertyLocation.Source);
+                        this.BytesToCopy += info.Entry.GetSize(this.SyncRelationship.GetSyncRelationship(), SyncEntryPropertyLocation.Source);
+                    }
                 }
                 else if (info.HasSyncEntryFlag(SyncEntryChangedFlags.Deleted))
                 {

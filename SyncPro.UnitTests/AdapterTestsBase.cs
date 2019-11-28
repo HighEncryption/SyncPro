@@ -240,6 +240,7 @@ namespace SyncPro.UnitTests
             SyncJob syncJob = (SyncJob)analyzeJob.WaitForCompletion();
 
             Assert.IsTrue(syncJob.HasFinished);
+            Assert.AreEqual(JobResult.Success, syncJob.JobResult);
 
             Assert.AreEqual(
                 syncFileList.Count, 

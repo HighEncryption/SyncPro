@@ -119,7 +119,14 @@
             {
                 if (entry.HasSyncEntryFlag(SyncEntryChangedFlags.NewDirectory))
                 {
-                    this.ChangeMetricsList[1].Added++;
+                    if (entry.HasSyncEntryFlag(SyncEntryChangedFlags.DestinationExists))
+                    {
+                        this.ChangeMetricsList[1].Existing++;
+                    }
+                    else
+                    {
+                        this.ChangeMetricsList[1].Added++;
+                    }
                 }
                 else if (entry.HasSyncEntryFlag(SyncEntryChangedFlags.Deleted))
                 {
@@ -135,9 +142,17 @@
             {
                 if (entry.HasSyncEntryFlag(SyncEntryChangedFlags.NewFile))
                 {
-                    this.ChangeMetricsList[0].Added++;
-                    this.ChangeMetricsList[2].Added += entry.OriginalSizeNew;
-                    this.BytesToCopy += entry.OriginalSizeNew;
+                    if (entry.HasSyncEntryFlag(SyncEntryChangedFlags.DestinationExists))
+                    {
+                        this.ChangeMetricsList[0].Existing++;
+                        this.ChangeMetricsList[2].Existing += entry.OriginalSizeNew;
+                    }
+                    else
+                    {
+                        this.ChangeMetricsList[0].Added++;
+                        this.ChangeMetricsList[2].Added += entry.OriginalSizeNew;
+                        this.BytesToCopy += entry.OriginalSizeNew;
+                    }
                 }
                 else if (entry.HasSyncEntryFlag(SyncEntryChangedFlags.Deleted))
                 {

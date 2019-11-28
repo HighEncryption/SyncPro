@@ -73,7 +73,8 @@
                            TextWrapping="Wrap"/>
 
                 <Button Margin="0,8"
-                        Style="{StaticResource ItemButtonStyle}">
+                        Style="{StaticResource ItemButtonStyle}"
+                        Command="{Binding Path=SelectIncludeExcludeFoldersCommand}">
                     <TextBlock Text="Select Include/Exclude Items" />
                 </Button>
                 

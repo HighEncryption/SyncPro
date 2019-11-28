@@ -39,19 +39,72 @@ namespace SyncPro.UnitTests
 
             if (!File.Exists(tokenFilePath))
             {
-                string tokenHelperPath = "OneDriveTokenHelper.exe";
-                Process p = Process.Start(tokenHelperPath, "/getToken /path \"" + tokenFilePath + "\"");
-                Pre.Assert(p != null, "p != null");
-                p.WaitForExit();
-
-                if (p.ExitCode != 1)
-                {
-                    throw new Exception("Failed to get token using OneDriveTokenHelper");
-                }
-
-                //throw new FileNotFoundException("Token file was not present at path " + tokenFilePath);
+                RunOneDriveTokenHelper(tokenFilePath);
             }
 
+            TokenResponse token = ReadTokenFromFile(tokenFilePath);
+
+            bool tokenExpired = false;
+
+            using (OneDriveClient client = new OneDriveClient(token))
+            {
+                client.TokenRefreshed += (sender, args) =>
+                {
+                    // The token was refreshed, so save a protected copy of the token to the token file.
+                    token = args.NewToken;
+                    token.SaveProtectedToken(tokenFilePath);
+                };
+
+                try
+                {
+                    client.GetUserProfileAsync().Wait();
+                }
+                catch (AggregateException ex)
+                {
+                    if (ex.InnerException is OneDriveTokenRefreshFailedException)
+                    {
+                        tokenExpired = true;
+                    }
+                }
+            }
+
+            if (tokenExpired)
+            {
+                RunOneDriveTokenHelper(tokenFilePath);
+
+                token = ReadTokenFromFile(tokenFilePath);
+
+                using (OneDriveClient client = new OneDriveClient(token))
+                {
+                    client.TokenRefreshed += (sender, args) =>
+                    {
+                        // The token was refreshed, so save a protected copy of the token to the token file.
+                        token = args.NewToken;
+                        token.SaveProtectedToken(tokenFilePath);
+                    };
+
+                    client.GetUserProfileAsync().Wait();
+                }
+            }
+
+            classCurrentToken = token;
+        }
+
+        private static void RunOneDriveTokenHelper(string tokenFilePath)
+        {
+            string tokenHelperPath = "OneDriveTokenHelper.exe";
+            Process p = Process.Start(tokenHelperPath, "/getToken /path \"" + tokenFilePath + "\"");
+            Pre.Assert(p != null, "p != null");
+            p.WaitForExit();
+
+            if (p.ExitCode != 1)
+            {
+                throw new Exception("Failed to get token using OneDriveTokenHelper");
+            }
+        }
+
+        private static TokenResponse ReadTokenFromFile(string tokenFilePath)
+        {
             string tokenContent = File.ReadAllText(tokenFilePath);
 
             var token = JsonConvert.DeserializeObject<TokenResponse>(tokenContent);
@@ -68,19 +121,7 @@ namespace SyncPro.UnitTests
             // The token file on disk is encrypted. Decrypt the values for in-memory use.
             token.Unprotect();
 
-            using (OneDriveClient client = new OneDriveClient(token))
-            {
-                client.TokenRefreshed += (sender, args) =>
-                {
-                    // The token was refreshed, so save a protected copy of the token to the token file.
-                    token = args.NewToken;
-                    token.SaveProtectedToken(tokenFilePath);
-                };
-
-                client.GetUserProfileAsync().Wait();
-            }
-
-            classCurrentToken = token;
+            return token;
         }
 
         protected override OneDriveAdapter CreateSourceAdapter(SyncRelationship newRelationship, string testMethodName)
@@ -102,7 +143,22 @@ namespace SyncPro.UnitTests
 
         protected override OneDriveAdapter CreateDestinationAdapter(SyncRelationship newRelationship, string testMethodName)
         {
-            throw new NotImplementedException();
+            TokenResponse currentToken = GetCurrentToken();
+
+            OneDriveAdapter destinationAdapter = new OneDriveAdapter(newRelationship)
+            {
+                CurrentToken = currentToken,
+            };
+
+            string testDirPath = this.TestContext.Properties["TestRunDirectory"] as string;
+            string testDir = testDirPath.Split('\\').Last();
+
+            destinationAdapter.Config.TargetPath = "OneDrive/SyncTemp/" + testDir;
+
+            destinationAdapter.InitializeClient().Wait();
+            destinationAdapter.CreateRootDirectory().Wait();
+
+            return destinationAdapter;
         }
 
         [TestMethod]

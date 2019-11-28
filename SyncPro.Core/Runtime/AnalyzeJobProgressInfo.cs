@@ -42,10 +42,11 @@ namespace SyncPro.Runtime
             int sourceAdapterId, 
             string activity,
             int filesTotal, 
-            long bytesTotal)
+            long bytesTotal,
+            double? progressValue = null)
         {
             this.Activity = activity;
-            this.ProgressValue = null;
+            this.ProgressValue = progressValue;
             this.SourceAdapterId = sourceAdapterId;
             this.FilesTotal = filesTotal;
             this.BytesTotal = bytesTotal;

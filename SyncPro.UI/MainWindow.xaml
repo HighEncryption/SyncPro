@@ -421,7 +421,7 @@
                                        ToolTip="{Binding Path=Name}" TextTrimming="CharacterEllipsis" />
 
                             <ProgressBar Grid.Column="1" HorizontalAlignment="Stretch" Height="3" VerticalAlignment="Bottom"
-                                         Margin="8,0,0,-2" IsIndeterminate="{Binding Path=ProgressIsIndeterminate}"
+                                         Margin="8,0,8,-2" IsIndeterminate="{Binding Path=ProgressIsIndeterminate}"
                                          Visibility="{Binding Path=ShowProgress, Converter={StaticResource BooleanToVisibility}}"
                                          Value="{Binding Path=ProgressValue}"/>
 

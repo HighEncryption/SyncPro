@@ -18,6 +18,8 @@ namespace SyncPro.UI.ViewModels
 
         public long Added { get; set; }
 
+        public long Existing { get; set; }
+
         public long Modified { get; set; }
 
         public long Metadata { get; set; }
@@ -30,6 +32,7 @@ namespace SyncPro.UI.ViewModels
         public void RaisePropertiesChanged()
         {
             this.RaisePropertyChanged(nameof(this.Added));
+            this.RaisePropertyChanged(nameof(this.Existing));
             this.RaisePropertyChanged(nameof(this.Modified));
             this.RaisePropertyChanged(nameof(this.Metadata));
             this.RaisePropertyChanged(nameof(this.Removed));

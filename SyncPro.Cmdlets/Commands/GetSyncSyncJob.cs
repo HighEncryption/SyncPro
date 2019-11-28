@@ -5,8 +5,8 @@
 
     using SyncPro.Runtime;
 
-    [Cmdlet(VerbsCommon.Get, "SyncProJob")]
-    public class GetSyncJob : PSCmdlet
+    [Cmdlet(VerbsCommon.Get, "SyncProSyncJob")]
+    public class GetSyncSyncJob : PSCmdlet
     {
         [Parameter]
         [Alias("Rid")]

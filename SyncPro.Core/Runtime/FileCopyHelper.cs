@@ -111,7 +111,7 @@ namespace SyncPro.Runtime
 
                 if (this.EncryptionMode == EncryptionMode.Encrypt)
                 {
-                    // The file was encrytped, so we read the original file and wrote the encrypted file.
+                    // The file was encrypted, so we read the original file and wrote the encrypted file.
                     this.updateInfo.OriginalSizeNew = result.BytesRead;
                     this.updateInfo.EncryptedSizeNew = result.BytesWritten;
 

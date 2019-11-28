@@ -40,11 +40,11 @@ namespace OneDriveTokenHelper
                 if (string.Equals(args.Uri.AbsolutePath, "ietf:wg:oauth:2.0:oob", StringComparison.OrdinalIgnoreCase))
                 {
                     // We were directed back to the redirect URI. Extract the code from the query string
-                    Dictionary<string, string> queryParametes = args.Uri.GetQueryParameters();
+                    Dictionary<string, string> queryParameters = args.Uri.GetQueryParameters();
 
                     authenticationResult = new AuthenticationResult()
                     {
-                        Code = queryParametes["code"]
+                        Code = queryParameters["code"]
                     };
 
                     // All done. Close the window.

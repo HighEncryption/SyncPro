@@ -91,6 +91,15 @@
                 </StackPanel>
             </DataTemplate>
 
+            <DataTemplate x:Key="ChangeExistsCellTemplate" DataType="{x:Type viewModels:ChangeMetrics}">
+                <StackPanel>
+                    <TextBlock Text="{Binding Path=Existing}" Style="{StaticResource TreeListItemStyle}"
+                               Visibility="{Binding Path=DisplayAsByteSize, Converter={StaticResource BooleanToVisibilityCollapsedReversed}}"/>
+                    <TextBlock Text="{Binding Path=Existing, Converter={StaticResource FileSize}}" Style="{StaticResource TreeListItemStyle}" 
+                               Visibility="{Binding Path=DisplayAsByteSize, Converter={StaticResource BooleanToVisibilityCollapsed}}"/>
+                </StackPanel>
+            </DataTemplate>
+
             <DataTemplate x:Key="ContentModifiedCellTemplate" DataType="{x:Type viewModels:ChangeMetrics}">
                 <StackPanel>
                     <TextBlock Text="{Binding Path=Modified}" Style="{StaticResource TreeListItemStyle}"
@@ -261,11 +270,12 @@
                     <GridView ColumnHeaderContainerStyle="{StaticResource CustomHeaderStyle}" AllowsColumnReorder="False">
                         <GridViewColumn Width="12" HeaderContainerStyle="{StaticResource CustomHeaderStyle2}" CellTemplate="{StaticResource EmptyCellTemplate}" />
                         <GridViewColumn Header=" " Width="120" CellTemplate="{StaticResource DisplayNameCellTemplate}" />
-                        <GridViewColumn Header="Added" Width="120" CellTemplate="{StaticResource ChangeAddedCellTemplate}" />
-                        <GridViewColumn Header="Content Modified" Width="120" CellTemplate="{StaticResource ContentModifiedCellTemplate}" />
-                        <GridViewColumn Header="Metadata Modified" Width="120" CellTemplate="{StaticResource MetadataModifiedCellTemplate}" />
-                        <GridViewColumn Header="Removed" Width="120" CellTemplate="{StaticResource RemovedCellTemplate}" />
-                        <GridViewColumn Header="Unchanged" Width="120" CellTemplate="{StaticResource UnchangedCellTemplate}" />
+                        <GridViewColumn Header="Added" Width="100" CellTemplate="{StaticResource ChangeAddedCellTemplate}" />
+                        <GridViewColumn Header="Existing" Width="100" CellTemplate="{StaticResource ChangeExistsCellTemplate}" />
+                        <GridViewColumn Header="Content Modified" Width="100" CellTemplate="{StaticResource ContentModifiedCellTemplate}" />
+                        <GridViewColumn Header="Metadata Modified" Width="100" CellTemplate="{StaticResource MetadataModifiedCellTemplate}" />
+                        <GridViewColumn Header="Removed" Width="100" CellTemplate="{StaticResource RemovedCellTemplate}" />
+                        <GridViewColumn Header="Unchanged" Width="100" CellTemplate="{StaticResource UnchangedCellTemplate}" />
                         <GridViewColumn Width="12" HeaderContainerStyle="{StaticResource CustomHeaderStyle2}" CellTemplate="{StaticResource EmptyCellTemplate}" />
                     </GridView>
                 </ListView.View>

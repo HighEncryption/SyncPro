@@ -177,9 +177,9 @@ namespace SyncPro.UI.Navigation
         }
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private bool progressValue;
+        private double progressValue;
 
-        public bool ProgressValue
+        public double ProgressValue
         {
             get { return this.progressValue; }
             set { this.SetProperty(ref this.progressValue, value); }

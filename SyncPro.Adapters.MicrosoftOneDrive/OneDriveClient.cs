@@ -7,6 +7,7 @@
     using System.Net.Http;
     using System.Net.Http.Headers;
     using System.Text;
+    using System.Threading;
     using System.Threading.Tasks;
     using System.Web;
 
@@ -252,7 +253,9 @@
             return new OneDriveResponse<T>(resultObject);
         }
 
-        private async Task<OneDriveResponse<T>> GetOneDriveItemSet<T>(string requestUri)
+        private async Task<OneDriveResponse<T>> GetOneDriveItemSet<T>(
+            string requestUri,
+            CancellationToken cancellationToken)
         {
             CounterManager.LogSyncJobCounter(
                 Constants.CounterNames.ApiCall,
@@ -262,7 +265,9 @@
                     "GetItemSet"));
 
             // Send the request to OneDrive and get the response.
-            var response = await this.SendOneDriveRequest(new HttpRequestMessage(HttpMethod.Get, requestUri)).ConfigureAwait(false);
+            var response = await this.SendOneDriveRequest(
+                new HttpRequestMessage(HttpMethod.Get, requestUri),
+                cancellationToken).ConfigureAwait(false);
 
             // Request was successful. Read the content returned.
             string content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -272,7 +277,14 @@
 
         private async Task<HttpResponseMessage> SendOneDriveRequest(HttpRequestMessage request)
         {
-            var response = await this.SendOneDriveRequest(request, this.oneDriveHttpClient).ConfigureAwait(false);
+            return await SendOneDriveRequest(request, CancellationToken.None).ConfigureAwait(false);
+        }
+
+        private async Task<HttpResponseMessage> SendOneDriveRequest(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            var response = await this.SendOneDriveRequest(request, this.oneDriveHttpClient, cancellationToken).ConfigureAwait(false);
 
             // Any failures (including those from re-issuing after a refresh) will ne handled here
             if (!response.IsSuccessStatusCode)
@@ -290,11 +302,14 @@
         /// The caller must provide the request to send. The authentication header will be set by this method. Any error
         /// returned by the call (including failure to refresh the token) will result in an exception being thrown.
         /// </remarks>
-        private async Task<HttpResponseMessage> SendOneDriveRequest(HttpRequestMessage request, HttpClient client)
+        private async Task<HttpResponseMessage> SendOneDriveRequest(
+            HttpRequestMessage request, 
+            HttpClient client,
+            CancellationToken cancellationToken)
         {
             request.Headers.Authorization = new AuthenticationHeaderValue("bearer", this.CurrentToken.AccessToken);
             LogRequest(request, client.BaseAddress);
-            var response = await client.SendAsync(request).ConfigureAwait(false);
+            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
             LogResponse(response);
 
             // Check for token refresh
@@ -318,7 +333,7 @@
                         // Dispose of the previous response before creating the new one
                         response.Dispose();
 
-                        response = await client.SendAsync(newRequest).ConfigureAwait(false);
+                        response = await client.SendAsync(newRequest, cancellationToken).ConfigureAwait(false);
                         LogResponse(response);
                     }
                 }
@@ -658,7 +673,7 @@
             while (true)
             {
                 OneDriveResponse<Item[]> oneDriveResponse =
-                    await this.GetOneDriveItemSet<Item[]>(requestUri).ConfigureAwait(false);
+                    await this.GetOneDriveItemSet<Item[]>(requestUri, CancellationToken.None).ConfigureAwait(false);
 
                 items.AddRange(oneDriveResponse.Value);
 
@@ -837,12 +852,20 @@
                     Constants.DimensionNames.OperationName,
                     "GetDownloadUriForItem"));
 
-            var response = await this.SendOneDriveRequest(request, this.oneDriveHttpClientNoRedirect).ConfigureAwait(false);
+            var response = await this.SendOneDriveRequest(
+                    request,
+                    this.oneDriveHttpClientNoRedirect,
+                    CancellationToken.None)
+                .ConfigureAwait(false);
 
             return response.Headers.Location;
         }
 
-        public async Task<OneDriveDeltaView> GetDeltaView(string path, string previousDeltaToken)
+        public async Task<OneDriveDeltaView> GetDeltaView(
+            string path, 
+            string previousDeltaToken, 
+            CancellationToken cancellationToken,
+            Action<long> onChangesReceived)
         {
             if (!path.StartsWith("/"))
             {
@@ -861,20 +884,27 @@
                 requestUri += "?token=" + previousDeltaToken;
             }
 
-            return await this.GetDeltaView(requestUri).ConfigureAwait(false);
+            return await this.GetDeltaView(requestUri, cancellationToken, onChangesReceived).ConfigureAwait(false);
         }
 
-        public async Task<OneDriveDeltaView> GetDeltaView(string requestUri)
+        public async Task<OneDriveDeltaView> GetDeltaView(
+            string requestUri, 
+            CancellationToken cancellationToken,
+            Action<long> onChangesReceived)
         {
             // A delta view from OneDrive can be larger than a single request, so loop until we have built the complete
             // view by following the NextLink properties.
             OneDriveDeltaView deltaView = new OneDriveDeltaView();
             while (true)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 OneDriveResponse<Item[]> oneDriveResponse =
-                    await this.GetOneDriveItemSet<Item[]>(requestUri).ConfigureAwait(false);
+                    await this.GetOneDriveItemSet<Item[]>(requestUri, cancellationToken).ConfigureAwait(false);
 
                 deltaView.Items.AddRange(oneDriveResponse.Value);
+
+                onChangesReceived?.Invoke(deltaView.Items.Count);
 
                 if (string.IsNullOrWhiteSpace(oneDriveResponse.NextLink))
                 {

@@ -180,6 +180,25 @@
             }
         }
 
+        public async Task CreateRootDirectory()
+        {
+            string[] pathParts = this.Config.TargetPath.Split(
+                new[] { this.PathSeparator },
+                StringSplitOptions.None);
+
+            string rootParentPath = string.Join(
+                this.PathSeparator,
+                pathParts.Skip(1).Take(pathParts.Length - 2));
+
+            Item rootParentItem = 
+                await this.oneDriveClient.GetItemByPathAsync(rootParentPath).ConfigureAwait(false);
+
+            var rootFolder =
+                await this.oneDriveClient.GetOrCreateFolderAsync(
+                    (ItemContainer) rootParentItem,
+                    pathParts.Last()).ConfigureAwait(false);
+        }
+
         public override async Task<IAdapterItem> GetRootFolder()
         {
             ItemContainer rootItemContainer = await this.GetRootItemContainer().ConfigureAwait(false);
@@ -517,7 +536,10 @@
             return Encoding.ASCII.GetString(uniqueId);
         }
 
-        public async Task<TrackedChange> GetChangesAsync()
+        public async Task<TrackedChange> GetChangesAsync(
+            bool resync, 
+            CancellationToken cancellationToken,
+            Action<long> onChangesReceived)
         {
             if (!this.Config.TargetPath.StartsWith("OneDrive", StringComparison.OrdinalIgnoreCase))
             {
@@ -531,7 +553,14 @@
             OneDriveDeltaView deltaView;
             try
             {
-                deltaView = await this.oneDriveClient.GetDeltaView(rootPath, this.Config.LatestDeltaToken).ConfigureAwait(false);
+                string previousDeltaToken = resync ? null : this.Config.LatestDeltaToken;
+
+                deltaView = await this.oneDriveClient.GetDeltaView(
+                        rootPath,
+                        previousDeltaToken,
+                        cancellationToken,
+                        onChangesReceived)
+                    .ConfigureAwait(false);
             }
             catch (OneDriveHttpException httpException)
                 when (httpException.ErrorResponse != null && httpException.ErrorResponse.Code == "resyncRequired")
@@ -554,7 +583,7 @@
                 // Get the new delta view
                 try
                 {
-                    deltaView = await this.oneDriveClient.GetDeltaView(locationHeader.Value.First()).ConfigureAwait(false);
+                    deltaView = await this.oneDriveClient.GetDeltaView(locationHeader.Value.First(), cancellationToken, onChangesReceived).ConfigureAwait(false);
                 }
                 catch (Exception exception)
                 {
@@ -662,7 +691,7 @@
                 TrackedChange changes = null;
                 try
                 {
-                    changes = await this.GetChangesAsync().ConfigureAwait(false);
+                    changes = await this.GetChangesAsync(false, CancellationToken.None, null).ConfigureAwait(false);
                 }
                 catch (Exception exception)
                 {

@@ -17,6 +17,7 @@ namespace SyncPro.Runtime
             : base(relationship)
         {
             this.AnalyzeResult = new AnalyzeRelationshipResult();
+            this.ProgressChanged += (sender, info) => { };
         }
 
         /// <summary>
@@ -27,7 +28,7 @@ namespace SyncPro.Runtime
             List<Task> updateTasks = new List<Task>();
             List<AnalyzeJobWorker> workers = new List<AnalyzeJobWorker>();
 
-            // For each adapter (where changes can origiante from), start a task to analyze the change
+            // For each adapter (where changes can originate from), start a task to analyze the change
             // originating from that adapter that would apply to every other adapter. This will allow 
             // multiple adapters to be examined in parallel.
             foreach (AdapterBase adapter in this.Relationship.Adapters.Where(a => a.Configuration.IsOriginator))
@@ -40,9 +41,11 @@ namespace SyncPro.Runtime
                             adapter,
                             destAdapter,
                             this.AnalyzeResult,
+                            this.Resync,
+                            this.SkipHashCheck,
                             this.CancellationToken);
 
-                    worker.ProgressChanged += this.ProgressChanged;
+                    worker.ProgressChanged += (sender, info) => this.ProgressChanged(sender, info);
 
                     workers.Add(worker);
                 }

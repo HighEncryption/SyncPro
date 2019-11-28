@@ -23,32 +23,35 @@ namespace SyncPro.UI.Navigation.MenuCommands
 
         protected override void InvokeCommand(object obj)
         {
-            // Find the navigation tree item for this relationship
-            SyncRelationshipNodeViewModel relatonshipNavItem =
-                App.Current.MainWindowsViewModel.NavigationItems.OfType<SyncRelationshipNodeViewModel>().FirstOrDefault(
-                    n => n.Item == this.relationship);
+            this.relationship.AnalyzeNowCommand.Execute(obj);
 
-            Debug.Assert(relatonshipNavItem != null, "relatonshipNavItem != null");
 
-            // Check if an Analyze item is already present under this relationship
-            NavigationNodeViewModel analyzeItem =
-                relatonshipNavItem.Children.OfType<AnalyzeJobNodeViewModel>().FirstOrDefault();
+            //// Find the navigation tree item for this relationship
+            //SyncRelationshipNodeViewModel relationshipNavItem =
+            //    App.Current.MainWindowsViewModel.NavigationItems.OfType<SyncRelationshipNodeViewModel>().FirstOrDefault(
+            //        n => n.Item == this.relationship);
 
-            // An analyze item is not present, so add a new one.
-            if (analyzeItem == null)
-            {
-                AnalyzeJobPanelViewModel viewModel = new AnalyzeJobPanelViewModel(this.relationship);
+            //Debug.Assert(relationshipNavItem != null, "relationshipNavItem != null");
 
-                analyzeItem = new AnalyzeJobNodeViewModel(relatonshipNavItem, viewModel);
-                relatonshipNavItem.Children.Add(analyzeItem);
-            }
+            //// Check if an Analyze item is already present under this relationship
+            //NavigationNodeViewModel analyzeItem =
+            //    relationshipNavItem.Children.OfType<AnalyzeJobNodeViewModel>().FirstOrDefault();
 
-            analyzeItem.IsSelected = true;
-            AnalyzeJobPanelViewModel analyzeJobViewModel = (AnalyzeJobPanelViewModel) analyzeItem.Item;
-            if (analyzeJobViewModel.BeginAnalyzeCommand.CanExecute(null))
-            {
-                analyzeJobViewModel.BeginAnalyzeCommand.Execute(null);
-            }
+            //// An analyze item is not present, so add a new one.
+            //if (analyzeItem == null)
+            //{
+            //    AnalyzeJobPanelViewModel viewModel = new AnalyzeJobPanelViewModel(this.relationship);
+
+            //    analyzeItem = new AnalyzeJobNodeViewModel(relationshipNavItem, viewModel);
+            //    relationshipNavItem.Children.Add(analyzeItem);
+            //}
+
+            //analyzeItem.IsSelected = true;
+            //AnalyzeJobPanelViewModel analyzeJobViewModel = (AnalyzeJobPanelViewModel) analyzeItem.Item;
+            //if (analyzeJobViewModel.BeginAnalyzeCommand.CanExecute(null))
+            //{
+            //    analyzeJobViewModel.BeginAnalyzeCommand.Execute(null);
+            //}
         }
     }
 }

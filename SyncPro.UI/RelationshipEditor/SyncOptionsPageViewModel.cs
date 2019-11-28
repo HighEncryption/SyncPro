@@ -5,12 +5,16 @@ namespace SyncPro.UI.RelationshipEditor
 
     using SyncPro.Configuration;
     using SyncPro.UI.Dialogs;
+    using SyncPro.UI.FolderBrowser;
     using SyncPro.UI.Framework.MVVM;
     using SyncPro.UI.ViewModels;
+    using SyncPro.UI.ViewModels.Adapters;
 
     public class SyncOptionsPageViewModel : RelationshipEditorPageViewModelBase
     {
         public ICommand ShowEncryptionSettingsDialogCommand { get; }
+
+        public ICommand SelectIncludeExcludeFoldersCommand { get; }
 
         public SyncOptionsPageViewModel(RelationshipEditorViewModel editorViewModel)
             : base(editorViewModel)
@@ -20,6 +24,10 @@ namespace SyncPro.UI.RelationshipEditor
             this.ShowEncryptionSettingsDialogCommand = new DelegatedCommand(
                 this.ShowEncryptionSettingsDialog,
                 this.CanShowEncryptionSettingsDialog);
+
+            this.SelectIncludeExcludeFoldersCommand = new DelegatedCommand(
+                this.SelectIncludeExcludeFolders,
+                this.CanSelectIncludeExcludeFolders);
         }
 
         private bool CanShowEncryptionSettingsDialog(object obj)
@@ -55,6 +63,27 @@ namespace SyncPro.UI.RelationshipEditor
 
                 this.SetEncryptedSettingsStatus();
             }
+        }
+
+        private bool CanSelectIncludeExcludeFolders(object obj)
+        {
+            ISyncTargetViewModel sourceAdapter = 
+                this.EditorViewModel.SyncSourcePageViewModel.SelectedSyncAdapter;
+
+            return sourceAdapter != null && !string.IsNullOrWhiteSpace(sourceAdapter.DestinationPath);
+        }
+
+        private void SelectIncludeExcludeFolders(object obj)
+        {
+            FolderBrowserViewModel viewModel = new FolderBrowserViewModel(
+                this.EditorViewModel.Relationship.SyncSourceAdapter.AdapterBase);
+
+            FolderBrowserWindow window = new FolderBrowserWindow
+            {
+                DataContext = viewModel
+            };
+
+            window.ShowDialog();
         }
 
         private void SetEncryptedSettingsStatus()

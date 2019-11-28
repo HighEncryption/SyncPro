@@ -1,6 +1,8 @@
 ﻿namespace SyncPro.Adapters
 {
+    using System;
     using System.Collections.Generic;
+    using System.Threading;
     using System.Threading.Tasks;
 
     /// <summary>
@@ -24,7 +26,10 @@
         /// <returns>
         /// A <see cref="TrackedChange"/> object that contains information about the set of changes that have occurred.
         /// </returns>
-        Task<TrackedChange> GetChangesAsync();
+        Task<TrackedChange> GetChangesAsync(
+            bool resync, 
+            CancellationToken cancellationToken, 
+            Action<long> onChangesReceived);
 
         Task CommitChangesAsync(TrackedChange trackedChange);
 

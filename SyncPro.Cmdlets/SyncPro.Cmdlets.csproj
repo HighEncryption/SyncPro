@@ -61,7 +61,8 @@
     <Compile Include="Commands\GetSyncHistory.cs" />
     <Compile Include="Commands\GetSyncHistoryEntry.cs" />
     <Compile Include="Commands\GetSyncRelationship.cs" />
-    <Compile Include="Commands\GetSyncJob.cs" />
+    <Compile Include="Commands\GetSyncSyncJob.cs" />
+    <Compile Include="Commands\StartAnalyzeJob.cs" />
     <Compile Include="Commands\SyncProCounterInstance.cs" />
     <Compile Include="Commands\SyncProCounterValue.cs" />
     <Compile Include="NoSelectedRelationshipException.cs" />

@@ -62,6 +62,9 @@ namespace SyncPro.Runtime
         // so that the entry is not incorrectly reported as having been deleted.
         private Dictionary<string, EntryUpdateInfo> deletedEntries;
 
+        private bool resync;
+        private bool skipHashCheck;
+
         /// <summary>
         /// Invoked when a new change is detected during analysis.
         /// </summary>
@@ -84,12 +87,16 @@ namespace SyncPro.Runtime
             AdapterBase sourceAdapter,
             AdapterBase destAdapter,
             AnalyzeRelationshipResult analyzeRelationshipResult,
+            bool resync,
+            bool skipHashCheck,
             CancellationToken cancellationToken)
         {
             this.relationship = relationship;
             this.sourceAdapter = sourceAdapter;
             this.destAdapter = destAdapter;
             this.analyzeRelationshipResult = analyzeRelationshipResult;
+            this.analyzeRelationshipResult = analyzeRelationshipResult;
+            this.skipHashCheck = skipHashCheck;
             this.cancellationToken = cancellationToken;
 
             this.AnalyzeResult = new AnalyzeAdapterResult();
@@ -140,13 +147,20 @@ namespace SyncPro.Runtime
 
                     // Get the tracked changes from the adapter
                     this.RaiseActivityChanged(this.sourceAdapter.Configuration.Id, "Retrieving tracked changes");
-                    TrackedChange trackedChange = await changeTracking.GetChangesAsync().ConfigureAwait(false);
+
+                    TrackedChange trackedChange = await changeTracking.GetChangesAsync(
+                        this.resync,
+                        this.cancellationToken,
+                        p => this.RaiseActivityChanged(
+                            this.sourceAdapter.Configuration.Id,
+                            string.Format("Retrieving tracked changes ({0} received)", p)))
+                        .ConfigureAwait(false);
 
                     this.AnalyzeResult.TrackedChanges = trackedChange;
 
                     // Perform the internal analysis on the changes to determine what/how to apply the changes
                     this.RaiseActivityChanged(this.sourceAdapter.Configuration.Id, "Analyzing changes");
-                    this.AnalyzeChangesWithChangeTracking();
+                    await this.AnalyzeChangesWithChangeTracking().ConfigureAwait(false);
                 }
                 else
                 {
@@ -292,7 +306,12 @@ namespace SyncPro.Runtime
             return hashList;
         }
 
-        private void AnalyzeChangesWithChangeTracking()
+        //private void BuildDestAdapterItemGraph()
+        //{
+
+        //}
+
+        private async Task AnalyzeChangesWithChangeTracking()
         {
             TrackedChange trackedChange = this.AnalyzeResult.TrackedChanges;
 
@@ -304,9 +323,9 @@ namespace SyncPro.Runtime
                     new Dictionary<string, object>()
                     {
                         { "SyncAnalysisRunId", this.analyzeRelationshipResult.Id },
-                        { "AdapterId", sourceAdapter.Configuration.Id },
-                        { "RootName", rootIndexEntry.Name },
-                        { "RootId", rootIndexEntry.Id },
+                        { "AdapterId", this.sourceAdapter.Configuration.Id },
+                        { "RootName", this.rootIndexEntry.Name },
+                        { "RootId", this.rootIndexEntry.Id },
                         { "TrackedChangeState", trackedChange.State },
                         { "TrackedChangeCount", changeCount },
                     }));
@@ -324,21 +343,31 @@ namespace SyncPro.Runtime
             // total number of changes to be analyzed, throw an exception.
             int skipCount = 0;
             Dictionary<string, SyncEntry> knownSyncEntries = new Dictionary<string, SyncEntry>();
+            AdapterItemSlim destRootItem =
+                new AdapterItemSlim(await this.destAdapter.GetRootFolder().ConfigureAwait(false));
 
             int processedCount = 0;
             while (pendingChanges.Any() && !this.cancellationToken.IsCancellationRequested)
             {
                 IChangeTrackedAdapterItem changeAdapterItem = pendingChanges.Dequeue();
 
-                if (this.AnalyzeSingleChangeWithTracking(changeAdapterItem, knownSyncEntries))
+                bool changeProcessed = 
+                    await this.AnalyzeSingleChangeWithTracking(
+                        changeAdapterItem,
+                        knownSyncEntries,
+                        destRootItem,
+                        (double)processedCount / changeCount)
+                    .ConfigureAwait(false);
+
+                if (changeProcessed)
                 {
                     // Change change was successfully analyzed. Reset the skip counter.
                     skipCount = 0;
                     processedCount++;
-                    this.RaiseActivityChanged(
-                        this.sourceAdapter.Configuration.Id,
-                        "Analyzing changes",
-                        (double)processedCount / changeCount);
+                    //this.RaiseActivityChanged(
+                    //    this.sourceAdapter.Configuration.Id,
+                    //    "Analyzing changes",
+                    //    );
                 }
                 else
                 {
@@ -353,18 +382,22 @@ namespace SyncPro.Runtime
             }
         }
 
-        private bool AnalyzeSingleChangeWithTracking(
+        private async Task<bool> AnalyzeSingleChangeWithTracking(
             IChangeTrackedAdapterItem changeAdapterItem, 
-            Dictionary<string, SyncEntry> knownSyncEntries)
+            Dictionary<string, SyncEntry> knownSyncEntries,
+            AdapterItemSlim rootItem,
+            double progressPercentage)
         {
             // Get the logical item for this change
             SyncEntryAdapterData adapterEntry =
-                db.AdapterEntries.Include(e => e.SyncEntry).FirstOrDefault(e => e.AdapterEntryId == changeAdapterItem.UniqueId);
+                this.db.AdapterEntries
+                    .Include(e => e.SyncEntry)
+                    .FirstOrDefault(e => e.AdapterEntryId == changeAdapterItem.UniqueId);
 
             if (changeAdapterItem.IsDeleted)
             {
-                // It is possible that an item was created and deleted before a sync cycle was run, so we need to handle the 
-                // case when the adapterEntry is not present.
+                // It is possible that an item was created and deleted before a sync cycle was run, so we need to
+                // handle the case when the adapterEntry is not present.
                 if (adapterEntry == null)
                 {
 #if DEBUG
@@ -381,7 +414,7 @@ namespace SyncPro.Runtime
                 // Mark the sync entry as 'deleted' by setting the appropriate bit.
                 logicalChild.State |= SyncEntryState.IsDeleted;
 
-                // Set the state to 'Unsynchronized' (so that we know we have pending changes).
+                // Set the state to 'Un-synchronized' (so that we know we have pending changes).
                 logicalChild.State |= SyncEntryState.NotSynchronized;
 
                 // Create the update info for the new entry
@@ -389,14 +422,14 @@ namespace SyncPro.Runtime
                     logicalChild,
                     this.sourceAdapter,
                     SyncEntryChangedFlags.Deleted,
-                    logicalChild.GetRelativePath(db, "/"));
+                    logicalChild.GetRelativePath(this.db, "/"));
 
                 // Set all previous metadata values from the values in the sync entry. Since this is a 
                 // deletion, all of the previous metadata values will be populated and the current values
                 // will be null/empty.
                 logicalChild.UpdateInfo.SetOldMetadataFromSyncEntry();
 
-                this.RaiseChangeDetected(this.sourceAdapter.Configuration.Id, logicalChild.UpdateInfo);
+                this.RaiseChangeDetected(this.sourceAdapter.Configuration.Id, logicalChild.UpdateInfo, progressPercentage);
 
                 this.LogSyncAnalyzerChangeFound(logicalChild);
                 return true;
@@ -428,7 +461,7 @@ namespace SyncPro.Runtime
                         logicalChild,
                         this.sourceAdapter, 
                         SyncEntryChangedFlags.Restored, 
-                        logicalChild.GetRelativePath(db, "/"));
+                        logicalChild.GetRelativePath(this.db, "/"));
 
                     // Because the item was previously deleted, all of the previous values will be null/empty.
                     // Other metadata will need to be set for new properties
@@ -479,7 +512,7 @@ namespace SyncPro.Runtime
 
                     // Raise change notification so that the UI can be updated in "real time" rather than waiting for 
                     // the analyze process to finish.
-                    this.RaiseChangeDetected(this.sourceAdapter.Configuration.Id, logicalChild.UpdateInfo);
+                    this.RaiseChangeDetected(this.sourceAdapter.Configuration.Id, logicalChild.UpdateInfo, progressPercentage);
 
                     this.LogSyncAnalyzerChangeFound(logicalChild);
                     return true;
@@ -499,7 +532,9 @@ namespace SyncPro.Runtime
                 if (!knownSyncEntries.TryGetValue(changeAdapterItem.ParentUniqueId, out parentEntry))
                 {
                     SyncEntryAdapterData parentAdapterEntry =
-                        db.AdapterEntries.Include(e => e.SyncEntry).FirstOrDefault(e => e.AdapterEntryId.Equals(changeAdapterItem.ParentUniqueId));
+                        this.db.AdapterEntries
+                            .Include(e => e.SyncEntry)
+                            .FirstOrDefault(e => e.AdapterEntryId.Equals(changeAdapterItem.ParentUniqueId));
 
                     if (parentAdapterEntry != null)
                     {
@@ -527,7 +562,7 @@ namespace SyncPro.Runtime
                     logicalChild,
                     this.sourceAdapter,
                     GetFlagsForNewSyncEntry(changeAdapterItem),
-                    logicalChild.GetRelativePath(db, "/"));
+                    logicalChild.GetRelativePath(this.db, "/"));
 
                 logicalChild.UpdateInfo.CreationDateTimeUtcNew = changeAdapterItem.CreationTimeUtc;
                 logicalChild.UpdateInfo.ModifiedDateTimeUtcNew = changeAdapterItem.ModifiedTimeUtc;
@@ -546,12 +581,109 @@ namespace SyncPro.Runtime
                     logicalChild.UpdateInfo.OriginalSha1HashNew = changeAdapterItem.Sha1Hash;
                 }
 
-                // Raise change notification so that the UI can be updated in "real time" rather than waiting for the analyze process to finish.
-                this.RaiseChangeDetected(this.sourceAdapter.Configuration.Id, logicalChild.UpdateInfo);
+                // An optimization can be made when syncing a relationship for the first time. There is a possibility
+                // that the file to be synced already exists in the destination. Check if it does, and if the metadata
+                // and at least one of the hashes matches between the source and the destination. If so, then the
+                // actual copy of the file can be skipped, and only the SyncEntry created.
+                if (parentEntry.Id == 0)
+                {
+                    IAdapterItem destAdapterItem =
+                        await FindDestAdapterItem(rootItem, logicalChild).ConfigureAwait(false);
+
+                    if (destAdapterItem != null)
+                    {
+                        this.CheckIfSyncRequired(
+                            logicalChild,
+                            changeAdapterItem,
+                            destAdapterItem);
+                    }
+                }
+
+                // Raise change notification so that the UI can be updated in "real time" rather than waiting for the
+                // analyze process to finish.
+                this.RaiseChangeDetected(
+                    this.sourceAdapter.Configuration.Id, 
+                    logicalChild.UpdateInfo, 
+                    progressPercentage);
 
                 this.LogSyncAnalyzerChangeFound(logicalChild);
+
                 return true;
             }
+        }
+
+        private class AdapterItemSlim 
+        {
+            public IAdapterItem Item { get; }
+
+            public string Name { get; }
+
+            public List<AdapterItemSlim> ChildItems { get; private set; }
+
+            private bool isLoaded;
+
+            public async Task LoadAsync(AdapterBase adapter)
+            {
+                if (this.isLoaded)
+                {
+                    return;
+                }
+
+                IEnumerable<IAdapterItem> childItems = adapter.GetAdapterItems(this.Item);
+
+                this.ChildItems = new List<AdapterItemSlim>();
+
+                foreach (IAdapterItem adapterItem in childItems)
+                {
+                    this.ChildItems.Add(new AdapterItemSlim(adapterItem));
+                }
+
+                this.isLoaded = true;
+            }
+
+            public AdapterItemSlim(IAdapterItem item)
+            {
+                this.Item = item;
+                this.Name = item.Name;
+            }
+        }
+
+        private async Task<IAdapterItem> FindDestAdapterItem(AdapterItemSlim rootItem, SyncEntry logicalChild)
+        {
+            string[] pathParts = logicalChild.UpdateInfo.RelativePath.Split(
+                new[] {'/'},
+                StringSplitOptions.RemoveEmptyEntries);
+
+            AdapterItemSlim thisItem = rootItem;
+
+            for (int i = 0; i < pathParts.Length; i++)
+            {
+                if (thisItem.ChildItems == null)
+                {
+                    string relativePath = rootItem.Name;
+
+                    if (i > 0)
+                    {
+                        relativePath += "/" + string.Join("/", pathParts, 0, i);
+                    }
+
+                    this.RaiseActivityChanged(
+                        this.sourceAdapter.Configuration.Id,
+                        string.Format("Examining destination files ({0})", relativePath));
+
+                    await thisItem.LoadAsync(this.destAdapter).ConfigureAwait(false);
+                }
+
+                var existingItem = thisItem.ChildItems.FirstOrDefault(t => t.Item.Name.Equals(pathParts[i]));
+                if (existingItem == null)
+                {
+                    return null;
+                }
+
+                thisItem = existingItem;
+            }
+
+            return thisItem.Item;
         }
 
         private void LogSyncAnalyzerChangeFound(SyncEntry logicalChild)
@@ -1039,88 +1171,107 @@ namespace SyncPro.Runtime
             // Verify that we are only dealing with a single new file update
             Pre.Assert(sourceLogicalChild.UpdateInfo.HasSyncEntryFlag(SyncEntryChangedFlags.NewFile));
 
-            bool isSourceSha1Available =
-                sourceAdapterChild.Sha1Hash != null || sourceAdapter.Locality != AdapterLocality.Internet;
-
-            bool isDestSha1Available =
-                destAdapterChild.Sha1Hash != null || destAdapter.Locality != AdapterLocality.Internet;
-
-            bool isSourceMd5Available =
-                sourceAdapterChild.Md5Hash != null || sourceAdapter.Locality != AdapterLocality.Internet;
-
-            bool isDestMd5Available =
-                destAdapterChild.Md5Hash != null || destAdapter.Locality != AdapterLocality.Internet;
-
-            if (!isSourceSha1Available && !isSourceMd5Available)
+            if (this.skipHashCheck)
             {
-                // No hashes are available from the source and they can't be easily computed, so we 
-                // dont know for sure if the file already exists at the destination. Therefore, we
-                // will need to copy the file.
-                Logger.Debug("CheckIfSyncRequired: No hashes available");
-                return;
-            }
-
-            // If the length of the files is different, we will have to copy the file (along with metadata)
-            if (sourceAdapterChild.Size != destAdapterChild.Size)
-            {
-                Logger.Debug(
-                    "CheckIfSyncRequired: File size differs (source={0}, dest={1})",
-                    sourceAdapterChild.Size,
-                    destAdapterChild.Size);
-
-                return;
-            }
-
-            if (isSourceSha1Available && isDestSha1Available)
-            {
-                byte[] sourceSha1 = sourceAdapter.GetItemHash(HashType.SHA1, sourceAdapterChild);
-                byte[] destSha1 = destAdapter.GetItemHash(HashType.SHA1, destAdapterChild);
-
-                if (!NativeMethods.ByteArrayEquals(sourceSha1, destSha1))
+                // If the length of the files is different, we will have to copy the file (along with metadata)
+                if (sourceAdapterChild.Size != destAdapterChild.Size)
                 {
-                    // The SHA1 hashes for the files do not match, so we need to copy the file
+                    Logger.Debug(
+                        "CheckIfSyncRequired: File size differs (source={0}, dest={1})",
+                        sourceAdapterChild.Size,
+                        destAdapterChild.Size);
+
                     return;
                 }
 
-                // Set the SHA1 hash property on the logical objects
-                sourceLogicalChild.SetSha1Hash(this.relationship, SyncEntryPropertyLocation.Source, sourceSha1);
-                sourceLogicalChild.SetSha1Hash(this.relationship, SyncEntryPropertyLocation.Destination, sourceSha1);
-                sourceLogicalChild.UpdateInfo.OriginalSha1HashNew = sourceSha1;
-
                 newChangeFlags |= SyncEntryChangedFlags.DestinationExists;
-
-                Logger.Debug(
-                    "The SHA1 hash ({0}) matches source and destination copies of {1}. File copy will be skipped.",
-                    "0x" + BitConverter.ToString(sourceSha1).Replace("-", ""),
-                    sourceAdapterChild.FullName);
-            }
-            else if (isSourceMd5Available && isDestMd5Available)
-            {
-                byte[] sourceMd5 = sourceAdapter.GetItemHash(HashType.MD5, sourceAdapterChild);
-                byte[] destMd5 = destAdapter.GetItemHash(HashType.MD5, destAdapterChild);
-
-                if (!NativeMethods.ByteArrayEquals(sourceMd5, destMd5))
-                {
-                    // The MD5 hashes for the files do not match, so we need to copy the file
-                    return;
-                }
-
-                // Set the SHA1 hash property on the logical objects
-                sourceLogicalChild.SetMd5Hash(this.relationship, SyncEntryPropertyLocation.Source, sourceMd5);
-                sourceLogicalChild.SetMd5Hash(this.relationship, SyncEntryPropertyLocation.Destination, sourceMd5);
-                sourceLogicalChild.UpdateInfo.OriginalMd5HashNew = sourceMd5;
-
-                newChangeFlags |= SyncEntryChangedFlags.DestinationExists;
-
-                Logger.Debug(
-                    "The MD5 hash ({0}) matches source and destination copies of {1}. File copy will be skipped.",
-                    "0x" + BitConverter.ToString(sourceMd5).Replace("-", ""),
-                    sourceAdapterChild.FullName);
             }
             else
             {
-                // Some combination of hashes were not available
-                Logger.Debug("Cannot perform hash comparison of {0}", sourceAdapterChild.FullName);
+                bool isSourceSha1Available =
+                    sourceAdapterChild.Sha1Hash != null || sourceAdapter.Locality != AdapterLocality.Internet;
+
+                bool isDestSha1Available =
+                    destAdapterChild.Sha1Hash != null || destAdapter.Locality != AdapterLocality.Internet;
+
+                bool isSourceMd5Available =
+                    sourceAdapterChild.Md5Hash != null || sourceAdapter.Locality != AdapterLocality.Internet;
+
+                bool isDestMd5Available =
+                    destAdapterChild.Md5Hash != null || destAdapter.Locality != AdapterLocality.Internet;
+
+                if (!isSourceSha1Available && !isSourceMd5Available)
+                {
+                    // No hashes are available from the source and they can't be easily computed, so we 
+                    // dont know for sure if the file already exists at the destination. Therefore, we
+                    // will need to copy the file.
+                    Logger.Debug("CheckIfSyncRequired: No hashes available");
+                    return;
+                }
+
+                // If the length of the files is different, we will have to copy the file (along with metadata)
+                if (sourceAdapterChild.Size != destAdapterChild.Size)
+                {
+                    Logger.Debug(
+                        "CheckIfSyncRequired: File size differs (source={0}, dest={1})",
+                        sourceAdapterChild.Size,
+                        destAdapterChild.Size);
+
+                    return;
+                }
+
+                if (isSourceSha1Available && isDestSha1Available)
+                {
+                    byte[] sourceSha1 = sourceAdapter.GetItemHash(HashType.SHA1, sourceAdapterChild);
+                    byte[] destSha1 = destAdapter.GetItemHash(HashType.SHA1, destAdapterChild);
+
+                    if (!NativeMethods.ByteArrayEquals(sourceSha1, destSha1))
+                    {
+                        // The SHA1 hashes for the files do not match, so we need to copy the file
+                        return;
+                    }
+
+                    // Set the SHA1 hash property on the logical objects
+                    sourceLogicalChild.SetSha1Hash(this.relationship, SyncEntryPropertyLocation.Source, sourceSha1);
+                    sourceLogicalChild.SetSha1Hash(this.relationship, SyncEntryPropertyLocation.Destination,
+                        sourceSha1);
+                    sourceLogicalChild.UpdateInfo.OriginalSha1HashNew = sourceSha1;
+
+                    newChangeFlags |= SyncEntryChangedFlags.DestinationExists;
+
+                    Logger.Debug(
+                        "The SHA1 hash ({0}) matches source and destination copies of {1}. File copy will be skipped.",
+                        "0x" + BitConverter.ToString(sourceSha1).Replace("-", ""),
+                        sourceAdapterChild.FullName);
+                }
+                else if (isSourceMd5Available && isDestMd5Available)
+                {
+                    byte[] sourceMd5 = sourceAdapter.GetItemHash(HashType.MD5, sourceAdapterChild);
+                    byte[] destMd5 = destAdapter.GetItemHash(HashType.MD5, destAdapterChild);
+
+                    if (!NativeMethods.ByteArrayEquals(sourceMd5, destMd5))
+                    {
+                        // The MD5 hashes for the files do not match, so we need to copy the file
+                        return;
+                    }
+
+                    // Set the SHA1 hash property on the logical objects
+                    sourceLogicalChild.SetMd5Hash(this.relationship, SyncEntryPropertyLocation.Source, sourceMd5);
+                    sourceLogicalChild.SetMd5Hash(this.relationship, SyncEntryPropertyLocation.Destination, sourceMd5);
+                    sourceLogicalChild.UpdateInfo.OriginalMd5HashNew = sourceMd5;
+
+                    newChangeFlags |= SyncEntryChangedFlags.DestinationExists;
+
+                    Logger.Debug(
+                        "The MD5 hash ({0}) matches source and destination copies of {1}. File copy will be skipped.",
+                        "0x" + BitConverter.ToString(sourceMd5).Replace("-", ""),
+                        sourceAdapterChild.FullName);
+                }
+                else
+                {
+                    // Some combination of hashes were not available
+                    Logger.Debug("Cannot perform hash comparison of {0}", sourceAdapterChild.FullName);
+                }
             }
 
             // We found a hash match for the file (either SHA1 or MD5). Check if the metadata is incorrect.
@@ -1162,7 +1313,7 @@ namespace SyncPro.Runtime
                     adapterId));
         }
 
-        private void RaiseChangeDetected(int adapterId, EntryUpdateInfo updateInfo)
+        private void RaiseChangeDetected(int adapterId, EntryUpdateInfo updateInfo, double? progressValue = null)
         {
             this.AnalyzeResult.EntryResults.Add(updateInfo);
             this.ProgressChanged?.Invoke(
@@ -1172,7 +1323,8 @@ namespace SyncPro.Runtime
                     adapterId,
                     "Analyzing files",
                     this.AnalyzeResult.EntryResults.Count,
-                    0));
+                    0,
+                    progressValue));
         }
 
         private static bool DateTimeEqual(DateTime dt1, DateTime dt2)

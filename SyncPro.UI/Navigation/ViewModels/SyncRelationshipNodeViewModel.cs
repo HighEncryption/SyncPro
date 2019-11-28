@@ -1,6 +1,8 @@
 namespace SyncPro.UI.Navigation.ViewModels
 {
+    using System.ComponentModel;
     using System.Diagnostics;
+    using System.Linq;
     using System.Windows.Input;
 
     using SyncPro.Adapters.WindowsFileSystem;
@@ -56,6 +58,32 @@ namespace SyncPro.UI.Navigation.ViewModels
                     App.DispatcherInvoke(CommandManager.InvalidateRequerySuggested);
                 }
 
+                if (args.PropertyName == nameof(this.Relationship.ActiveJob) &&
+                    this.Relationship.ActiveJob != null)
+                {
+                    this.Relationship.ActiveJob.PropertyChanged += ActiveJobOnPropertyChanged;
+
+                    this.ProgressIsIndeterminate = this.Relationship.ActiveJob.IsProgressIndeterminate;
+
+                    // Check if an Analyze item is already present under this relationship
+                    NavigationNodeViewModel analyzeItem =
+                        this.Children.OfType<AnalyzeJobNodeViewModel>().FirstOrDefault();
+
+                    // An analyze item is not present, so add a new one.
+                    if (analyzeItem == null)
+                    {
+                        AnalyzeJobPanelViewModel viewModel = new AnalyzeJobPanelViewModel(this.Relationship);
+
+                        analyzeItem = new AnalyzeJobNodeViewModel(this, viewModel);
+                        App.DispatcherInvoke(() => this.Children.Add(analyzeItem));
+                    }
+
+                    if (this.IsSelected)
+                    {
+                        App.DispatcherInvoke(() => analyzeItem.IsSelected = true);
+                    }
+                }
+
                 if (args.PropertyName == nameof(this.Relationship.Name))
                 {
                     this.Name = this.Relationship.Name;
@@ -63,6 +91,19 @@ namespace SyncPro.UI.Navigation.ViewModels
             };
 
             this.SetNavigationState();
+        }
+
+        private void ActiveJobOnPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(this.Relationship.ActiveJob.ProgressValue))
+            {
+                this.ProgressValue = this.Relationship.ActiveJob.ProgressValue * 100;
+            }
+
+            if (e.PropertyName == nameof(this.Relationship.ActiveJob.IsProgressIndeterminate))
+            {
+                this.ProgressIsIndeterminate = this.Relationship.ActiveJob.IsProgressIndeterminate;
+            }
         }
 
         private void SetNavigationState()

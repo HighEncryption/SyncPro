@@ -1,6 +1,7 @@
 ﻿namespace SyncPro.Cmdlets.Commands
 {
     using System;
+    using System.Data.Entity;
     using System.IO;
     using System.Linq;
     using System.Management.Automation;
@@ -17,6 +18,12 @@
 
         [Parameter]
         public SwitchParameter Offline { get; set; }
+
+        [Parameter]
+        public string AdapterEntryId { get; set; }
+        
+        [Parameter]
+        public string Name { get; set; }
 
         protected override void ProcessRecord()
         {
@@ -62,8 +69,22 @@
 
             using (var db = relationship.GetDatabase())
             {
-                foreach (SyncEntry syncEntry in db.Entries)
+                foreach (SyncEntry syncEntry in db.Entries.Include(e => e.AdapterEntries))
                 {
+                    if (!string.IsNullOrWhiteSpace(this.Name) && syncEntry.Name != this.Name)
+                    {
+                        continue;
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(this.AdapterEntryId))
+                    {
+                        if (syncEntry.AdapterEntries == null ||
+                            syncEntry.AdapterEntries.All(e => e.AdapterEntryId != this.AdapterEntryId))
+                        {
+                            continue;
+                        }
+                    }
+
                     this.WriteObject(syncEntry);
                 }
             }
@@ -100,6 +121,21 @@
                     this.WriteObject(syncEntry);
                 }
             }
+        }
+    }
+
+
+    [Cmdlet(VerbsData.Initialize, "SyncProRelationship")]
+    public class InitializeSyncProRelationship : PSCmdlet
+    {
+        [Parameter]
+        [Alias("Rid")]
+        public Guid RelationshipId { get; set; }
+
+
+
+        protected override void ProcessRecord()
+        {
         }
     }
 }

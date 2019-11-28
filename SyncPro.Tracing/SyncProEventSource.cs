@@ -226,7 +226,7 @@ namespace SyncPro.Tracing
             Level = EventLevel.Informational,
             Opcode = EventOpcode.Start,
             Task = Tasks.InitializeRelationship,
-            Message = "Initialize() called for relationship {0} ({1})")]
+            Message = "Initializing Relationship {0} ({1})")]
         public void InitializeRelationshipStart(string name, Guid relationshipId, string activityName)
         {
             this.WriteEvent(EventIDs.InitializeRelationshipStart, name, relationshipId, activityName);
@@ -250,7 +250,7 @@ namespace SyncPro.Tracing
             Level = EventLevel.Informational,
             Opcode = EventOpcode.Start,
             Task = Tasks.InitializeApplication,
-            Message = "Beginning application initialization")]
+            Message = "Initializing application")]
         public void InitializeApplicationStart(string activityName)
         {
             this.WriteEvent(EventIDs.InitializeApplicationStart, activityName);
@@ -274,7 +274,7 @@ namespace SyncPro.Tracing
             Level = EventLevel.Informational,
             Opcode = EventOpcode.Start,
             Task = Tasks.InitializeAdapter,
-            Message = "Beginning initialization of adapter {0} ({1}) on relationship {2}")]
+            Message = "Initializing adapter {0} ({1}) on relationship {2}")]
         public void InitializeAdapterStart(Guid relationshipId, Guid adapterTypeId, int adapterId, string activityName)
         {
             this.WriteEvent(EventIDs.InitializeAdapterStart, relationshipId, adapterTypeId, adapterId, activityName);
@@ -322,7 +322,7 @@ namespace SyncPro.Tracing
             Level = EventLevel.Informational,
             Opcode = EventOpcode.Start,
             Task = Tasks.AnalyzeChangesWorker,
-            Message = "AnalyzeJobWorker started with Id {0} for adapter {1}")]
+            Message = "AnalyzeJobWorker called with Id {0} for adapter {1}")]
         public void AnalyzeChangesStart(Guid runId, int adapterId, string activityName)
         {
             this.WriteEvent(EventIDs.AnalyzeChangesStart, runId, adapterId, activityName);
@@ -339,7 +339,5 @@ namespace SyncPro.Tracing
         {
             this.WriteEvent(EventIDs.AnalyzeChangesStop, runId, adapterId);
         }
-
-
     }
 }

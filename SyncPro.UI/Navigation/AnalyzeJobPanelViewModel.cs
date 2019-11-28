@@ -29,6 +29,11 @@ namespace SyncPro.UI.Navigation
 
             this.FileDisplayMode = SyncJobFilesViewMode.Flat;
 
+            if (this.Relationship.ActiveJob is AnalyzeJobViewModel activeAnalyzeJobViewModel)
+            {
+                this.AnalyzeJobViewModel = activeAnalyzeJobViewModel;
+            }
+
             this.Relationship.PropertyChanged += (sender, args) =>
             {
                 if (args.PropertyName == nameof(this.Relationship.ActiveJob))
@@ -77,7 +82,7 @@ namespace SyncPro.UI.Navigation
             // We are asking the relationship viewmodel to create a new analyze job. The viewmodel for that job is
             // created asynchronously, so we can't have it passed back to us here. Instead, we are passed the actual
             // job object, which we will treat as a 'promise' of a viewmodel to be created later. When the viewmodel
-            // is eventually created, it will be assigned to the ActiveJob property on the relationship ifself. We
+            // is eventually created, it will be assigned to the ActiveJob property on the relationship itself. We
             // can then wait for a callback that the ActiveJob property has changed, and set our local viewmodel
             // property to be that viewmodel if the underlying job matches the job we were promised here.
             this.promisedJob = this.Relationship.StartAnalyzeJob(false);
